@@ -5,7 +5,7 @@
 #'
 #' @description 
 #' Convenience function for using \code{\link[data.table]{dcast.data.table}}
-#' and \code{link[reshape2]{dcast}};
+#' and \code{\link[reshape2]{dcast}};
 #' inputs are character strings (names of variables) instead of a formula.
 #' 
 #' @param data a \code{data.table} or \code{data.frame}
@@ -21,11 +21,13 @@
 #' @details This function is just a small interface for \code{dcast} / 
 #' \code{dcast.data.table} and less flexible than the originals.
 #' 
-#' Note that all \code{data.table} objects are alos \code{data.frame} 
+#' Note that all \code{data.table} objects are also \code{data.frame} 
 #' objects, but that each have their own \code{dcast} method.
 #' \code{\link[data.table]{dcast.data.table}} is faster.
 #' 
-#' If any information needs to aggregated, it is aggregated using \code{sum}.
+#' If any values in \code{value.vars} need to be 
+#' aggregated, they are aggregated using \code{sum}.
+#' See \code{?dcast}.
 #' 
 #' @examples 
 #' \dontrun{
@@ -38,39 +40,70 @@
 #' }
 
 
-cast_simple <- function(data=NULL, columns='year', rows=c('PrimarySite','sex'), values='std.incidence') {
+cast_simple <- function(data=NULL, columns=NULL, rows=NULL, values=NULL) {
+  if (!is.data.frame(data)) stop("data needs be a data.frame or data.table")
+  if (is.null(data) || nrow(data) == 0L) stop("data NULL or has no rows")
   
-  # make a formula
-  a <- NULL
-  for(i in 1:length(rows)) {
-    a <- paste(a, rows[i],'+',sep='') 
+  if (is.null(columns)) stop("columns cannot be NULL")
+  
+  msg <- paste0("Missing 'columns' variables: %%VARS%%")
+  all_names_present(data, columns, msg = msg)
+  msg <- paste0("Missing 'rows' variables: %%VARS%%")
+  all_names_present(data, rows, msg = msg)
+  msg <- paste0("Missing 'values' variables: %%VARS%%")
+  all_names_present(data, values, msg = msg)
+  
+  ## allow rows = NULL 
+  rowsNULL <- FALSE
+  if (is.null(rows)) rowsNULL <- TRUE
+  if (rowsNULL) rows <- "1"
+  
+  ## sometimes rows names appear to be like expressions, e.g. 'factor(V1)'
+  ## (and this function only uses string-column-names, so that's fine.)
+  actualRows <- rows
+  if (length(rows) > 1L || rows != "1") {
+    rows <- makeTempVarName(names = c(names(data), columns), 
+                            pre = paste0("RN", 1:length(rows)))
+    on.exit(setnames(data, rows, actualRows), add = TRUE)
+    setnames(data, actualRows, rows)
   }
-  a <- substr(a,1, nchar(a)-1)
+  ## same for cols
+  actualCols <- columns
+  columns <- makeTempVarName(names = c(names(data), rows), 
+                             pre = paste0("CN", 1:length(columns)))
+  on.exit(setnames(data, columns, actualCols), add = TRUE)
+  setnames(data, actualCols, columns)
   
-  b <- NULL
-  for(i in 1:length(columns)) {
-    b <- paste(b, columns[i],'+',sep='')
-  }
-  b <- substr(b,1,nchar(b)-1)
-  
-  form <- as.formula(paste(a,'~',b))
+  form <- paste0(paste0(rows, collapse = " + "), " ~ ", 
+                 paste0(columns, collapse = " + "))
+  form <- as.formula(form)
   
   ## note: dcast probably usually finds the methods for data.frame / data.table,
   ## but this method is more certain
   if (is.data.table(data)) {
-    dcast.data.table(data, formula = form, value.var=values, drop=FALSE, fun.aggregate=sum) 
+    d <- dcast.data.table(data, formula = form, value.var=values, 
+                          drop=FALSE, fun.aggregate=sum)[]
   } else {
-    dcast(data, formula = form, value.var = values, drop = FALSE, fun.aggregate = sum)
+    d <- dcast(data, formula = form, value.var = values, 
+               drop = FALSE, fun.aggregate = sum)[]
   }
+  if (rowsNULL) set(d, j = names(d)[1L], value = NULL)
+  wh_rows <- which(rows %in% names(d))
+  if (sum(wh_rows, na.rm = TRUE)) setnames(d, rows[wh_rows], actualRows[wh_rows])
   
+  d
 }
 
 
 #' @title Convert NA's to zero in data.table
 #' @author Joonas Miettinen
+#' @description Given a \code{data.table DT}, replaces any \code{NA} values
+#' in the variables given in \code{vars} in \code{DT}. Takes a copy of the 
+#' original data and returns the modified copy.
 #' @import data.table
 #' @param DT \code{data.table} object
-#' @param vars a character string vector of variables names in \code{DT}
+#' @param vars a character string vector of variables names in \code{DT};
+#' if \code{NULL}, uses all variable names in \code{DT}
 #' @export na2zero
 #' @details Given a \code{data.table} object, converts \code{NA} values
 #' to numeric (double) zeroes for all variables named in \code{vars} or
@@ -86,7 +119,7 @@ na2zero = function(DT, vars = NULL) {
     DT[is.na(get(k)), (k) := 0]
   }
   
-  return(DT)
+  return(DT[])
 }
 
 
@@ -157,7 +190,7 @@ fac2num <- function(x) {
 #' 
 #' 
 #' @seealso
-#' \code{\link[Epi]{cal.yr}}
+#' \code{\link[Epi]{cal.yr}}, \code{\link{as.Date.yrs}}
 #' 
 #' @examples
 #' 
@@ -165,13 +198,20 @@ fac2num <- function(x) {
 #' test$dg_yrs <- get.yrs(test$dg_date)
 #' summary(test$dg_yrs)
 #' 
+#' ## see: ?as.Date.yrs
+#' dg_date2 <- as.Date(test$dg_yrs)
+#' summary(as.numeric(dg_date2 - test$dg_date))
+#' 
 #' ## Epi's cal.yr versus get.yrs
 #' Epi::cal.yr("2000-01-01") ## 1999.999
 #' get.yrs("2000-01-01") ## 2000
 #' 
 get.yrs <- function(dates, format = "%Y-%m-%d", year.length = "approx") {
-  match.arg(year.length, c("actual", "approx"))
+  year.length <- match.arg(year.length, c("actual", "approx"))
   y <- yrs <- NULL ## to instate as global variable to appease R CMD CHECK
+  
+  if (missing(dates) || length(dates) == 0L) 
+    stop("'dates' not supplied or is a variable with length zero.")
   
   orle <- length(dates)
   nale <- sum(is.na(dates))
@@ -179,7 +219,7 @@ get.yrs <- function(dates, format = "%Y-%m-%d", year.length = "approx") {
   dat <- data.table(dates=dates)
   if (is.character(dates)) {
     dat[, dates := as.IDate(dates, format = format)]
-  } else if (inherits(dat$dates, "date")) {
+  } else {
     dat[, dates := as.IDate(dates)]
   }
   
@@ -199,8 +239,16 @@ get.yrs <- function(dates, format = "%Y-%m-%d", year.length = "approx") {
     dat[, yrs := year(dates) + (yday(dates)-1L)/365.242199]
   }
   nale3 <- dat[, sum(is.na(yrs))]
-  if (nale3 == orle) warning(paste0("ALL dates values were coerced to NA by get.yrs"))
-  if (nale3 >  nale) warning(paste0(nale3-nale, "values were coerced to NA by get.yrs"))
+  if (nale3 >  nale) {
+    warning(nale3-nale, " values were coerced to NA by get.yrs, ",
+            "of which ", nale2-nale, " were coerced to NA by as.Date(). ",
+            "Please use any date class supported by as.Date(), or ",
+            "supply the appropriate 'format' if 'dates' is a character ", 
+            "vector. See ?as.Date for more information on formatting.")
+  }
+  
+  setattr(dat$yrs, "year.length", year.length)
+  setattr(dat$yrs, "class", c("yrs", "numeric"))
   
   return(dat$yrs)
 }
@@ -241,7 +289,11 @@ is_leap_year <- function(years) {
   isLeap
   
 }
-#' @title Test if object is a Date object
+#' @title Test if object is a \code{Date} object
+#' @description Tests if an object is a \code{Date} object and returns
+#' a logical vector of length 1. \code{IDate} objects are also 
+#' \code{Date} objects, but \code{date} objects from package \pkg{date}
+#' are not. 
 #' @author Joonas Miettinen
 #' @param obj object to test on
 #' @export is.Date
@@ -339,30 +391,44 @@ robust_values <- function(num.values, force = FALSE, messages = TRUE) {
 #' @title Check if all names are present in given data
 #' @author Joonas Miettinen
 #' @param data dataset where the variable names should be found
-#' @param var.names a character vector of variable names
+#' @param var.names a character vector of variable names, e.g.
+#' \code{c("var1", "var2")}
 #' @param stops logical, stop returns exception
-#' @description given a character vector, checks if all names are present in \code{names(data)}.
+#' @param msg Custom message to return instead of default message.
+#' Special: include \code{\%\%VARS\%\%} in message string and the missing 
+#' variable names will be inserted there (quoted, separated by comma, e.g. 
+#' \code{'var1'}, \code{'var2'} --- no leading or tracing white space). 
+#' @description Given a character vector, checks if all names are present in \code{names(data)}.
 #' Throws error if \code{stops=TRUE}, else returns \code{FALSE} if some variable name is not present.
 #' @seealso
 #' \code{\link{robust_values}}
 #' @export all_names_present
 
-all_names_present <- function(data, var.names, stops=TRUE) {
-  if (any(!var.names %in% names(data))) {
-    if (stops) {
-      vn <- NULL
-      for(k in var.names[!var.names %in% names(data)]) {
-        vn <- paste(vn,"'",k,"', ", sep="")
-      }
-      vn <- substr(vn,1,nchar(vn)-2)
-      stop(paste("Cannot proceed - following given variable name(s) not present in dataset '",
-                 deparse(substitute(data)),"': ", vn,sep=""))
-    }
-    if (!stops) {
-      return(FALSE)
-    }
+all_names_present <- function(data, var.names, stops = TRUE, msg = NULL) {
+  
+  if (!is.null(var.names) && !is.character(var.names)) {
+    stop("Argument 'var.names' must be NULL or a character vector of ",
+         "variable names.")
   }
-  else{return(TRUE)}
+  if (length(var.names) && any(is.na(var.names))) {
+    stop("There are ", sum(is.na(var.names)), " missing values in argument ",
+         "'var.names'. Please only supply non-NA values.")
+  }
+  
+  badNames <- setdiff(var.names, names(data))
+  if (length(badNames) == 0L) return(TRUE)
+  
+  badNames <- paste0("'", badNames, "'", collapse = ", ")
+  
+  if (is.null(msg)) msg <- paste0("Cannot proceed - following given variable name(s) not present in dataset '",
+                                  deparse(substitute(data)), "': ", badNames)
+  if (!is.character(msg) || length(msg) > 1L) stop("Argument 'msg' must be a character string vector of length one.") else
+    msg <- gsub(pattern = "%%VARS%%", replacement = badNames, x = msg)
+  if (!is.logical(stops) || length(stops) > 1L) stop("Argument 'stops' must be either TRUE or FALSE.")
+  
+  if (stops) stop(msg)
+  
+  return(FALSE)
 }
 
 
@@ -424,7 +490,8 @@ cut_bound <- function(t, factor=TRUE) {
 
 #' @title Set the class of an object (convencience function for
 #'  \code{setattr(obj, "class", CLASS)}); can add instead of replace
-#'  
+#' @description Sets the class of an object in place to \code{cl}
+#' by replacing or adding
 #' @param obj and object for which to set class
 #' @param cl class to set
 #' @param add if \code{TRUE}, adds \code{cl} to the 
@@ -452,19 +519,33 @@ setclass <- function(obj, cl, add=FALSE, add.place="first") {
 
 
 
-#' @title Attempts to convert a numeric object to integer, but won't if loss of information is imminent
+#' @title Attempt coercion to integer
 #' @author James Arnold
+#' @description Attempts to convert a numeric object to integer, 
+#' but won't if loss of information is imminent (if values after decimal
+#' are not zero for even one value in \code{obj})
 #' @param obj a numeric vector
+#' @param tol tolerance; if each numeric value in \code{obj} deviate from
+#' the corresponding integers at most the value of \code{tol}, they are considered
+#' to be integers; e.g. by default \code{1 + .Machine$double.eps} is considered
+#' to be an integer but \code{1 + .Machine$double.eps^0.49} is not.
 #' @export try2int
 #' @source \href{http://stackoverflow.com/questions/3476782/how-to-check-if-the-number-is-integer}{Stackoverflow thread}
-try2int <- function(obj) {
+try2int <- function(obj, tol = .Machine$double.eps^0.5) {
   if (!is.numeric(obj)) stop("obj needs to be integer or double (numeric)")
   if (is.integer(obj)) return(obj)
   
-  #   tol = .Machine$double.eps^0.5
-  #   test <- all(abs(min(obj%%1, obj%%1-1)) < tol)
+  test <- FALSE
   
-  test <- all( obj %% 1 == 0, na.rm = TRUE )
+  bad <- if (length(na.omit(obj)) == 0) TRUE else 
+    min(obj, na.rm = TRUE) == -Inf || max(obj, na.rm = TRUE) == Inf
+  if (bad) {
+    return(obj)
+  } else {
+    test <- max(abs(obj) %% 1, na.rm = TRUE) < tol
+  }
+  
+  if (is.na(test) || is.null(test)) test <- FALSE
   
   if (test) return(as.integer(obj))
   
@@ -473,10 +554,17 @@ try2int <- function(obj) {
 }
 
 
-#' @title Shifts a variable to create lag or lead values
+#' @title Shift a variable to create lag or lead values
 #' @author Joonas Miettinen
+#' @description 
+#' \strong{DEPRECATED}: 
+#' Intended to do what \code{\link[data.table]{shift}} from
+#' \pkg{data.table} does better since \pkg{data.table} 1.9.6. 
+#' Shifts the values of a variable forwards or 
+#' backwards to create lag or lead values. Takes a copy of the whole data
+#' and returns a new copy with the shifted variable.
 #' @export shift.var
-#' @param data a data,frame or data.table
+#' @param data a \code{data.frame} or \code{data.table}
 #' @param id.vars a character string vector of variable names; \code{id.vars} are used to identify unique subjects,
 #' for which shifting is done separately; e.g. with a panel data where \code{region} refers to different regions that
 #' all have their own time series, using \code{id.vars = "region"} shifts the time series for each region separately
@@ -486,6 +574,8 @@ try2int <- function(obj) {
 #' @param shift.value an integer; specifies the direction and extent of shifting; e.g. \code{shift.value = -1L} shifts
 #' one row backwards (a lag of one row) and \code{shift.value = 2L} creates a two-row lead
 shift.var <- function(data, id.vars = NULL, shift.var = NULL, value.vars=NULL, shift.value=-1L) {
+  .Deprecated(new = "shift", msg = "popEpi's shift.var is deprecated in 0.3.0 and will be removed in the next release; please use e.g. data.table's shift() function")
+  
   merge_var <- makeTempVarName(data, pre = "merge_var")
   if (is.null(shift.var)||is.null(value.vars)) stop("shift.var and value.vars cannot be NULL")
   all_names_present(data, c(id.vars, shift.var, value.vars))
@@ -512,17 +602,18 @@ shift.var <- function(data, id.vars = NULL, shift.var = NULL, value.vars=NULL, s
   setkeyv(data, c(id.vars, merge_var))
   setkeyv(lagdata, c(id.vars, merge_var))
   data <- lagdata[data]
-#   data <- merge(data, lagdata, all.x=TRUE, all.y=FALSE, by = c(id.vars, merge_var))
-
+  #   data <- merge(data, lagdata, all.x=TRUE, all.y=FALSE, by = c(id.vars, merge_var))
+  
   data[, (merge_var) := NULL]
   setkeyv(data, old_key)
-  return(data)
+  return(data[])
 }
 
 
 
 #' @title Get rate and exact Poisson confidence intervals
 #' @author epitools
+#' @description Computes confidence intervals for Poisson rates
 #' @param x observed
 #' @param pt expected
 #' @param conf.level alpha level
@@ -560,10 +651,11 @@ poisson.ci <- function(x, pt = 1, conf.level = 0.95) {
 }
 
 
-
-
 #' @title Delete \code{data.table} columns if there
 #' @author Joonas Miettinen
+#' @description Deletes columns in a \code{data.table} conveniently.
+#' May only delete columns that are found silently. Sometimes useful in e.g.
+#' \code{on.exit} expressions.
 #' @param DT a \code{data.table}
 #' @param delete a character vector of column names to be deleted
 #' @param keep a character vector of column names to keep; 
@@ -579,7 +671,7 @@ poisson.ci <- function(x, pt = 1, conf.level = 0.95) {
 setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TRUE) {
   if (!is.data.table(DT)) stop("not a data.table")
   if (!soft) {
-    all_names_present(DT, keep)
+    all_names_present(DT, keep, msg = "Expected")
     all_names_present(DT, delete)
   }
   del_cols <- NULL
@@ -601,7 +693,7 @@ setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TR
 
 
 
-#' @title Coerce a \code{ratetable} object to \code{data.frame}
+#' @title Coerce a \code{ratetable} Object to Class \code{data.frame}
 #' @description
 #' \code{ratatable} objects used in e.g. \pkg{survival} and \pkg{relsurv}
 #' can be conveniently coerced to a long-format \code{data.frame}.
@@ -610,26 +702,25 @@ setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TR
 #' @author Joonas Miettinen
 #' @param x a \code{ratetable}
 #' @param ... unused but added for compatibility with \code{as.data.frame}
-#' @export as.data.frame.ratetable
-#' @S3method as.data.frame ratetable
 #' @examples
 #' library(relsurv)
 #' data(slopop)
-#' df <- as.data.frame.ratetable(slopop)
+#' df <- as.data.frame(slopop)
 #' head(df)
 #' @seealso 
 #' \code{\link[survival]{ratetable}}, 
 #' \code{\link{as.data.table.ratetable}}
 #'
+#' @export
 as.data.frame.ratetable <- function(x, ...) {
   dimids <- attr(x, "dimid")
   x <- as.data.frame.table(as.table(as.array(x)))
   names(x) <- c(dimids, "haz")
-  x
+  x[]
 }
 
 
-#' @title Coerce a \code{ratetable} object to \code{data.table}
+#' @title Coerce a \code{ratetable} Object to Class \code{data.table}
 #' @author Joonas Miettinen
 #' 
 #' @description
@@ -639,8 +730,7 @@ as.data.frame.ratetable <- function(x, ...) {
 #' may not match names and levels of variables in your data.
 #' @param x a \code{ratetable}
 #' @param ... other arguments passed on to \code{as.data.table}
-#' @export as.data.table.ratetable
-#' @S3method as.data.table ratetable
+
 #' @seealso 
 #' \code{\link[survival]{ratetable}}, 
 #' \code{\link{as.data.frame.ratetable}}
@@ -648,19 +738,24 @@ as.data.frame.ratetable <- function(x, ...) {
 #' @examples
 #' library(relsurv)
 #' data(slopop)
-#' dt <- as.data.table.ratetable(slopop)
+#' dt <- as.data.table(slopop)
 #' dt
+#' @export
 as.data.table.ratetable <- function(x, ...) {
   dimids <- attr(x, "dimid")
   x <- as.data.table(as.table(as.array(x)), ...)
   x[, names(x) := lapply(.SD, robust_values, messages = FALSE, force = FALSE)]
   setnames(x, c(dimids, "haz"))
-  x
+  x[]
 }
 
 
 #' @title \strong{Experimental}: Coerce a long-format \code{data.frame} to a \code{ratetable} object
 #' @author Joonas Miettinen
+#' @description Coerces a long-format \code{data.frame} of population hazards
+#' to an array, and in turn to a \code{\link[survival]{ratetable}},
+#' which can be used in e.g. \pkg{survival}'s expected survival computations
+#' and \pkg{relsurv}'s relative survival computations.
 #' @param DF a \code{data.frame}
 #' @param value.var name of values variable in quotes
 #' @param by.vars names vector of variables by which to create (array) dimensions
@@ -681,35 +776,58 @@ longDF2ratetable <- function(DF, value.var = "haz", by.vars = setdiff(names(DF),
   ar
 }
 
+temp_var_names <- function(n = 1L, avoid = NULL, length = 10L) {
+  ## INTENTION: make temporary variable names that don't exist in
+  ## char vector "avoid", e.g. avoid = names(data).
+  if (n < 1L || !is.integer(n)) {
+    stop("n must an integer > 0")
+  }
+  if (length < 1L || !is.integer(length)) {
+    stop("length must an integer > 0")
+  }
+  if (!is.null(avoid)) avoid <- as.character(avoid)
+  
+  pool <- c(0:9, letters, LETTERS)
+  
+  formTemp <- function(int) {
+    v <- sample(x = pool, size = length, replace = TRUE)
+    paste0(v, collapse = "")
+  }
+  
+  l <- lapply(1:n, formTemp)
+  dupll <- duplicated(l) | l %in% avoid
+  tick <- 1L
+  while (any(dupll) && tick <= 100L) {
+    l[dupll] <- lapply(1:sum(dupll), formTemp)
+    dupll <- duplicated(l) | l %in% avoid
+    tick <- tick + 1L
+  }
+  if (tick >= 100L) {
+    stop("ran randomization 100 times and could not create unique temporary",
+         " names. Perhaps increase length?")
+  }
+  unlist(l)
+}
 
 #' @import stats
-makeTempVarName <- function(data=NULL, names=NULL, pre=NULL, post=NULL) {
+makeTempVarName <- function(data=NULL, names=NULL, 
+                            pre=NULL, post=NULL, length = 10L) {
   DN <- NULL
   DN <- c(DN, names(data))
   DN <- c(DN, names)
   DN <- unique(DN)
   
-  if (is.null(DN)) stop("no data nor names defined")
-  
-  ra <- "V123456789"
-  tvn <- paste0(pre, ra, post)
-  for (k in tvn) {
-    
-    if (k %in% DN) {
-      revo <- 1L
-      while (tvn %in% DN) {
-        if (revo >= 1000) {
-          stop("wow, did not find a random unused variable name even after 1000 tries. Specify 'pre' and or 'post'?")
-        }
-        ra <- paste0("V", as.integer(1e9*runif(1)))
-        tvn <- paste0(pre, ra, post)
-        revo <- revo + 1L
-      }
-    }
-    DN <- c(DN, k)
+  if (length(pre) != length(post) && length(post) > 0L && length(pre) > 0L) {
+    stop("Lengths of arguments 'pre' and 'post' differ (", length(pre), " vs. ",
+         length(post), "). (Tried to create temporary variables, so this is ",
+         "most likely an internal error and the pkg maintainer should be ",
+         "complained to.)")
   }
-  
-  return(tvn)
+  useN <- max(length(pre), length(post), 1L)
+  useL <- length
+  tv <- temp_var_names(avoid = DN, n = useN, length = useL)
+  tv <- paste0(pre, tv, post)
+  tv
 }
 
 
@@ -729,13 +847,14 @@ setDFpe <- function(x) {
 
 
 
-evalLogicalSubset <- function(data, substiset, n = 2) {
+evalLogicalSubset <- function(data, substiset, n = 2, enclos = parent.frame(n)) {
   ## NOTE: subset MUST be substitute()'d before using this function!
   ## we allow substiset to be a logical condition only
   ## ALWAYS returns a logical vector of length nrow(data)
-  substiset <- eval(substiset, envir = data, enclos = parent.frame(n))
+  
+  substiset <- eval(substiset, envir = data, enclos = enclos)
   if (!is.null(substiset)) {
-    if (!is.logical(substiset)) stop("expression to substitute by must be a logical condition, e.g. var1 > 0")
+    if (!is.logical(substiset)) stop("Expression to subset by must be a logical condition, e.g. var1 == 0, var1 %in% 1:2, var1 > 0, etc.")
     substiset <- substiset & !is.na(substiset)
     if (sum(substiset) == 0) stop("zero rows in data after subset")
   } else {
@@ -745,36 +864,63 @@ evalLogicalSubset <- function(data, substiset, n = 2) {
 }
 
 
-subsetGently <- function(dt, subset=NULL, select=NULL) {
-  ## source:
-  ## http://stackoverflow.com/questions/10790204/how-to-delete-a-row-by-reference-in-r-data-table/10791729#10791729
-  ## intended for sparing memory, may be slower due to evaluating subset
-  ## multiple times
-  
-  ## - dt must be a data.table
-  ## - subset must be already evaluated into a logical vector using e.g.
-  ##   substitute & evalLogicalSubset
-  ## - retains attributes
-  
-  if (!is.data.table(dt)) stop("dt must be a data.table")
-  if (!is.logical(subset)) stop("subset must be logical condition, e.g. var1 > 0")
+subsetDTorDF <- function(data, subset=NULL, select=NULL) {
+  ## INTENTION: subsetting either a data.table or a data.frame
+  ## and returning only selected variables for lazy people.
+  if (!is.data.frame(data)) stop("data must be a data.table/data.frame")
+  if (!is.logical(subset) && !is.null(subset)) stop("subset must be a logical vector or NULL")
   
   if (is.null(select)) {
-    select <- names(dt)
+    select <- names(data)
   } else {
-    all_names_present(dt, select)
+    all_names_present(data, select)
   }
   
-  sdt <- dt[subset, (select[1]), with = FALSE]
-  if (length(select) > 1) {
-    alloc.col(sdt, n = length(select) + 100L)
-    for (k in select[-1]) {
-      set(sdt, j = k, value = dt[[k]][subset])
-    }
+  e <- "data["
+  if (!is.null(subset) && !all(subset)) e <- paste0(e, "subset") 
+  if (!is.null(select) && (length(select) < names(data) || any(select != names(data)))) {
+    e <- paste0(e, ", eval(select)")
+    if (is.data.table(data)) e <- paste0(e, ", with = FALSE")
   }
-  sdt
+  e <- paste0(e, "]")
+  
+  e <- parse(text = e)
+  
+  eval(e)
   
 }
+
+subsetRolling <- function(data, subset = NULL, select = NULL) {
+  ## INTENTION: subsets a data.table column by column and by deleting columns
+  ## in the old data.table.
+  if (!is.data.table(data)) stop("data must be a data.table")
+  if (!is.logical(subset)) stop("subset must be a logical vector")
+  
+  if (is.null(select)) {
+    select <- names(data)
+  } else {
+    all_names_present(data, select)
+  }
+  
+  if (length(select) == 0L) stop("select is of length zero, which would delete all columns in data")
+  
+  setcolsnull(data, keep = select)
+  
+  dt <- data[subset, select[1L], with = FALSE]
+  
+  setcolsnull(data, delete = select[1L])
+  select <- select[-1L]
+  
+  for (v in select) {
+    set(dt, j = v, value = data[[v]][subset])
+    set(data, j = v, value = NULL)
+  }
+  
+  rm(list = deparse(substitute(data)), envir = parent.frame(1L))
+  
+  dt
+}
+
 
 
 setDT2DF <- function(x) {
@@ -804,33 +950,6 @@ setDF2DT <- function(x) {
 
 
 
-setaggre <- function(x, obs = "obs", pyrs = "pyrs", d.exp = NULL, by = setdiff(names(x), c(obs, pyrs))) {
-  ## input: aggregated data in data.frame or data.table format
-  ## intention: any user can define their data as an aggregated data set
-  ## which will be usable by survtab / sir / other
-  ## output: no need to do x <- setaggre(x); instead modifies attributes in place;
-  ## sets "aggreVars" attribute, a list of names of various variables.
-  ## survtab for aggregated data will need this attribute to work.
-  all_names_present(x, c(obs, pyrs, d.exp, by))
-  
-  if (!inherits(x, "aggre")) {
-    cl <- class(x)
-    wh <- which(cl == "pe")
-    if (length(wh) == 0) wh <- which(cl == "data.table")
-    if (length(wh) == 0) wh <- which(cl == "data.frame")
-    
-    cl <- c(cl[1:(wh-1)], "aggre", cl[wh:length(cl)])
-    setattr(x, "class", cl)
-  }
-  
-  
-  setattr(x, "aggreVars", list(obs = obs, pyrs = pyrs, by = by))
-  invisible(x)
-}
-
-
-
-
 p.round <- function(p, dec=3) {
   th <- eval( parse(text=paste0('1E-', dec ) ))
   if( is.null(p)) return( '= NA') 
@@ -842,5 +961,765 @@ p.round <- function(p, dec=3) {
   }
   p 
 }
+
+popArg2ModelNames <- function(arg, type) {
+  ## INTENTION: given a quoted/substituted expression,
+  ## digs out the expression(s) creating a/multiple column(s)
+  ## and returns the deparsed expression(s) to be used as names
+  ## of columns the same way that models such as lm() display
+  ## the names of expressions used within formula
+  
+  ## some exceptions
+  if (is.data.frame(arg)) return(names(arg))
+  if (is.character(arg)) return(arg)
+  
+  type <- match.arg(type[1L], c("NULL", "character", "list", "expression", "formula"))
+  
+  lang <- NULL
+  lang <- try(is.language(arg) || inherits(arg, "formula"), silent = TRUE)
+  
+  
+  if (inherits(lang, "try-error") || !lang) stop("arg must be a quoted or substituted expression or a formula. Error message: ", lang, ". type of arg: ", typeof(arg), ". Class: ", class(arg), ". Mode: ", mode(arg), ".")
+  
+  d <- oneWhitespace(paste0(deparse(arg)))
+  
+  if (type == "expression") return(d) else 
+    if (type == "NULL") return(NULL) else 
+      if (type == "character") return(eval(arg)) else 
+        if (type == "list") {
+          d <- substr(d, 6, nchar(d)-1L) ## removes "list(" and ")"
+          d <- strsplit(d, ", ")
+          return(unlist(d))
+        } else if (type == "formula") {
+          arg <- eval(arg)
+          d <- names(RHS2list(arg))
+          if (length(d) == 0L) return(NULL) ## e.g. y ~ 1
+          return(d)
+        }
+  stop("could not determine deparsed-expression-names")
+}
+
+uses_dollar <- function(q, data.names) {
+  ## INTENTION: determine whether q is an expressions that is evaluated
+  ## outside a data.frame, i.e. one that uses the dollar operator.
+  ## e.g. TF$V1 should not be evaluated in a data.frame even if it has
+  ## the variables TF and V1 since it wont work and was not intended.
+  if (!is.language(q) || inherits(q, "formula")) {
+    return(FALSE)
+  }
+  
+  d <- deparse(q)
+  ## sometimes d is of length > 1 for some reason...
+  d <- paste0(d, collapse = "")
+  d <- oneWhitespace(d)
+  
+  if (substr(d, 1, 4) == "list") {
+    ## lists are not allowed to work in this manner for now.
+    return(FALSE)
+  }
+  
+  if (!grepl(x = d, pattern = "\\$")) {
+    ## does not use dollar operator.
+    return(FALSE)
+  }
+  
+  ## detect if word$word is used in d
+  t <- regexec(pattern = "\\w+\\$\\w+", text = d)
+  if (t != -1) {
+    ## ok, used word$word
+    ## is there are variable with that name in data.names?
+    m <- unlist(regmatches(d, t))
+    if (m %in% data.names) {
+      return(FALSE)
+    }
+    ## if not, it should be evaluated outside the data.
+    return(TRUE)
+  } 
+  
+  return(FALSE)
+}
+
+
+evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = TRUE, types = c("NULL","character", "list", "expression"), naming = c("DT", "model")) {
+  ## arg: an unevaluated AND substitute()'d argument within a function, which may be
+  ## * an expression
+  ## * a list of expressions
+  ## * a character vector of variable names (in a given data set)
+  ## n: steps upstream as in parent.frame(n); 0L refers to calling environment
+  ## of evalPopArg, 1L to calling environment of e.g. sir which uses evalPopArg, etc.
+  ## hence n = 1L should be almost always the right way to go.
+  ## ALTERNATIVELY supply an environment by hand via enclos.
+  ## enclos will override n.
+  ## recursive: if TRUE, evals arg as many times as it is of type language.
+  ## output:
+  ## * vector as a result of an expression
+  ## * list as a result of a list
+  ## * character vector of names
+  ## OR with DT = TRUE, a data.table based on aforementioned results.
+  ## intention: output to be used in by argument of data.table.
+  ## a data.table output is directly usable in by.
+  ## if column names cannot be easily found, BV1, BV2, ... are imputed
+  ## for missing names (unrobustly: such names may already exist, resulting in duplicates)
+  
+  ## naming: DT style uses first element of all.names() where 
+  ## a name has to be created; model style keeps the whole deparsed
+  ## expression. Only applied when DT = TRUE
+  naming <- match.arg(naming[1L], c("DT", "model"))
+  
+  ## types: allowed popArg types of arguments.
+  types <- match.arg(types, c("NULL","character", "list", "expression", "formula"), several.ok = TRUE)
+  
+  if (!is.null(enclos) && !is.environment(enclos)) {
+    stop("enclos must be NULL or an environment")
+  }
+  if (!is.environment(enclos)) enclos <- parent.frame(n + 1L)
+  
+  ## used data may change if expression uses dollar operator, hence
+  ## arg should not be evaluated within data but only its surroundings.
+  use_data <- data
+  use_enc <- enclos
+  dataNames <- names(data)
+  
+  if (uses_dollar(arg, data.names = dataNames)) {
+    use_data <- enclos
+    use_enc <- baseenv()
+  }
+  e <- eval(arg, envir = use_data, enclos = use_enc)
+  if (is.language(e) && !inherits(e, "formula")) {
+    if (!recursive) stop("arg is of type language after evaluating, and recursive = FALSE")
+    
+    tick <- 1L
+    while (is.language(e) && !inherits(e, "formula") && tick < 100L) {
+      arg <- e
+      use_data <- data
+      use_enc <- enclos
+      if (uses_dollar(arg, data.names = dataNames)) {
+        use_data <- enclos
+        use_enc <- baseenv()
+      }
+      e <- eval(arg, envir = use_data, enclos = use_enc)
+      tick <- tick + 1L
+    }
+    if (tick == 100L) stop("arg was of type language even after 100 evaluations. Something went wrong here...")
+    
+    
+    
+  } 
+  argType <- "NULL"
+  if (is.list(e)) argType <- "list" else 
+    if (is.character(e)) argType <- "character" else 
+      if (is.vector(e) || is.factor(e)) argType <- "expression" else 
+        if (inherits(e, "formula")) argType <- "formula"
+  
+  if (!argType %in% types) stop("popArg type of evaluated arg not one of the allowed types (set via argument types). Detected type: '", argType, "'. Allowed types: ", paste0("'", types, "'", collapse = ", "))
+  
+  if (argType == "NULL") return(NULL)
+  
+  av <- all.vars(arg)
+  if (argType == "character") av <- e
+  
+  ## byNames: names of columns resulting from aggre argument, by which
+  ## pyrs and such are aggregated. same functionality
+  ## as in results seen in e.g.DT[, .N, by = list(factor(x), y, z = w)] ## factor, y, z
+  ## note: first object in ags with list or expression aggre is "list"
+  byNames <- NULL
+  
+  if (is.character(e)) byNames <- e
+  else if (argType == "list" && substr(paste0(deparse(arg)), 1, 5) == "list(") byNames <- sapply(arg[-1], function(x) all.names(x)[1]) 
+  else if (argType == "expression") byNames <- all.names(arg)[1]
+  
+  badNames <- c("$", ":")
+  
+  byNames[byNames %in% badNames] <- paste0("BV", 1:length(byNames))[byNames %in% badNames]
+  
+  
+  if (argType == "formula") {
+    arg <- e
+    use_data <- data
+    use_enc <- enclos
+    e <- RHS2DT(formula = e, data = use_data, enclos = use_enc)
+    if (ncol(e) == 0L || nrow(e) == 0L) e <- data.table() ## e.g. y ~ 1
+    
+  } else if (is.character(e)) {
+    all_names_present(data, e)
+    if (DT) {
+      ## note: e contains variable names in character strings,
+      ## ergo fully named list & DT created
+      l <- lapply(e, function(x) data[[x]])
+      setattr(l, "names", e)
+      setDT(l)
+      e <- l; rm(l)
+    }
+  } else if (is.list(e)) {
+    ## note: fully unnamed list has NULL names()
+    ## partially named list has some "" names
+    ne <- names(e)
+    
+    if (DT && any(sapply(e, is.null))) stop("at least one object in list arg is NULL; cannot form data.table with such list")
+    
+    if (is.null(ne)) ne <- rep("", length(e))
+    
+    
+    wh_bad <- which(ne == "")
+    if (length(wh_bad) > 0) {
+      if (is.null(byNames)) {
+        byNames <- paste0("BV", 1:length(e))
+      }
+      
+      ne[wh_bad] <- byNames[wh_bad]
+      setattr(e, "names", ne)
+    }
+    
+    if (DT) {
+      ## NOTE: used to be setDT, but length of different elements
+      ## in list may differ, which as.data.table handles correctly
+      e <- as.data.table(e)
+    }
+  } else if ((is.vector(e) || is.factor(e))) {
+    ## is e.g. a numeric vector or a factor
+    if (DT) {
+      e <- data.table(V1 = e)
+      setnames(e, 1, byNames)
+    }
+  }
+  
+  ## NOTE: e may be of type language at this point if arg was double-quoted
+  ## and recursive = FALSE
+  
+  if (DT) {
+    setDT(e)
+    setattr(e, "all.vars", av)
+    setattr(e, "quoted.arg", arg)
+    setattr(e, "arg.type", argType)
+    if (naming == "model" && ncol(e) > 0L) setnames(e, 1:ncol(e), popArg2ModelNames(arg, type = argType))
+  }
+  e
+}
+
+
+popArgType <- function(arg, data = NULL, n = 1L, enclos = NULL, recursive = TRUE) {
+  ## input: a substitute()'d expression / argument
+  ## NOTE: recursive useful when arg might be quoted twice and want the eventual
+  ## result; need to supply data for it though
+  ## output: type of thingie that was substitute()'d
+  ##  * list (of expressions)
+  ##  * character string vector
+  ##  * an expression (includes symbol)
+  av <- all.vars(arg, unique = TRUE) ## all variables
+  av <- setdiff(av, c("$", "T", "F"))
+  an <- all.names(arg, unique = TRUE) ## all variables and functions
+  af <- setdiff(an, av) ## all functions used
+  
+  a <- deparse(arg)
+  a <- paste0(a, collapse = "") ## lists may somehow produce length > 1 here
+  if (substr(a, 1, 5) == "list(") return("list")
+  if (a == "NULL") return("NULL")
+  ## detection of character arguments is not easy and should not be considered
+  ## fool proof since user may pass e.g. a vector of character strings as a 
+  ## symbol, which can only really be interpreted as an expression
+  if (sum(grep('\\"', a)) && length(setdiff(af, "c")) == 0) return("character")
+  
+  if (is.data.frame(data)) {
+    if (is.symbol(arg) && a %in% names(data)) return("expression")
+    if (length(av) == 1L && av %in% names(data)) return("expression")
+    e <- eval(arg, envir = data[1:min(nrow(data), 20L), ], 
+              enclos = if (is.environment(enclos)) enclos else parent.frame(n + 1L))
+    if (inherits(e, "formula")) return("formula")
+    if (is.null(e)) return("NULL")
+    if (is.list(e)) return("list")
+    if (is.character(e) && all(e %in% names(data))) return("character")
+    if (is.vector(e) || is.factor(e)) return("expression")
+    
+    if (recursive && is.language(e)) return(popArgType(e, data = data, n = n + 1L, enclos = enclos))
+  }
+  
+  "expression"
+  
+}
+
+cutLow <- function(x, breaks, tol =  .Machine$double.eps^0.5) {
+  ## a cut function that returns the lower bounds of the cut intervals (as numeric) as levels
+  
+  breaks <- sort(breaks)
+  x <- cut(x + tol, right = FALSE, breaks = breaks, labels = FALSE)
+  x <- breaks[-length(breaks)][x]
+  x
+}
+
+
+
+
+cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.y = all, all = FALSE, mid.scales = c("per", "age"), old.nums = TRUE) {
+  ## INTENTION: merges y to x by by.x & by.y after cutLow()'ing appropriate
+  ## variables in x so that y's values match with x's values
+  ## requirements;
+  ## * numeric variables in y correspond to lower limits of some intervals OR
+  ##   are group variables (e.g. sex = c(0,1))
+  ## inputs: two datas as in merge, preferably both data.table, and other args
+  ## to merge()
+  ## output: a data.table where y has been merged to x after cutLow()
+  ## example: merging popmort to a split Lexis object, where popmort's variables
+  ## correspond to at least some Lexis time scales
+  ## old.nums: return old numeric variable values used in cutLow()'ing?
+  ## mid.scales: use mid-point of interval when merging by these Lexis time scales
+  ## computed by adding + 0.5*lex.dur, which must exist
+  
+  if ((is.null(by.x) && !is.null(by.y)) || (!is.null(by.x) && is.null(by.y))) stop("one but not both of by.x / by.y is NULL")
+  if (!is.null(by)) by.x <- by.y <- by 
+  
+  if (length(by.x) != length(by.y)) stop("lengths differ for by.y & by.x")
+  all_names_present(x, by.x)
+  all_names_present(y, by.y)
+  names(by.x) <- by.y
+  names(by.y) <- by.x
+  
+  if (length(mid.scales)>0) all_names_present(x, c("lex.dur", mid.scales))
+  
+  whScale <- by.x %in% mid.scales
+  xScales <- by.x[whScale]
+  yScales <- by.y[whScale]
+  
+  if (length(yScales) > 0) {
+    
+    oldVals <- copy(with(x, mget(xScales)))
+    on.exit(set(x, j = xScales, value = oldVals))
+    setattr(oldVals, "names", yScales)
+    
+    for (yVar in yScales) {
+      xVar <- xScales[yVar]
+      xBr <- sort(unique(y[[yVar]]))
+      xBr <- unique(c(xBr, Inf))
+      set(x, j = xVar, value = cutLow(x[[xVar]] + x$lex.dur*0.5, breaks = xBr))
+    }
+    
+  }
+  xKey <- key(x)
+  if (length(xKey) == 0 && is.data.table(x)) {
+    xKey <- makeTempVarName(x, pre = "sort_")
+    on.exit(if ("x" %in% ls()) setcolsnull(x, delete = xKey, soft = TRUE), add = TRUE)
+    on.exit(if ("z" %in% ls()) setcolsnull(z, delete = xKey, soft = TRUE), add = TRUE)
+    x[, (xKey) := 1:.N]
+  }
+  
+  if (any(duplicated(y, by = by.y))) {
+    stop("y is duplicated by the inferred/supplied by.y variables (",
+         paste0("'", by.y, "'", collapse = ", "), "). ",
+         "First ensure this is not so before proceeding.")
+  }
+  
+  xClass <- class(x)
+  on.exit(setattr(x, "class", xClass), add = TRUE)
+  if (is.data.table(x)) {
+    ## avoid e.g. using merge.Lexis when x inherits Lexis & data.table
+    setattr(x, "class", c("data.table", "data.frame"))
+  }
+  
+  z <- merge(x, y, by.x = by.x, by.y = by.y, 
+             all.x = all.x, all.y = all.y, all = all, 
+             sort = FALSE)
+  
+  setDT(z)
+  if (old.nums) {
+    ## avoid warning due to coercing double to integer
+    set(z, j = xScales, value = NULL)
+    set(z, j = xScales, value = oldVals)
+  }
+  setcolorder(z, c(names(x), setdiff(names(z), names(x))))
+  if (length(xKey) > 0) setkeyv(z, xKey)
+  z[]
+  
+}
+
+
+getOrigin <- function(x) {
+  ## input: Date, IDate, or date variable
+  ## output: the origin date in Date format,
+  ## the origin date being the date where the underlying index is zero.
+  if (inherits(x, "Date") || inherits(x, "IDate")) {
+    as.Date("1970-01-01")
+  } else if (inherits(x, "date")) {
+    as.Date("1960-01-01")
+  } else if (inherits(x, "dates")) {
+    as.Date(paste0(attr(x, "origin"), collapse = "-"), format = "%d-%m-%Y")
+  } else {
+    stop("class '", class(x), "' not supported; usage of Date recommended - see ?as.Date")
+  }
+  
+}
+
+
+setcols <- function(x, j, value) {
+  ## intention: add new columns to DT via modifying in place, and to DF
+  ## via DF$var <- value; both conserve memory (don't take copy of whole data)
+  
+  if (!is.data.frame(x)) stop("x must be a data.frame")
+  if (!is.list(value)) stop("value must be a list of values (columns to add)")
+  if (missing(j)) j <- names(value)
+  
+  if (!is.data.table(x)) {
+    x[j] <- value
+  } else {
+    set(x, j = j, value = value)
+  }
+  x
+}
+
+
+
+`%.:%` <- function(x, y) {
+  ## INTENTION: hacking formula calls using `:`
+  ## which is apparently normally evaluated in C... (in model.matrix.default)
+  ## USAGE: e.g. c(1,2) %.:% c(3,4) = c(3, 8)
+  ## (instead of getting warning)
+  if (length(x) > 1L && length(y) > 1L && is.numeric(x) && is.numeric(y)) {
+    return(x*y)
+  } else if (length(x) == 1L && length(y) == 1L && is.numeric(x) && is.numeric(y)) {
+    return(x:y)
+  }
+  as.factor(x):as.factor(y)
+  
+}
+
+
+
+RHS2list <- function(formula, handle.adjust=TRUE) {
+  ## INTENTION: turns the right-hand side of a formula
+  ## into a list of substituted expressions;
+  ## each element in list is an expressions separated
+  ## by a '+' in the formula. needs to be eval()'d,
+  ## preferably using the appropriate data set.
+  if (!inherits(formula, "formula")) stop("not a formula")
+  
+  ## no response
+  formula <- formula[c(1, length(formula))]
+  
+  te <- terms(formula)
+  tl <- attr(te, "term.labels")
+  
+  ## handle adjusting variables (e.g. adjust(V1, V2) -> c("V1", "V2"))
+  adj <- tl[substr(tl, 1, 7) == "adjust("]
+  if (length(adj) == 0L) adj <- NULL
+  if (handle.adjust && !is.null(adj)) {
+    tl <- setdiff(tl, adj)
+    adjNames <- substr(adj, 8, nchar(adj)-1L)
+    adj <- lapply(adj, function(x) parse(text = x))
+    adj <- unlist(lapply(adj, eval), recursive = FALSE)
+    adj <- lapply(adj, deparse)
+    adj <- unlist(adj)
+    
+    tl <- c(tl, adj)
+  }
+  
+  ## to avoid e.g. c(1,2):c(3,4) NOT evaluating as c(3, 8)
+  l <- lapply(tl, function(x) gsub(pattern = ":", x = x, replacement = "%.:%"))
+  l <- lapply(l, function(x) parse(text = x)[[1L]])
+  
+  names(l) <- tl
+  
+  setattr(l, "adjust", adj)
+  
+  l
+}
+
+RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
+  l <- RHS2list(formula)
+  if (length(l) == 0L) return(data.table())
+  adj <- attr(l, "adjust")
+  
+  dana <- names(data)
+  dana <- gsub(x=dana, pattern=" %.:% ", replacement = ":")
+  dana <- gsub(x=dana, pattern="%.:%", replacement = ":")
+  
+  ld <- lapply(l, deparse)
+  ld <- lapply(ld, function(ch) gsub(x=ch, pattern=" %.:% ", replacement = ":"))
+  ld <- lapply(ld, function(ch) gsub(x=ch, pattern="%.:%", replacement = ":"))
+  ld <- lapply(ld, function(ch) if (ch %in% dana) which(dana %in% ch) else ch)
+  ld <- lapply(ld, function(el) if (is.integer(el)) data[[names(data)[el]]] else NULL)
+  ld[which(unlist(lapply(ld, is.null)))] <- NULL
+  l[names(ld)] <- ld
+  
+  l <- lapply(l, function(elem) eval(expr = elem, envir = data, enclos = enclos))
+  
+  l <- as.data.table(l)
+  setattr(l, "adjust", adj)
+  l
+}
+
+Surv2DT <- function(Surv) {
+  sa <- attributes(Surv)
+  dt <- copy(Surv)
+  setattr(dt, "class", "array")
+  dt <- data.table(dt)
+  
+  type <- attr(Surv, "type")
+  statNA <- sum(is.na(dt$status))
+  if (statNA) 
+    stop("Some status indicators (", statNA  ," values in total) were NA as a result of using Surv(). Usual suspects: original status variable has NA values, or you have numeric status variable with more than two levels and you did not assign e.g. type = 'mstate' (e.g. Surv(time = c(1,1,1), event = c(0,1,2), type = 'mstate') works).")
+  
+  
+  setattr(dt, "type", type)
+  testClass <- sa$inputAttributes$time2$class
+  if (!is.null(testClass) && testClass == "factor") dt[, status := factor(status, labels = sa$inputAttributes$time2$levels)]
+  testClass <- sa$inputAttributes$event$class
+  if (!is.null(testClass) && testClass == "factor") dt[, status := factor(status, labels = sa$inputAttributes$event$levels)]
+  
+  dt[]
+}
+
+promptYN <- function(q) {
+  
+  rl <- readline(prompt = paste0(q, " (Y/N) ::: "))
+  y <- c("y", "Y")
+  n <- c( "n", "N")
+  if (!rl %in% c(y,n)) {
+    cat("Answer must be one of the following (without ticks):", paste0("'",c(y, n),"'", collapse = ", "))
+    promptYN(q = q)
+  }
+  
+  if (rl %in% y) TRUE else FALSE
+  
+}
+
+#' @title Adjust Estimates by Categorical Variables
+#' @description This function is only intended to be used within a formula
+#' when supplied to e.g. \code{\link{survtab_ag}} and should not be
+#' used elsewhere. 
+#' @param ... variables to adjust by, e.g. \code{adjust(factor(v1), v2, v3)}
+#' @return Returns a list of promises of the variables supplied which can be
+#' evaluated.
+#' @examples 
+#' 
+#' y ~ x + adjust(z)
+#' @export
+adjust <- function(...) {
+  
+  call <- sys.call(1L)
+  call <- as.list(call)[1L]
+  
+  if (deparse(call) %in% c("adjust", "list(adjust)")) stop("Function adjust() only intended to be used within the formulas of certain functions of package popEpi. See e.g. ?survtab_ag for usage.")
+  
+  mc <- as.list(match.call())[-1L]
+  mc
+}
+
+evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2L), subset = NULL, Surv.response = TRUE) {
+  
+  ## INTENTION: given a formula object, returns a DT where each column
+  ## is an evaluated expression from formula (separated by  + )
+  
+  fe <- environment(formula)
+  
+  either <- FALSE
+  if (is.character(Surv.response)) {
+    Surv.response <- match.arg(Surv.response, "either")
+    Surv.response <- TRUE
+    either <- TRUE
+  } else if (!is.logical(Surv.response)) {
+    stop("Surv.response must be either logical or 'either'")
+  }
+  
+  ## subset if needed ----------------------------------------------------------
+  if (!is.null(subset) && !is.logical(subset)) {
+    stop("subset must be NULL or a logical vector and not an expression at ",
+         "this point. If you see this, complain to the package maintainer.")
+  }
+  if (!is.null(subset)) {
+    keepVars <- c(all.vars(formula), "lex.Xst")
+    data <- subsetDTorDF(data, subset = subset, select = keepVars)
+  }
+  
+  
+  ## formula -------------------------------------------------------------------
+  if (!inherits(formula, "formula")) {
+    stop("formula is not of class 'formula'; supply it as e.g. y ~ x")
+  }
+  if (length(formula) < 3L) {
+    stop("formula appears to be one-sided, which is not supported; ",
+         "supply it as e.g. y ~ x")
+  }
+  
+  ## response
+  y <- eval(formula[[2L]], envir = data, enclos = enclos)
+  if (inherits(y, "Surv") && !either && !Surv.response) {
+    stop("Response is a result of using Surv(), which is not allowed in ",
+         "this context.")
+  }
+  
+  if (!inherits(y, "Surv") && !either && Surv.response) {
+    stop("The response of the formula must be a Surv object; ",
+         "see ?Surv (in package survival).")
+  }
+  
+  if (inherits(y, "Surv")) {
+    y <- Surv2DT(y)
+    setcolsnull(y, keep = c("time", "start", "status"), colorder = TRUE)
+    if (!any(c("time", "start") %in% names(y))) {
+      stop("You must supply function Surv a value to the 'time' ",
+           "argument. See ?Surv")
+    }
+    setnames(y, names(y), c("time", "status")[1:ncol(y)])
+  } else {
+    y <- data.table(y)
+    setnames(y, 1, deparse(formula[[2L]]))
+    if (either && inherits(data, "Lexis")) {
+      ## we assume the unmodified lex.Xst to be a useful status variable.
+      if (!"lex.Xst" %in% names(data)) {
+        stop("Supplied a formula without using Surv(), and data was a Lexis ",
+             "object, so assumed you intended to use 'lex.Xst' in data as the ",
+             "status variable in this context, but that column was missing ",
+             "from data.")
+      }
+      setnames(y, 1, "time")
+      y[, "status"] <- data$lex.Xst
+      
+    }
+  }
+  
+  
+  ## RHS
+  l <- RHS2DT(formula, data = data, enclos = enclos)
+  adj <- attr(l, "adjust")
+  
+  ## combine
+  l <- if (length(l) > 0L) cbind(y, l) else y
+  
+  setattr(l, "adjust.names", adj)
+  setattr(l, "print.names", setdiff(names(l), c(adj, names(y))))
+  setattr(l, "Surv.names", names(y))
+  setattr(l, "formula", formula)
+  
+  l
+}
+
+oneWhitespace <- function(x) {
+  if (!is.character(x)) stop("x not a character")
+  x <- paste0(x, collapse = " ")
+  while(sum(grep(pattern = "  ", x = x))) {
+    x <- gsub(pattern = "  ", replacement = " ", x = x)
+  }
+  x
+}
+
+
+
+evalRecursive <- function(arg, env, enc, max.n = 100L) {
+  ## INTENTION: digs out actual evaluatable value and expression
+  
+  if (missing(env)) env <- environment()
+  if (missing(enc)) enc <- parent.frame(1L)
+  
+  if (is.data.frame(env)) {
+    na <- names(env)
+    env <- env[1:(min(10L, nrow(env))), ]
+    
+    env <- data.frame(env)
+    setattr(env, "names", na)
+    
+  }
+  argSub <- arg
+  
+  tick <- 1L
+  while (!inherits(arg, "try-error") && is.language(arg) && 
+         !inherits(arg, "formula") && tick < max.n) {
+    
+    argSub <- arg
+    arg <- try(eval(argSub, envir = env, enclos = enc), silent = TRUE)
+    
+    tick <- tick + 1L
+  }
+  
+  if (tick == max.n) {
+    stop("evaluated expression ", max.n, 
+         " times and still could not find underlying expression")
+  }
+  if (!is.language(argSub)) argSub <- substitute(arg)
+  list(arg = arg, argSub = argSub, all.vars = all.vars(argSub))
+}
+
+
+usePopFormula <- function(form = NULL, adjust = NULL, data = data.frame(), 
+                          enclos, Surv.response = TRUE) {
+  ## INTENTION: evaluates form and combines with adjust appropriately
+  ## returns a list of the elements dug out from the formula and adjust 
+  ## arguments.
+  # formSub <- substitute(form)
+  al <- evalRecursive(arg = form, env = data, enc = enclos)
+  
+  if (!inherits(al$arg, "formula")) stop("'form' is not a formula object")
+  
+  dt <- evalPopFormula(formula = al$arg, data = data, enclos = enclos, 
+                       Surv.response = Surv.response)
+  adNames <- attr(dt, "adjust.names")
+  prNames <- attr(dt, "print.names")
+  suNames <- attr(dt, "Surv.names")
+  
+  adjust <- evalPopArg(data, adjust, DT = TRUE, recursive = TRUE, 
+                       enclos = new.env(), naming = "model",
+                       types = c("NULL", "character", "list", "expression"))
+  
+  if (is.data.frame(adjust) && (nrow(adjust) == 0L || ncol(adjust) == 0L)) {
+    stop("adjust evaluated to an empty data.frame")
+  }
+  if (!is.null(adjust) && ncol(adjust) > 0L && length(adNames) > 0L) {
+    stop("Cannot both use argument 'adjust' AND use an adjust() term within ",
+         "the formula argument. Please only use one.")
+  }
+  if (is.null(adjust) && length(adNames) > 0L) {
+    adjust <- dt[, .SD, .SDcols = c(adNames)]
+  }
+  
+  
+  print <- NULL
+  if (length(prNames > 0L)) print <- dt[, .SD, .SDcols = eval(prNames)]
+  
+  list(y = dt[, .SD, .SDcols = c(suNames)], 
+       print = print, 
+       adjust = adjust, formula = al$arg)
+}
+
+
+aliased_cols <- function(data, cols) {
+  
+  if (missing(cols)) cols <- names(data)
+  all_names_present(data, cols)
+  
+  if (length(cols) < 2L) return(invisible())
+  
+  x <- with(data, mget(cols))
+  x <- lapply(x, duplicated)
+  
+  sub_cols <- cols
+  tl <- list()
+  ## loop: each step reduce vector of names by one
+  ## to avoid testing the same variables twice (in both directions)
+  tick <- 0L
+  aliased <- FALSE
+  while (!aliased && length(sub_cols) > 1L && tick <= length(cols)) {
+    
+    currVar <- sub_cols[1L]
+    sub_cols <- setdiff(sub_cols, currVar)
+    tl[[currVar]] <- unlist(lapply(x[sub_cols], function(j) identical(x[[currVar]], j)))
+    aliased <- sum(tl[[currVar]])
+    
+    tick <- tick + 1L
+  }
+  
+  if (tick == length(cols)) warning("while loop went over the number of columns argument cols")
+  
+  ## result: list of logical vectors indicating if a column is aliased
+  ## with other columns
+  tl[vapply(tl, function(j) sum(j) == 0L, logical(1))] <- NULL
+  
+  if (length(tl) == 0L) return(invisible())
+  
+  ## take first vector for reporting
+  var <- names(tl)[1L]
+  aliases <- names(tl[[1L]])[tl[[1]]]
+  aliases <- paste0("'", aliases, "'", collapse = ", ")
+  stop("Variable '", var, "' is aliased with following variable(s): ", aliases, ".")
+  
+  invisible()
+}
+
 
 

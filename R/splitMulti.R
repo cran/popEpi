@@ -25,7 +25,7 @@
 #'  time scales.
 #' It requires a Lexis object as input.
 #' 
-#' The \code{breaks} must be a list of named numeric vectors. 
+#' The \code{breaks} must be a list of named vectors of the appropriate type. 
 #' The breaks are fully explicit and
 #' left-inclusive and right exclusive, e.g. \code{fot=c(0,5)} 
 #' forces the data to only include time between
@@ -46,6 +46,15 @@
 #' Multiple breaks can be supplied in the same manner. However, if both
 #' \code{breaks} and \code{...} are used, only the breaks in \code{breaks}
 #' are utilized within the function. 
+#' 
+#' The \code{Lexis} time scale variables can be of any arbitrary 
+#' format, e.g. \code{Date},
+#' fractional years (see \code{\link[Epi]{cal.yr}}) and \code{\link{get.yrs}},
+#' or other. However, using \code{date} variables (from package \pkg{date})
+#' are not recommended, as \code{date} variables are always stored as integers,
+#' whereas \code{Date} variables (see \code{?as.Date}) are typically stored
+#' in double ("numeric") format. This allows for breaking days into fractions
+#' as well, when using e.g. hypothetical years of 365.25 days.
 #'  
 #' @return
 #' A \code{data.table} or \code{data.frame} 
@@ -68,7 +77,7 @@
 #' x <- Lexis(data=sire, entry = list(fot=0, per=dg_date, age=dg_date-bi_date), 
 #'            exit=list(per=ex_date), exit.status=status)
 #' BL <- list(fot = seq(0, 5, by = 3/12)*365.242199,
-#'            per = as.IDate(paste0(c(1980:2014),"-01-01")),
+#'            per = as.Date(paste0(c(1980:2014),"-01-01")),
 #'            age = c(0,45,85,Inf)*365.242199)
 #' x2 <- splitMulti(x, breaks = BL, verbose=TRUE)
 #' 
@@ -108,86 +117,91 @@ splitMulti <- function(data,
                        drop=TRUE,
                        merge=TRUE,
                        verbose=FALSE) {
+  
+  lex.id <- NULL ## APPEASE R CMD CHECK
+  
   ## basic checks --------------------------------------------------------------
   if (verbose) {stime <- proc.time()}
-  if (!inherits(data, "Lexis")) stop("data not a Lexis object")
+  
+  breaks <- splitMultiPreCheck(data = data, breaks = breaks, ...)
+  
+  
+  ## check if even need to do splitting ----------------------------------------
   allScales <- attr(data, "time.scales")
-  if (length(allScales) == 0) stop("no time scales appear to be defined; is data a Lexis object?")
-  
-  if (!is.null(breaks) && !is.list(breaks)) stop("breaks must be a list; see examples in ?splitMulti")
-  if (is.null(breaks)) {
-    breaks <- list(...)
-    breaks <- breaks[intersect(names(breaks), allScales)]
-  }
-  
-  if (length(breaks) == 0) stop("no breaks defined!")
-  
-  splitScales <- names(breaks)
-  ## NULL breaks imply not used
-  for (k in splitScales) {
-    if (is.null(breaks[[k]])) {
-      breaks[[k]] <- NULL
-    }
-  } 
-  
-  checkBreaksList(x = data, breaks = breaks)
-  
   splitScales <- names(breaks)
   
-  if (!all(splitScales %in% allScales)) {
-    stop("breaks must be a list with at least one named vector corresponding to used time scales \n
-         e.g. breaks = list(fot = 0:5)")
-  }
+  oldBreaks <- attr(data, "breaks")
+  tryCatch(checkBreaksList(data, oldBreaks), error = function(e) {
+    stop("Error in splitMulti: \n",
+         "Old breaks existing in Lexis data did not pass testing. Error ",
+         "message from test: \n", e, call. = FALSE)
+  })
   
-  if (!all(splitScales %in% names(data))) {
-    stop("At least one vector name in breaks list is not a variable name in the data")
-  }
+  ## only do split if all breaks are NOT in the breaks that the data
+  ## has already been split by.
+  do_split <- TRUE
+  do_split <- !all_breaks_in(breaks, oldBreaks, x = data)
   
-  
-  tmpID <- makeTempVarName(data = data, pre = "TEMP_SPLITMULTI_ID_")
-  IDT <- data.table(lex.id = data$lex.id, temp.id = 1:nrow(data), key = "temp.id")
-  
-  set(data, j = "lex.id", value = 1:nrow(data))
-  l <- list()
-  for (v in splitScales) {
-    l[[v]] <- splitLexisDT(data, breaks = breaks[[v]], 
-                           merge = TRUE, drop = FALSE, timeScale = v)
-    breaks[[v]] <- attr(l[[v]], "breaks")[[v]]
-  }
-  l <- rbindlist(l)
-  set(data, j = "lex.id", value = IDT[, ]$lex.id)
-  
-  ## lex.id is here 1:nrow(data)
-  setkey(l, lex.id)
-  setnames(l, "lex.id",  tmpID)
-  set(l, j = "lex.id", value = IDT[.(l[[tmpID]]), ]$lex.id)
-  rm(data, IDT)
-  
-  
-  if (!merge) setcolsnull(l, keep = c("lex.id", "lex.dur", allScales, "lex.Cst", "lex.Xst", tmpID), soft = FALSE)
-  
-  v1 <- splitScales[1]
-  
-  if (length(splitScales) > 1L) {
+  if (!do_split) {
+    l <- setDT(copy(data))
+    setkeyv(l, c("lex.id", allScales[1]))
+  } else {
     
-    tmpIE <- makeTempVarName(data = l, pre = "TEMP_SPLITMULTI_intEnd")
-    tmpLD <- makeTempVarName(data = l, pre = "TEMP_SPLITMULTI_lagDur")
-    l[, (tmpIE) := get(v1) + lex.dur]
-    setkeyv(l, c(tmpID, tmpIE))
+    ## prepare data  -------------------------------------------------------------
     
-    l <- unique(l)
-    ## time scale minima and lex.dur as cumulative duration --------------------
-    l[, (allScales) := lapply(.SD, min), .SDcols = allScales, by = c(tmpID)]
-    l[, lex.dur := get(tmpIE) - get(v1)]
-    l[, (tmpLD) := c(0, lex.dur[-.N]), by = c(tmpID)]
+    tmpID <- makeTempVarName(data = data, pre = "TEMP_SPLITMULTI_ID_")
+    IDT <- data.table(lex.id = data$lex.id, temp.id = 1:nrow(data), key = "temp.id")
     
-    for (k in allScales) {
-      set(l, j = k, value = l[[k]] + l[[tmpLD]])
+    set(data, j = "lex.id", value = 1:nrow(data))
+    on.exit(set(data, j = "lex.id", value = IDT[, ]$lex.id))
+    
+    l <- vector(mode = "list", length = length(splitScales))
+    setattr(l, "names", splitScales)
+    for (v in splitScales) {
+      l[[v]] <- splitLexisDT(data, breaks = breaks[[v]], 
+                             merge = TRUE, drop = FALSE, timeScale = v)
+      breaks[[v]] <- attr(l[[v]], "breaks")[[v]]
     }
-    # non-cumulative duration
-    set(l, j = "lex.dur", value = l$lex.dur - l[[tmpLD]])
-    set(l, j = tmpLD, value = NULL)
-    set(l, j = tmpIE, value = NULL)
+    l <- rbindlist(l)
+    on.exit()
+    set(data, j = "lex.id", value = IDT$lex.id)
+    
+    ## lex.id is here 1:nrow(data)
+    setkey(l, lex.id)
+    setnames(l, "lex.id",  tmpID)
+    set(l, j = "lex.id", value = IDT[.(l[[tmpID]]), ]$lex.id)
+    rm(data, IDT)
+    
+    
+    if (!merge) setcolsnull(l, keep = c("lex.id", "lex.dur", allScales, "lex.Cst", "lex.Xst", tmpID), soft = FALSE)
+    
+    v1 <- splitScales[1]
+    
+    if (length(splitScales) > 1L) {
+      
+      tmpIE <- makeTempVarName(data = l, pre = "TEMP_SPLITMULTI_intEnd")
+      tmpLD <- makeTempVarName(data = l, pre = "TEMP_SPLITMULTI_lagDur")
+      l[, (tmpIE) := get(v1) + lex.dur]
+      setkeyv(l, c(tmpID, tmpIE))
+      
+      l <- unique(l)
+      ## time scale minima and lex.dur as cumulative duration --------------------
+      l[, (allScales) := lapply(.SD, min), .SDcols = allScales, by = c(tmpID)]
+      l[, lex.dur := get(tmpIE) - get(v1)]
+      l[, (tmpLD) := c(0, lex.dur[-.N]), by = c(tmpID)]
+      
+      for (k in allScales) {
+        set(l, j = k, value = l[[k]] + l[[tmpLD]])
+      }
+      # non-cumulative duration
+      set(l, j = "lex.dur", value = l$lex.dur - l[[tmpLD]])
+      set(l, j = tmpLD, value = NULL)
+      set(l, j = tmpIE, value = NULL)
+    }
+    
+    setkeyv(l, c(tmpID, v1))
+    set(l, j = tmpID, value = NULL)
+    
   }
   
   l <- l[lex.dur > 0]
@@ -196,10 +210,6 @@ splitMulti <- function(data,
   if (nrow(l) == 0) {
     warning("no data left after dropping; check breaks?")
   }
-  
-  setkeyv(l, c(tmpID, v1))
-  #   l[, lex.multi := 1:.N, by=c(tmpID)]
-  set(l, j = tmpID, value = NULL)
   
   order <- c("lex.id", "lex.multi", allScales, "lex.dur", "lex.Cst", "lex.Xst")
   order <- c(order, setdiff(names(l), order))
@@ -214,7 +224,7 @@ splitMulti <- function(data,
   setattr(l, "class", c("Lexis","data.table","data.frame"))
   if (!getOption("popEpi.datatable")) setDFpe(l)
   
-  l
+  l[]
   
 }
 

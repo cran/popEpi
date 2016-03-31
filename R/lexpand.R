@@ -8,41 +8,38 @@
 #' given \code{breaks} and additionally processed if requested.
 #' @param data dataset of e.g. cancer cases as rows
 #' @param birth birth time in date format 
-#' or fractional years; quoted or unquoted
+#' or fractional years; string, symbol or expression
 #' @param entry entry time in date format 
-#' or fractional years; quoted or unquoted
+#' or fractional years; string, symbol or expression
 #' @param exit exit from follow-up time in date 
-#' format or fractional years; quoted or unquoted
+#' format or fractional years; string, symbol or expression
 #' @param event advanced: time of possible event differing from \code{exit};
 #' typically only used in certain SIR/SMR calculations - see Details; 
-#' keep \code{NULL} if \code{exit} is the time of the event; quoted or unquoted
+#' string, symbol or expression
 #' @param status variable indicating type of event at \code{exit} or \code{event}; 
 #' e.g. \code{status = status != 0}; expression or quoted variable name
 #' @param entry.status input in the same way as \code{status}; 
 #' status at \code{entry}; see Details
-#' @param id an id variable; e.g. \code{id = my_id};  quoted or unquoted
+#' @param id optional; an id variable; e.g. \code{id = my_id};  
+#' string, symbol or expression
 #' @param overlapping advanced, logical; if \code{FALSE} AND if \code{data} contains
-#' multiple rows per subject AND \code{event} is defined, 
-#' ensures that the timelines \code{lex.id}-specific rows do not overlap;
+#' multiple rows per subject, 
+#' ensures that the timelines of \code{id}-specific rows do not overlap;
 #' this ensures e.g. that person-years are only computed once per subject 
 #' in a multi-state paradigm
 #' @param aggre e.g. \code{aggre = list(sex, fot)}; 
 #' a list of unquoted variables and/or expressions thereof,
 #' which are interpreted as factors; data events and person-years will
 #' be aggregated by the unique combinations of these; see Details
-#' @param aggre.type either \code{"unique"} or \code{"cross-product"};
-#' can be abbreviated;
-#' state transitions and person-year will be calculated either for all
-#' existing levels of expressions in \code{aggre}, or
-#' for the cross-product of all possible existing levels (with some 
-#' possibly having zero person-years and transitions); see Details
+#' @param aggre.type one of \code{c("unique","cartesian")};
+#' can be abbreviated; see Details
 #' @param breaks a named list of vectors of time breaks; 
 #' e.g. \code{breaks = list(fot=0:5, age=c(0,45,65,Inf))}; see Details
 #' @param drop logical; if \code{TRUE}, drops all resulting rows 
 #' after splitting that reside outside
 #' the time window as defined by the given breaks (all time scales)
 #' @param pophaz a dataset of population hazards to merge
-#'  with splitted data; see Details
+#'  with split data; see Details
 #' @param pp logical; if \code{TRUE}, computes Pohar-Perme weights using
 #' \code{pophaz}; adds variable with reserved name \code{pp}; 
 #' see Details for computing method
@@ -55,7 +52,7 @@
 #' @param ... e.g. \code{fot = 0:5}; instead of specifying a \code{breaks} list, 
 #' correctly named breaks vectors can be given 
 #' for \code{fot}, \code{age}, and \code{per}; these override any breaks in the
-#' \code{breaks} list
+#' \code{breaks} list; see Examples
 #' 
 #' 
 #' 
@@ -76,6 +73,10 @@
 #' \code{\link{sire}} as an example of the
 #' minimum required information for processing data with \code{lexpand}.
 #' 
+#' Many arguments can be supplied as a character string naming the appropriate
+#' variable (e.g. \code{"sex"}), as a symbol (e.g. \code{sex}) or as an expression
+#' (e.g. \code{factor(sex, 0:1, c("m", "f"))}) for flexibility.
+#' 
 #' \strong{Breaks}
 #' 
 #' You should define all breaks as left inclusive and right exclusive 
@@ -92,6 +93,16 @@
 #' Breaks for \code{per} can also be given in 
 #' \code{Date}/\code{IDate}/\code{date} format, whereupon
 #' they are converted to fractional years before used in splitting.
+#' 
+#' The \code{age} time scale can additionally 
+#' be automatically split into common age grouping schemes
+#' by naming the scheme with an appropriate character string:
+#' 
+#' \itemize{
+#'   \item \code{"18of5"}: age groups 0-4, 5-9, 10-14, ..., 75-79, 80-84, 85+
+#'   \item \code{"20of5"}: age groups 0-4, 5-9, 10-14, ..., 85-89, 90-94, 95+
+#'   \item \code{"101of1"}: age groups 0, 1, 2, ..., 98, 99, 100+
+#' }
 #' 
 #' \strong{Time variables}
 #' 
@@ -141,7 +152,7 @@
 #' (and passed on to a \code{cut} call). The mandatory variable \code{haz}
 #' must specify the appropriate average rate at the person-year level;
 #' e.g. \code{haz = -log(survProb)} where \code{survProb} is a one-year conditional
-#' survival probability will be the correct hazard specification. **tajuan, mutta en osaa korjata!**
+#' survival probability will be the correct hazard specification. 
 #' 
 #' The corresponding \code{pophaz} population hazard value is merged by using the mid points
 #' of the records after splitting as reference values. E.g. if \code{age=89.9} at the start
@@ -171,6 +182,21 @@
 #' 0.5). This ensures that more accurately merged population hazards are fully
 #' used.
 #' 
+#' \strong{Event not at end of follow-up & overlapping time lines}
+#' 
+#' \code{event} may be used if the event indicated by \code{status} should
+#' occur at a time differing from \code{exit}. If \code{event} is defined,
+#' \code{cutLexis} is used on the data set after coercing it to the \code{Lexis}
+#' format and before splitting. Note that some values of \code{event} are allowed
+#' to be \code{NA} as with \code{cutLexis} to accommodate observations
+#' without an event occurring.
+#' 
+#' Additionally, setting \code{overlapping = FALSE} ensures that (irrespective
+#' of using \code{event}) the each subject defined by \code{id} only has one
+#' continuous time line instead of possibly overlapping time lines if
+#' there are multiple rows in \code{data} by \code{id}.
+#' 
+#' 
 #' \strong{Aggregating}
 #' 
 #' Certain analyses such as SIR/SMR calculations require tables of events and
@@ -193,7 +219,7 @@
 #' \code{cut(fot, breaks$fot, right=FALSE)}. 
 #' 
 #' This only works if
-#' the corresponding breaks are defined in \code{breaks} or via \code{...}.
+#' the corresponding breaks are defined in \code{breaks} or via "\code{...}".
 #' E.g. 
 #' 
 #' \code{aggre = list(sex, fot.int = fot)} with 
@@ -207,20 +233,30 @@
 #' with the given new names as categorizing variable names, e.g. 
 #' \code{aggre = list(follow_up = fot, gender = sex, agegroup = age)}.
 #' 
-#' The ouputted table has person-years (\code{pyrs}) and event (mutation) counts
-#' (e.g. \code{from0to1}) as columns. Event counts are the numbers of mutations
+#' The ouputted table has person-years (\code{pyrs}) and event counts
+#' (e.g. \code{from0to1}) as columns. Event counts are the numbers of transitions
 #' (\code{lex.Cst != lex.Xst}) or the \code{lex.Xst} value at a subject's 
 #' last record (subject possibly defined by \code{id}).
 #' 
-#' If \code{aggre.type = "unique"}, the above results are computed for existing
+#' If \code{aggre.type = "unique"} (alias \code{"non-empty"}), 
+#' the above results are computed for existing
 #' combinations of expressions given in \code{aggre}, but also for non-existing
-#' combinations if \code{aggre.type = "cross-product"}. E.g. if a
+#' combinations if \code{aggre.type = "cartesian"} (alias \code{"full"}). E.g. if a
 #' factor variable has levels \code{"a", "b", "c"} but the data is limited
 #' to only have levels \code{"a", "b"} present 
 #' (more than zero rows have these level values), the former setting only
 #' computes results for \code{"a", "b"}, and the latter also for \code{"c"}
 #' and any combination with other variables or expression given in \code{aggre}.
+#' In essence, \code{"cartesian"} forces also combinations of variables used
+#' in \code{aggre} that have no match in data to be shown in the result.
 #' 
+#' If \code{aggre} is not \code{NULL} and \code{pophaz} has been supplied,
+#' \code{lexpand} also aggregates the expected counts of events, which
+#' appears in the outputted data by the reserved name \code{d.exp}. Additionally,
+#' having \code{pp = TRUE} causes \code{lexpand} to also compute various
+#' Pohar-Perme weighted figures necessary for computing Pohar-Perme net survivals
+#' with \code{\link{survtab_ag}}. This can be slow, so consider what is really
+#' needed. The Pohar-Perme weighted figures have the suffix \code{.pp}. 
 #' 
 #' @return
 #' If \code{aggre = NULL}, returns 
@@ -235,37 +271,55 @@
 #' \code{data.table}/\code{data.frame} with the variable \code{pyrs} (person-years),
 #' and variables for the counts of transitions in state or state at end of 
 #' follow-up formatted \code{fromXtoY}, where \code{X} and \code{Y} are 
-#' the states transitioned from and to, respectively.
+#' the states transitioned from and to, respectively. The data may also have
+#' the columns \code{d.exp} for expected numbers of cases and various
+#' Pohar-Perme weighted figures as identified by the suffix \code{.pp}; see 
+#' Details.
 #' 
 #' 
 #' @examples
 #' \dontrun{
 #' ## prepare data for e.g. 5-year cohort survival calculation
 #' x <- lexpand(sire, breaks=list(fot=seq(0, 5, by = 1/12)), 
+#'              birth = bi_date, entry = dg_date, exit = ex_date,
 #'              status =  status != 0, pophaz=popmort)
 #' 
 #' ## prepare data for e.g. 5-year "period analysis" for 2008-2012
 #' BL <- list(fot = seq(0, 5, by = 1/12), per = c("2008-01-01", "2013-01-01"))
-#' x <- lexpand(sire, breaks = BL, pophaz=popmort, status =  status != 0)
+#' x <- lexpand(sire, breaks = BL, 
+#'              birth = bi_date, entry = dg_date, exit = ex_date,
+#'              pophaz=popmort, status =  status != 0)
 #' 
 #' ## aggregating
 #' BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))
 #' ag <- lexpand(sire, breaks = BL, status = status != 0, 
+#'              birth = bi_date, entry = dg_date, exit = ex_date,
 #'               aggre=list(sex, period = per, surv.int = fot))
 #' 
+#' ## aggregating even more
+#' ag <- lexpand(sire, breaks = BL, status = status != 0, 
+#'               birth = bi_date, entry = dg_date, exit = ex_date,
+#'               aggre=list(sex, period = per, surv.int = fot),
+#'               pophaz = popmort, pp = TRUE)
+#' 
 #' ## using "..."
-#' x <- lexpand(sire, fot=0:5, pophaz=popmort, status =  status != 0) 
+#' x <- lexpand(sire, fot=0:5, status =  status != 0,
+#'              birth = bi_date, entry = dg_date, exit = ex_date,
+#'              pophaz=popmort) 
 #' 
 #' x <- lexpand(sire, fot=0:5, status =  status != 0, 
+#'              birth = bi_date, entry = dg_date, exit = ex_date,
 #'              aggre=list(sex, surv.int = fot))
 #'              
 #' ## using the "event" argument: it just places the transition to given "status"
 #' ## at the "event" time instead of at the end, if possible using cutLexis
-#' x <- lexpand(sire, status = status, event = dg_date, birth=bi_date, entry=bi_date, exit=ex_date) 
+#' x <- lexpand(sire, status = status, event = dg_date,
+#'              birth = bi_date, entry = dg_date, exit = ex_date,) 
 #' 
 #' ## aggregating with custom "event" time
-#' 
-#' x <- lexpand(sire, status = status, event = dg_date, birth=bi_date, entry=bi_date, exit=ex_date,
+#' ## (the transition to status is moved to the "event" time)
+#' x <- lexpand(sire, status = status, event = dg_date, 
+#'              birth = bi_date, entry = dg_date, exit = ex_date,
 #'              per = 1970:2014, age = c(0:100,Inf),
 #'              aggre = list(sex, year = per, agegroup = age)) 
 #' 
@@ -273,20 +327,18 @@
 #' 
 #' @import data.table
 #' @import Epi
-#' @export lexpand
 #' @seealso
 #' \code{\link{splitMulti}}, \code{\link[Epi]{Lexis}}, \code{\link{survtab}}, \code{\link{relpois}}, \code{\link{popmort}} \code{\link{sir}}
-
-
+#' @export
 lexpand <- function(data, 
-                    birth=bi_date, entry=dg_date, exit=ex_date, event=NULL,
+                    birth=NULL, entry=NULL, exit=NULL, event=NULL,
                     status = status != 0,
                     entry.status = NULL,
                     breaks = list(fot=c(0,Inf)),
                     id = NULL,
                     overlapping = TRUE,
                     aggre = NULL,
-                    aggre.type = c("unique", "cross-product"),
+                    aggre.type = c("unique", "cartesian"),
                     drop=TRUE,
                     pophaz = NULL, pp = TRUE, 
                     subset = NULL,
@@ -294,22 +346,37 @@ lexpand <- function(data,
                     ...) {
   start_time <- proc.time()
   
-  ## to instate global variables to appease R CMD CHECK
-  .EACHI <- lex.status <- lexpand.id <- lex.exit <- lex.birth <- lex.entry <- lex.event <- temp.id <- NULL
+  TF <- environment()
+  PF <- parent.frame(1L)
   
+  ## data checks
   if ( missing(data) || nrow(data) == 0) stop("no data found")
   
   if (!is.data.frame(data)) stop("data must be a data.frame or data.table")
   
+  ## to instate global variables to appease R CMD CHECK 
+  .EACHI <- lex.status <- lexpand.id <- lex.exit <- lex.birth <- 
+    lex.entry <- lex.event <- temp.id <- cd <- fot <- age <- per <- 
+    lex.id <- lex.multi <- pop.haz <- NULL
+  
+  
+  ## test conflicting variable names -------------------------------------------
   added_vars <- c("fot", "per", "age", "lex.id", "lex.dur", "lex.Xst", "lex.Cst")
+  if (!is.null(pophaz)) added_vars <- if (pp) c(added_vars, "pp", "pop.haz") else c(added_vars, "pop.haz")
   conflicted_vars <- intersect(added_vars, names(data))
-  if (length(conflicted_vars) > 0) {
+  
+  if (merge && length(conflicted_vars) > 0) {
     conflicted_vars <- paste0("'", conflicted_vars, "'", collapse = ", ")
-    warning("'data' already had variable(s) named ", conflicted_vars, "which lexpand will create; this may result in unexpected problems. Rename the variable(s)?")
+    warning("'data' already had variable(s) named ", conflicted_vars, " which lexpand will create, and you have merge = TRUE; this may result in unexpected problems. Rename the variable(s)?")
   }
   rm(added_vars, conflicted_vars)
   
-  aggre.type <- match.arg(aggre.type[1L], c("cross-product", "unique"))
+  ## test aggre type -----------------------------------------------------------
+  aggre.type <- match.arg(aggre.type[1L], c("cartesian", "non-empty", "unique", "cross-product", "full"))
+  if (aggre.type == "cross-product") {
+    aggre.type <- "cartesian"
+    warning("aggre.type value 'cross-product' deprecated and renamed to 'cartesian'; please use that in the future")
+  }
   
   ## subsetting-----------------------------------------------------------------
   ## no copy taken of data!
@@ -327,11 +394,11 @@ lexpand <- function(data,
   lex_vars <- c("lex.birth","lex.entry","lex.exit","lex.event", "lex.status", "lex.entry.status", "lexpand.id")[wh]
   if (any(!c("lex.birth", "lex.entry", "lex.exit", "lex.status") %in% lex_vars)) stop("birth, entry, exit and status are mandatory")
   
-  l <- eval(l, envir = data[subset, ], enclos = parent.frame())
+  l <- eval(l, envir = data[subset, ], enclos = PF)
   l[-wh] <- NULL
   
   
-  ## vars can be given as quoted names
+  ## vars can be given as character strings of variable names
   isChar  <- sapply(l, is.character, simplify = TRUE)
   if (any(isChar)) {
     isShort <- sapply(l, function(x) {length(x) == 1L}, simplify = TRUE)
@@ -372,12 +439,11 @@ lexpand <- function(data,
   ## checks for merging style --------------------------------------------------
   if (!is.null(pophaz)) {
     all_names_present(pophaz, c("agegroup","year","haz"))
-    merge_vars <- setdiff(names(pophaz), c("agegroup","year","haz"))
-    test_merge_vars <- intersect(merge_vars, names(data))
-    if (length(test_merge_vars) == 0) {
-      stop("pophaz contains following merging variables not in data: ", 
-           paste0(test_merge_vars, collapse = ", "),
-           "; make sure data contains identical merging variables as pophaz, and that pophaz does not contain any extra variables!")
+    othMergeVars <- setdiff(names(pophaz), c("agegroup","year","haz"))
+    badOthMergeVars <- setdiff(othMergeVars, names(data))
+    if (length(badOthMergeVars) > 0) {
+      badOthMergeVars <- paste0("'", badOthMergeVars, "'", collapse = ", ")
+      stop("Following variables exist in pophaz but do not exist in data: ", badOthMergeVars, ". Make sure data and pophaz contain variables with the same names that you intend to merge by.")
     }
   }
   
@@ -404,6 +470,12 @@ lexpand <- function(data,
   ## ensure given breaks make any sense ----------------------------------------
   
   bl <- list(...)
+  lna <- names(bl)
+  bad_lna <- setdiff(lna, c("fot","per","age"))
+  if (length(bad_lna) > 0) {
+    bad_lna <- paste0("'", bad_lna, "'", collapse = ", ")
+    stop("only arguments named 'fot', 'per' or 'age' currently allowed to be passed via '...'; did you mistype an argument? bad args: ", bad_lna)
+  }
   lna <- intersect(names(bl), c("fot","per","age"))
   if (length(lna) > 0) {
     bl <- bl[lna]
@@ -421,42 +493,20 @@ lexpand <- function(data,
   if (length(brna) == 0) {
     breaks$fot <- c(0,Inf)
   }
+  
+  if ("age" %in% brna && is.character(breaks$age)) {
+    schemeNames <- c("18of5", "20of5", "101of1")
+    if (!breaks$age %in% schemeNames) stop("You supplied '", breaks$age, "' as breaks for the age scale, but allowed character strings are: ", paste0("'", schemeNames, "'", collapse = ","))
+    brSchemes <- list(c(seq(0, 85, 5)), c(seq(0, 95, 5), Inf), c(0:100, Inf))
+    names(brSchemes) <- paste0("age_", schemeNames)
+    breaks$age <- brSchemes[paste0("age_",breaks$age)]
+  } 
+  
+  
   if (any(sapply(breaks, length) == 1L)) {
     stop("any given non-null vector of breaks must have more than one break!")
   }
   
-  ## aggregating checks --------------------------------------------------------
-  aggre <- substitute(aggre)
-  testag <- deparse(aggre)
-  if (length(testag) > 1) {
-    testag <- paste0(testag, collapse = "")
-    testag <- gsub("(?<=[\\s])\\s*|^\\s+$", "", testag, perl=TRUE) ## replaces multiple whitespaces with one whitespace
-  }
-  if (testag != "NULL" && substr(testag, 1,4) != "list") {
-    stop("aggre has to be a list; e.g. list(sex)")
-  }
-  
-  ## bad method: determine from character string if 
-  ## list contains a time scale variable, e.g. list(sex, fot, var) / list(sex, var, fot)
-  if (testag != "NULL") {
-    
-    cut_vars <- c("fot","per","age")
-    del_vars <- NULL
-    for (k in 1:3) {
-      var <- cut_vars[[k]]
-      test <- grep(paste0(", ", var, ","), testag)
-      if (length(test) == 0) test <- grep(paste0(", ", var, ")"), testag)
-      if (length(test) == 0) test <- grep(paste0(" = ", var, ","), testag)
-      if (length(test) == 0) test <- grep(paste0(" = ", var, ")"), testag)
-      if (length(test) == 0) test <- grep(paste0("list\\(", var, ","), testag)
-      if (length(test) == 0) test <- grep(paste0("list\\(", var, "\\)"), testag)
-      if (length(test) == 0) del_vars <- c(del_vars, var)
-    }
-    cut_vars <- setdiff(cut_vars, del_vars)
-    rm(del_vars)
-    
-    if (any(!cut_vars %in% brna)) stop("you used some time scale variables in aggre without splitting along them")
-  }
   # convert to fractional years ------------------------------------------------
   
   char2date <- function(obj) {
@@ -484,11 +534,34 @@ lexpand <- function(data,
   if (verbose) cat("given birth, entry, exit, status etc. variables after coercion to numeric \n")
   if (verbose) print(l)
   
+  # check data consistency for overlapping = FALSE -----------------------------
+  ## not allowed: for any one unique subject to be true for 
+  ## multiple rows (if overlapping = TRUE):
+  ## * same event values
+  ## * same entry values
+  if (!overlapping) {
+    if ("lex.event" %in% names(l)) {
+      if (all(is.na(l$lex.event))) stop("ALL 'event' values are NA; if this is as intended, please use event = NULL instead")
+      
+      if (any(duplicated(l, by = c("lexpand.id", "lex.event")))) {
+        stop("subject(s) defined by lex.id had several rows where 'event' time had the same value, which is not supported with overlapping = FALSE; perhaps separate them by one day?")
+      } 
+      if (any(l[!is.na(lex.event), lex.entry == lex.event])) {
+        stop("some rows have simultaneous 'entry' and 'event', which is not supported with overlapping = FALSE; perhaps separate them by one day?")
+      }
+    } else if (any(duplicated(l, by = c("lexpand.id", "lex.exit")))) {
+      stop("subject(s) defined by lex.id had several rows where 'exit' time had the same value, which is not supported without 'event' defined; use 'event' or perhaps separate them by one day?")
+    }
+    
+    
+  }
+  
+  
   # dropping unuseful records --------------------------------------------------
   test_times <- function(condition, msg, old_subset=l_subset, DT=l) {
     
     condition <- substitute(condition)
-    condition <- eval(condition, envir = DT, enclos = parent.frame())
+    condition <- eval(condition, envir = DT, enclos = parent.frame(1L))
     
     new_subset <- old_subset & !(condition & !is.na(condition))
     old_n <- sum(old_subset)
@@ -506,14 +579,18 @@ lexpand <- function(data,
   
   l_subset <- rep(TRUE, nrow(l))
   
+  l_subset <- test_times(is.na(lex.birth), "birth values are missing")
+  l_subset <- test_times(is.na(lex.entry), "entry values are missing")
+  l_subset <- test_times(is.na(lex.exit), "exit values are missing")
+  
   if (!is.null(breaks$per)) {
     l_subset <- test_times(lex.exit < min(breaks$per), "subjects left follow-up before earliest per breaks value")
   }
   if (!is.null(breaks$age)) {
-    l_subset <- test_times(lex.exit < min(breaks$age), "subjects left follow-up before lowest age breaks value")
+    l_subset <- test_times(lex.entry - lex.birth < min(breaks$age), "subjects left follow-up before lowest age breaks value")
   }
   if (!is.null(breaks$fot)) {
-    l_subset <- test_times(lex.exit < min(breaks$fot), "subjects left follow-up before lowest fot breaks value")
+    l_subset <- test_times(lex.exit - lex.entry < min(breaks$fot), "subjects left follow-up before lowest fot breaks value")
   }
   l_subset <- test_times(lex.birth >= lex.exit, "birth >= exit")
   l_subset <- test_times(lex.entry == lex.exit, "entry == exit")
@@ -564,7 +641,7 @@ lexpand <- function(data,
   
   ## crop time scale values to obey breaks limits and drop if necessary
   ## NOTE: goes wrong if need to compute pp weights!
-  #   if (drop && is.null(pp)) {
+  #   if (drop && !pp) {
   #     intelliCrop(x = l, breaks = breaks, allScales = c("fot", "per", "age"), cropStatuses = TRUE)
   #     l <- intelliDrop(x = l, breaks = breaks, dropNegDur = TRUE)
   #   }
@@ -582,43 +659,91 @@ lexpand <- function(data,
   # event not at exit time -----------------------------------------------------
   
   if ("lex.event" %in% names(l)) {
+    
+    if (!overlapping) {
+      
+      ## using lex.event time, ensure coherence of lex.Cst & lex.Xst
+      ## before cutLexis()
+      tmpFE <- makeTempVarName(l, pre = "fot_end_")
+      l[, (tmpFE) := fot + lex.dur]
+      setkeyv(l, c("lex.id", "lex.event", tmpFE))
+      tmpLX <- makeTempVarName(l, pre = "lag_lex.Xst_")
+      l[, (tmpLX) := shift(lex.Xst, n = 1, type = "lag"), by = lex.id]
+      l[!is.na(get(tmpLX)), lex.Cst := get(tmpLX)]
+      l[, c(tmpFE, tmpLX) := NULL]
+      rm(tmpFE, tmpLX)
+      
+    }
+    
     if (verbose) cutt <- proc.time()
+    setDF(l)
+    setattr(l, "class", c("Lexis", "data.frame"))
     l <- Epi::cutLexis(l, cut = l$lex.event, timescale = "per", new.state = l$lex.Xst, precursor.states = unique(l$lex.Cst))
     setDT(l)
     setattr(l, "class", c("Lexis", "data.table", "data.frame"))
     if (verbose) cat("Time taken by cutLexis when defining event time points: ", timetaken(cutt), "\n")
+    
+    if (verbose) cat("Data just after using cutLexis: \n")
+    if (verbose) print(l[])
+    
   }
   
   
   # overlapping timelines? -----------------------------------------------------
   
   if (!overlapping && any(duplicated(l$lex.id))) {
-    if ("lex.event" %in% names(l)) {
-      
-      fot_end <- NULL
-      
-      l[, fot_end := fot + lex.dur]
-      setkey(l, lex.id, fot_end) ## order of time of event
-      l <- unique(l)
-      if (verbose) cat("data just before fixing overlapping time lines \n")
-      if (verbose) print(l)
-      l[, lex.dur := fot_end - c(min(fot), fot_end[-.N]), by = lex.id]
-      l[, fot := fot_end - lex.dur]
-      l[, age := age + c(0, cumsum(lex.dur)[-.N]), by = lex.id]
-      l[, per := per + c(0, cumsum(lex.dur)[-.N]), by = lex.id]
-      l[, fot_end := NULL]
-      
-    } else {
-      stop("requested non-overlapping timelines, but no 'event' is defined; hence did nothing")
-    }
+    tmpFE <- makeTempVarName(l, pre = "fot_end_")
+    l[, (tmpFE) := fot + lex.dur]
+    ## don't keep duplicated rows:
+    ## same end points imply fully overlapping time lines
+    ## e.g. 
+    ## --->
+    ## ->
+    ##  -->
+    ## results in 
+    ## ->
+    ## --->
+    ## we only keep the longest time line with a unique end point.
+
+    # setkeyv(l,  c("lex.id", tmpFE, "fot"))
+    tmpLE <- intersect(names(l), "lex.event")
+    LEval <- if (length(tmpLE) == 0) NULL else -1
+
+    setorderv(l, c("lex.id", tmpFE, tmpLE, "fot"), c(1,1,LEval,1))
+    l <- unique(l, by = c("lex.id", tmpFE))
+    
+    ## end points are kept but starting points are "rolled"
+    ## from first to last row by lex.id to ensure non-overlappingness; e.g.
+    ## ->
+    ## --->
+    ## results in 
+    ## ->
+    ##   ->
+    # setkeyv(l, c("lex.id", tmpFE))
+    # setorderv(l, c("lex.id", tmpLE, tmpFE), c(1, LEval, 1))
+    setkeyv(l, c("lex.id", tmpLE, tmpFE))
+    
+    if (verbose) cat("data just before fixing overlapping time lines \n")
+    if (verbose) print(l)
+    l[, lex.dur := get(tmpFE) - c(min(fot), get(tmpFE)[-.N]), by = lex.id]
+    l[, fot := get(tmpFE) - lex.dur]
+    cumDur <- l[,  list(age = min(age), per = min(per), cd = c(0, cumsum(lex.dur)[-.N])), by = lex.id]
+    cumDur[, age := age+cd]
+    cumDur[, per := per+cd]
+    l[, age := cumDur$age]
+    l[, per := cumDur$per]
+    l[, (tmpFE) := NULL]; rm(cumDur)
+    
     
     ## if event used, first row up to event, second row from first event to etc...
   }
-  setcolsnull(l, "lex.event", soft = TRUE)
+  
+  setcolsnull(l, "lex.event", soft = TRUE) ## note: lex.event needed in overlapping procedures
   
   if (verbose) cat("time and status variables before splitting: \n")
   if (verbose) print(l)
-  if (exists("id")) rm("id")
+  if ("id" %in% ls()) rm("id")
+  
   
   # splitting ------------------------------------------------------------------
   
@@ -629,6 +754,8 @@ lexpand <- function(data,
     drop_after <- TRUE
   }
   
+  forceLexisDT(l, breaks = list(fot = NULL, per = NULL, age = NULL),
+               allScales = c("fot", "per", "age"))
   if (verbose) splittime <- proc.time()
   l <- splitMulti(l,  breaks = breaks, 
                   drop = drop, verbose=FALSE, merge = TRUE)
@@ -655,6 +782,18 @@ lexpand <- function(data,
   }
   rm(data, subset, l_subset)
   
+  ## aggregating checks --------------------------------------------------------
+  ## NOTE: aggre evaled here using small data subset to check that all needed
+  ## variables are found, etc.
+  aggSub <- substitute(aggre)
+  agTest <- evalPopArg(arg = aggSub, data = l[1:min(10L, .N), ], 
+                       enclos = PF, recursive = TRUE, DT = TRUE)
+  agTy <- attr(agTest, "arg.type")
+  if (is.null(agTy)) agTy <- "NULL"
+  aggSub <- attr(agTest, "quoted.arg")
+  agVars <- attr(agTest, "all.vars")
+  rm(aggre)
+  
   # merging pophaz and pp-weighting --------------------------------------------
   if (!is.null(pophaz)) {
     
@@ -668,168 +807,50 @@ lexpand <- function(data,
       NULL_FOT <- TRUE
     }
     
-    le_fot <- length(breaks$fot)
-    
-    ## bunch of temporary variable names to avoid overwriting anything
-    tmpSI <- makeTempVarName(names = c(names(pophaz), names(l)), pre = "surv.int")
-    tmpSIL <- makeTempVarName(names = c(names(pophaz), names(l)), pre = "surv.int.start")
-    tmpSIR <- makeTempVarName(names = c(names(pophaz), names(l)), pre = "surv.int.stop")
-    tmpSILE <- makeTempVarName(names = c(names(pophaz), names(l)), pre = "surv.int.length")
-    
-    ints <- data.table(V1 = 1:(le_fot-1))
-    setnames(ints, "V1", tmpSI)
-    ints[, (tmpSIL) := sort(breaks$fot[1:(le_fot-1)]) ]
-    ints[, (tmpSIR)  := sort(breaks$fot[2:(le_fot  )]) ]
-    ints[, (tmpSILE) := get(tmpSIR) - get(tmpSIL) ]
-    
-    l[, (tmpSI) := cut(fot, breaks = breaks$fot, right=FALSE, labels=F)]
-    if (NULL_FOT) breaks$fot <- NULL
-    
-    setkeyv(l, tmpSI); setkeyv(ints, tmpSI)
-    l <- ints[l]   
-    
+    breaks$fot <- sort(unique(breaks$fot))
     # handle pophaz data -------------------------------------------------------
-    ## determine merging factor variables
-    pophaz <- data.table(pophaz)
-    tmpMA <- makeTempVarName(names = c(names(l), names(pophaz)), pre = "merge_age")
-    tmpMP <- makeTempVarName(names = c(names(l), names(pophaz)), pre = "merge_per")
-    setnames(pophaz, c("agegroup", "year"), c(tmpMA, tmpMP))
     
-    merge_vars <- setdiff(names(pophaz), c("haz"))
-    merge_vars <- unique(c(merge_vars, tmpMA, tmpMP))
+    if (!"haz" %in% names(pophaz)) stop("no 'haz' variable in pophaz; please rename you hazard variable to 'haz'")
+    yBy <- xBy <- setdiff(names(pophaz), c("haz"))
+    if (c("year") %in% yBy) xBy[yBy == "year"] <- "per"
+    if (c("agegroup") %in% yBy) xBy[yBy == "agegroup"] <- "age"
+    yByOth <- setdiff(yBy, c("year", "agegroup"))
     
-    pophaz_max_per <- max(pophaz[[tmpMP]], na.rm=T)
-    pophaz_max_age <- max(pophaz[[tmpMA]], na.rm=T)
+    if (any(!yByOth %in% names(l))) 
+      stop("Following variable names not common between pophaz and data: ", paste0("'", yByOth[!yByOth %in% names(l)], "'", collapse = ", "))
     
+    l <- cutLowMerge(x = l, y = pophaz, by.x = xBy, by.y = yBy, all.x = TRUE,
+                     all.y = FALSE, mid.scales = c("per", "age"), old.nums = TRUE)
+    setnames(l, "haz", "pop.haz")
     
-    al <- pophaz[, sort(unique(get(tmpMA)))]
-    ab <- sort(unique(c(-Inf, al, Inf)))
-    pl <- pophaz[, sort(unique(get(tmpMP)))]
-    pb <- sort(unique(c(-Inf, pl, Inf)))
+    ## check if l's merging time variables were within pophaz's limits ---------
+    nNA <- l[is.na(pop.haz), .N]
+    if (nNA > 0) message("WARNING: after merging pophaz, ", nNA, " rows in split data have NA hazard values!")
     
-    set(l, j = tmpMP, value = l$per)
-    set(l, j = tmpMA, value = l$age)
-    
-    
-    ## merge per / age till midpoint of record
-    set(l, j = tmpMP, value = l[[tmpMP]] + l$lex.dur*0.5)
-    set(l, j = tmpMA, value = l[[tmpMA]] + l$lex.dur*0.5)    
-    
-    ## check if l's merging time variables are within pophaz's limits
-    n_too_old <- l[get(tmpMA) > pophaz_max_age+1, .N]
-    if (n_too_old > 0) {
-      l[get(tmpMA) > pophaz_max_age+1, (tmpMA) := pophaz_max_age]
-      message(paste0(n_too_old," rows in expanded data had age values >= ", 
-                     pophaz_max_age+1 ,"; assumed for these the same expected hazard as for people of age ", pophaz_max_age))
+    names(yBy) <- xBy
+    names(xBy) <- yBy
+    for (k in intersect(c("per", "age"), xBy)) {
+      yVar <- yBy[k]
+      kLo <- min(pophaz[[yVar]])
+      kHi <- max(pophaz[[yVar]])
+      mid <- l[, get(k) + lex.dur]
+      nLo <- sum(mid < kLo - .Machine$double.eps^0.5)
+      nHi <- sum(mid > kHi - .Machine$double.eps^0.5)
+      if (nLo > 0) message("WARNING: ", nLo, " rows in split data have NA values due to their mid-points residing below the minimum value of '", yVar, "' in pophaz!")
+      if (nHi > 0) message("NOTE: ", nHi, " rows in split data had values of '", k, "' higher than max of pophaz's '", yVar, "'; the hazard values at '", yVar, "' == ", kHi, " were used for these")
     }
-    
-    n_too_late <- l[get(tmpMP) > pophaz_max_per+1, .N]
-    if (n_too_late > 0) {
-      l[get(tmpMP) > pophaz_max_per+1, (tmpMP) := pophaz_max_per]
-      message(paste0(n_too_late, " rows in expanded data had calendar time values >= ", 
-                     pophaz_max_per+1 ,"; assumed for these the same expected hazard as for people at time ", pophaz_max_per))
+    rm(mid)
+    for (k in yByOth) {
+      levsNotOth <- setdiff(unique(l[[k]]), unique(pophaz[[k]]))
+      if (length(levsNotOth) > 0) message("WARNING: following levels (first five) of variable '", k, "' not in pophaz but exist in split data: ", paste0("'",levsNotOth[1:5],"'", collapse = ", "))
     }
-    
-    l[, (tmpMP) := cut(get(tmpMP), breaks = pb, right=FALSE, labels = c(-Inf,pl))]
-    set(l, j = tmpMP, value = fac2num(l[[tmpMP]]))
-    l[, (tmpMA) := cut(get(tmpMA), breaks = ab, right=FALSE, labels = c(-Inf,al))]
-    set(l, j = tmpMA, value = fac2num(l[[tmpMA]]))
-    
-    ## test for missing merging variable names
-    missing_vars <- intersect(merge_vars, names(l))
-    missing_vars <- setdiff(merge_vars, missing_vars)
-    if (length(missing_vars) != 0) {
-      missing_vars <- paste0(missing_vars, collapse = ", ")
-      stop("missing following variables in data that are present in pophaz: ", missing_vars, "; is merge = TRUE?")
-    }
-    rm(missing_vars)
-    
-    ## do merge, reorder columns
-    old_order <- names(l)
-    
-    setkeyv(l, merge_vars); setkeyv(pophaz, merge_vars)
-    l <- pophaz[l]
-    rm(pophaz)
-    
-    new_names <- setdiff(names(l), old_order)
-    new_order <- c(old_order, new_names)
-    setcolorder(l, new_order)
-    setnames(l, c("haz"), c("pop.haz"))
-    
-    setcolsnull(l, c(tmpMA, tmpMP), soft = FALSE)
     
     
     # pohar-perme weighting ----------------------------------------------------
     if (comp_pp) {
-      ## cumulative survivals needed for pp weighting.
-      setkeyv(l, c("lex.id","lex.multi"))
-      setkeyv(l, c("lex.id"))
-      
-      ## need a bunch of temporary variable names to compute pp weights
-      ## inside the data set without overwriting anything existing.
-      tmpPS <- makeTempVarName(data = l, pre = "pop.surv")
-      tmpPCS <- makeTempVarName(data = l, pre = "pop.cumsurv")
-      tmpPCSM <- makeTempVarName(data = l, pre = "pop.cumsurv.mid")
-      ## conditional survs
-      l[, (tmpPS) := exp(-pop.haz*lex.dur)] 
-      ## till end of each interval...
-      l[, (tmpPCS) := cumprod(get(tmpPS)), by = lex.id]
-      ## till start of each interval
-      l[, (tmpPCS) := get(tmpPCS) / (get(tmpPS))]    
-      
-      ## pohar-perme weighting by expected cumulative survival. approximation:
-      ## cumulative survival up to either middle of remaining surv.int (not individual-specific)
-      ## or up to middle of subject's follow-up in each row (individual-specific)
-      ## difference: e.g. 2 rows within a surv.int have either the same or different pp-weights
-      if (pp == "actual") {
-        l[, (tmpPCSM) := get(tmpPCS)*(get(tmpPS)^(1/2))]
-      }
-      if (pp == "delta") {
-        if (verbose) deltaTime <- proc.time()
-        setkeyv(l, c(tmpSI,"lex.id","lex.multi"))
-        setkeyv(l, c(tmpSI,"lex.id"))
-        ## expected survival up to middle of remaining time in surv.int
-        ## cumulation starting from first record for subject in each surv.int
-        
-        ## some records are the only one for a lex.id in a surv.int; these are easy
-        first_in_surv.int <- !duplicated(l, fromLast = FALSE)
-        last_in_surv.int <- !duplicated(l, fromLast = TRUE)
-        only_in_surv.int <- first_in_surv.int & last_in_surv.int
-        
-        #         last_in_surv.int <- last_in_surv.int & !first_in_surv.int
-        #         first_in_surv.int <- first_in_surv.int & !first_in_surv.int
-        
-        l[only_in_surv.int, (tmpPCSM) := get(tmpPCS) * exp(-pop.haz*(get(tmpSIR) - fot)/2)]
-        ## more complicated with many records in a surv.int per lex.id
-        if (any(!only_in_surv.int)) {
-          
-          
-          fdTmp <- makeTempVarName(l, pre = "fot.dist")
-          
-          ## distance from remaining surv.int mid-point starting from start of record, or lex.dur; for integration
-          l[, (fdTmp) := pmin((get(tmpSIR) - fot)/2, lex.dur)]
-          ## some records after mid-point can have negative fot.dist at this point
-          l[, (fdTmp) := pmax(get(fdTmp), 0)]
-          
-          ## some lex.id are censored / die before mid of surv.int; last record
-          ## must reach its fot.dist at least up to the mid (or be zero due to above)
-          l[last_in_surv.int, (fdTmp) := pmax((get(tmpSIR) - fot)/2, 0)]
-          
-          ## from start of first in surv.int till mid point
-          l[!only_in_surv.int, (tmpPCSM) := get(tmpPCS)[1L] * exp(-sum(pop.haz*get(fdTmp))), by = c(tmpSI, "lex.id")]
-          
-          ## todo: alternate faster method for integration!
-          setcolsnull(l, delete = c(fdTmp))
-        }
-        
-        rm(first_in_surv.int, last_in_surv.int, only_in_surv.int)
-        if (verbose) cat("Time taken by 'delta' integration of cumsurv: ", timetaken(deltaTime), "\n")
-      }
-      
-      
-      l[, pp := 1/(get(tmpPCSM))]
-      
-      setcolsnull(l, delete = c(tmpPS, tmpPCS, tmpPCSM), soft = FALSE)
+      setkeyv(l, c("lex.id", "fot"))
+      comp_pp_weights(l, surv.scale = "fot", breaks = breaks$fot, haz = "pop.haz", 
+                      style = "delta", verbose = verbose)
     }
     merge_msg <- "Time taken by merging pophaz"
     if (comp_pp) merge_msg <- paste0(merge_msg, " and computing pp")
@@ -837,11 +858,7 @@ lexpand <- function(data,
     if (verbose) cat(paste0(merge_msg, timetaken(pophaztime), "\n"))
     
     
-    
-    setcolsnull(l, c(tmpSI, tmpSILE, tmpSIL, tmpSIR), soft = FALSE)
-    
   }
-  
   
   # dropping after merging -----------------------------------------------------
   if (drop_after) {
@@ -852,131 +869,39 @@ lexpand <- function(data,
   
   
   # aggregating if appropriate -------------------------------------------------
-  if (testag != "NULL") {
+  if (agTy != "NULL") {
     
-    ## turn time scales mentioned in aggre argument
-    ## into intervals defined by breaks 
-    ## (instead of current values which may fall in between breaks) 
-    if (length(cut_vars) > 0) {
-      for (k in cut_vars) {
-        brks <- breaks[[k]]
-        set(l, j = k, value = cut(l[[k]] + .Machine$double.eps^(0.5), brks, right = FALSE, labels = brks[-length(brks)]))
-        if (aggre.type == "unique") set(l, j = k, value = try2int(fac2num(l[[k]])) ) 
-        ## note: cross-product needs time scales to remain as 
-        ## factor & keep levels() info for including zero-row levels in tables
+    setcolsnull(l, keep = c("lex.id","lex.dur", "fot", "per", "age", "lex.Cst", "lex.Xst", agVars, "pop.haz", "pp"))
+    
+    sumVars <- NULL
+    if ("pop.haz" %in% names(l)) {
+      if ("d.exp" %in% names(l)) stop("data had variable named 'd.exp' by which to aggregate, which would be overwritten due to aggregating expected numbers of cases (you have supplied pophaz AND are aggregating); please rename / remove it first.")
+      l[, c("d.exp") := pop.haz*lex.dur ]
+      sumVars <- c(sumVars, "d.exp")
+    }
+    if ("pop.haz" %in% names(l) && comp_pp && "pp" %in% names(l)) {
+      forceLexisDT(l, breaks = breaks, allScales = c("fot", "per", "age"))
+      ppFigs <- comp_pp_weighted_figures(lex = l, haz = "pop.haz", pp = "pp", event.ind = NULL)
+      bad_pp_vars <- intersect(names(ppFigs), names(l))
+      if (length(bad_pp_vars) > 0L) {
+        bad_pp_vars <- paste0("'",bad_pp_vars, "'", collapse = ", ")
+        stop("Data had variable(s) named ", bad_pp_vars, ", by which to aggregate, which would be overwritten due to aggregating expected numbers of cases (you have supplied pophaz AND are aggregating); please rename / remove them first")
       }
+      l[, names(ppFigs) := ppFigs]
+      sumVars <- c(sumVars, names(ppFigs))
+      rm(ppFigs)
+      
     }
     
-    ## WIP: en expression to evaluate that avoids computing pyrs and transitions
-    ## separately
-#     lastRows <- !duplicated(l, by=c("lex.id"), fromLast=T)
-#     mutaRows <- l[, lex.Xst != lex.Cst]
-#     exitTypes <- l[lastRows | mutaRows, unique(lex.Xst)]
-#     obsTypes <- l[lastRows | mutaRows, unique(paste0("from", lex.Cst, "to", lex.Xst))]
-#     agExpr <- "list( pyrs = sum(lex.dur), "
-#     agExpr <- paste0(agExpr, )
+    if (verbose) cat("Starting aggregation of split data... \n")
+    setDT(l)
+    forceLexisDT(l, allScales = c("fot", "per", "age"), breaks = breaks)
+    l <- try(aggre(lex = l, by = aggSub, type = aggre.type, verbose = verbose, sum.values = sumVars))
+    if (inherits(l, "try-error")) stop("Something went wrong when calling aggre() within lexpand(). Usual suspect: bad 'by' argument. Error message from aggre(): 
+                                       ", paste0(l[[1]]))
+    if (verbose) cat("Aggregation done. \n")
     
-    ## compute pyrs first in a separate table;
-    ## cannot easily compute transitions as well here, since
-    ## need to limit data to transitions and end-points of follow-up only
-    ## for transition computations
-    if (aggre.type == "unique") {
-      pyrsDT <- l[, list(pyrs = sum(lex.dur)), keyby = eval(aggre)]
-      nAggreFacs <- length(setdiff(names(pyrsDT), "pyrs"))
-      
-      if (verbose) cat("aggre.type = 'unique'; producing a table with ", nrow(pyrsDT), " rows \n")
-    } else {
-      
-      ## these will be used to detect the factor where time scale variables were used
-      ## (which may have any arbitrary name but fixed levels)
-      tsFacLevs <- lapply(l[, cut_vars, with = FALSE], levels)
-      
-      ## factor-like variables to aggregate by made into temporary variables
-      nAggreFacs <- ncol(l)
-      l <- cbind(setDT(eval(aggre, envir = l, enclos = environment())), l)
-      nAggreFacs <- ncol(l) - nAggreFacs
-      tempNames <- makeTempVarName(l, pre = "temp_")
-      tempNames <- paste0(tempNames, 1:nAggreFacs)
-      setnames(l, 1:nAggreFacs, tempNames) ## this will avoid name collisions down the road
-      
-      
-      aggre.by.unilevs <- function(x) {
-        if (is.factor(x)) {
-          levels(x)
-        } else {
-          unique(x)
-        }
-      }
-      ceejay <- lapply(l[, tempNames, with=FALSE], aggre.by.unilevs)
-      ceejay <- do.call(CJ, c(ceejay, sorted=FALSE, unique=FALSE))
-      
-      if (verbose) cat("aggre.type = 'cross-product'; producing a table with ", nrow(ceejay), " rows \n")
-      
-      setkeyv(l, tempNames)
-      ## evaluate sum of lex.durs in each level in 'ceejay', a cross-product table
-      ## of factor-like variables created via 'aggre'
-      pyrsDT <- l[ceejay, list(pyrs = sum(lex.dur)), by = .EACHI]
-      setcolsnull(l, delete = tempNames, soft = FALSE)
-      rm(ceejay, tempNames); gc()
-    }
-    
-    ## compute counts of transitions and merge with above;
-    ## compute a long-format table and cast to wide format
-    aggre$lex.Cst <- quote(lex.Cst)
-    aggre$lex.Xst <- quote(lex.Xst)
-    lastRows <- !duplicated(l, by=c("lex.id"), fromLast=T)
-    mutaRows <- l[, lex.Xst != lex.Cst]
-    obsDT  <- l[lastRows | mutaRows, list(obs=.N), keyby = eval(aggre)]
-    
-    mutate <- NULL ## to appease R CMD CHECK
-    obsDT[, mutate := factor(paste0("from",lex.Cst,"to",lex.Xst))]
-    setcolsnull(obsDT, c("lex.Cst", "lex.Xst"))
-    obsDT <- cast_simple(obsDT, columns = "mutate", 
-                         rows = setdiff(names(obsDT), c("obs","mutate")), 
-                         values = "obs")
-    
-    mergeVars <- names(obsDT)[1:nAggreFacs]
-    setnames(pyrsDT, 1:nAggreFacs, mergeVars)
-    setDT(pyrsDT); setDT(obsDT)
-    l <- merge(pyrsDT, obsDT, all.x=TRUE, all.y=TRUE, by = mergeVars, sort = FALSE)
-    
-    rm(pyrsDT, obsDT, mergeVars)
-    if (!is.data.table(l)) setDT(l, key = names(l)) ## sometimes merge.data.table not called somehow
-    gc() ## sometimes problems with releasing memory
-    
-    ## cross-product results in factor variables corresponding to
-    ## the time scales. we want them as numeric variables with
-    ## starts of intervals as levels.
-    if (aggre.type == "cross-product") {
-      whFac <- which(unlist(l[, lapply(.SD, is.factor)]))
-      facVars <- names(l)[whFac]
-      for (k in seq_along(tsFacLevs)) {
-        testLevs <- tsFacLevs[[k]]
-        for (var in facVars) {
-          allLevsTest <- all(levels(l[[var]]) %in% testLevs)
-          allLevsTest <- allLevsTest & all(testLevs %in% levels(l[[var]]))
-                             
-          if (allLevsTest) {
-            set(l, j = var, value = try2int(fac2num(l[[var]])))
-          }
-        }
-      }
-    }
-   
-    
-    ## NA pyrs / observations should be zero
-    whMod <- which(names(l) == "pyrs")
-    whMod <- names(l)[whMod:length(names(l))] ## since transition vars always after "pyrs" var
-    for (v in whMod) {
-      l[is.na(get(v)), (v) := 0]
-    }
-    
-    setattr(l, "class", c("pe","data.table","data.frame"))
-    setattr(l, "breaks", breaks)
-#     setaggre(l, obs = names(l)[substr(names(l),1,4) == "from"], 
-#              pyrs = "pyrs", by = names(l)[1:nAggreFacs], 
-#              d.exp = if("d.exp" %in% names(l)) "d.exp" else NULL)
-    if (!getOption("popEpi.datatable")) setDFpe(l)
+    if (!getOption("popEpi.datatable") && is.data.table(l)) setDFpe(l)
     
   } else {
     
@@ -990,8 +915,8 @@ lexpand <- function(data,
     set(l, j = "lex.multi", value = NULL)
     setattr(l, "time.scales", c("fot","per","age"))
     setattr(l, "breaks", breaks)
-    setattr(l, "class", c("pe","Lexis","data.table","data.frame"))
-    if (!getOption("popEpi.datatable")) setDFpe(l)
+    setattr(l, "class", c("Lexis","data.table","data.frame"))
+    if (!getOption("popEpi.datatable") && is.data.table(l)) setDFpe(l)
     
     
     

@@ -2,12 +2,12 @@
 #' @author Joonas Miettinen
 #' @description Fit a marginal relative survival curve based on a \code{relpois} fit
 #' @param object a \code{relpois} object
-#' @param conf.int confidence interval level; e.g. \code{0.95} for \code{95 \%}
-#' confidence intervals (region)
 #' @details
+#' \pkg{popEpi} version 0.2.1 supported confidence intervals but due to lack
+#' of testing this is disabled until the intervals are subjected to more rigorous testing.
+#' 
 #' Currently only estimates a marginal curve, i.e. the average of all
-#' possible individual curves. The confidence intervals are based on an
-#' assumption of asymptotic normalcy at the cumulative hazard level.
+#' possible individual curves. 
 #' 
 #' Only supported when the reserved \code{FOT} variable was used in \code{relpois}.
 #' Computes a curve for each unique combination of covariates (e.g. 4 sets) 
@@ -34,31 +34,43 @@
 #' sr$agegr <- cut(sr$dg_age, breaks = ab, right = FALSE)
 #'
 #' BL <- list(fot= seq(0,10,1/12))
-#' x <- lexpand(sr, breaks=BL, pophaz=popmort, status=status)
+#' pm <- data.frame(popEpi::popmort)
+#' x <- lexpand(sr, breaks=BL, pophaz=pm, 
+#'              birth = bi_date, 
+#'              entry = dg_date, exit = ex_date, 
+#'              status  = status %in% 1:2)
 #' 
-#' rpm <- relpois(x, formula = lex.Xst %in% 1:2 ~ -1+ FOT + agegr, fot.breaks=c(0,0.25,0.5,1:8,10))
+#' rpm <- relpois(x, formula = lex.Xst %in% 1:2 ~ -1+ FOT + agegr, 
+#'                fot.breaks=c(0,0.25,0.5,1:8,10))
 #' pmc <- rpcurve(rpm)
 #'
 #' ## compare with non-parametric estimates
-#' st <- survtab(x,relsurv.method = "e2", agegr.w.breaks=c(0,45,55,65,75,Inf))
+#' names(pm) <- c("sex", "per", "age", "haz")
+#' x$agegr <- cut(x$dg_age, c(0,45,55,65,75,Inf), right = FALSE)
+#' st <- survtab(fot ~ adjust(agegr), data = x, weights = "internal",
+#'               pophaz = pm)
 #'
-#' plot(I(c(0.5,1))~I(c(0,10)), type="n", xlab="years", ylab="relative survival")
-#' matlines(y = st[, list(r.e2.as, r.e2.as.lo, r.e2.as.hi)], x = st$Tstop, col="blue", lty=c(1,2,2))
-#' matlines(y = pmc[, list(est, lo, hi)], x = pmc$Tstop, col="red", lty=c(1,2,2))
+#'
+#' plot(st, y = "r.e2.as")
+#' lines(y = pmc$est, x = pmc$Tstop, col="red")
 #' }
 #' 
 #' 
 #' 
 
-rpcurve <- function(object = NULL, conf.int = 0.95) {
+rpcurve <- function(object = NULL) {
   
-  FOT <- uni_id <- uni_n <- uni_w <- lo <- hi <- NULL
+  Tstart <- FOT <- uni_id <- uni_n <- uni_w <- 
+    lo <- hi <- NULL  ## APPEASE R CMD CHECK
   ## sanity checks -------------------------------------------------------------
   if (is.null(object)) stop("no relative Poisson excess hazard model given")
   
   if (!inherits(object, "relpois")) stop("not a relpois object")
   
   if (!"FOT" %in% all.vars(object$formula)) stop("No FOT variable in model formula")
+  
+  est <- fot <- pop.haz <- delta <- Tstop <- Tstar <- lex.id <- 
+    fot <- lex.multi <- pyrs <- NULL ## appease R CMD CHECK
   
   ## collate surv.ints, breaks, deltas -----------------------------------------
   fotlevs <- as.factor(sort(as.character(unique(object$model$FOT))))
@@ -117,10 +129,10 @@ rpcurve <- function(object = NULL, conf.int = 0.95) {
   l <- lapply(l, attrsetter)
 
   epicumgetter <- function(x, ...) {
-    Epi::ci.cum(ctr.mat = x, ..., alpha = 1-conf.int)
+    Epi::ci.cum(ctr.mat = x, ..., alpha = 1-0.95, Exp = TRUE, ci.Exp = TRUE)
   }
   
-  tab <- lapply(l, epicumgetter, obj=object, Exp = TRUE, intl = fb$delta); rm(l)
+  tab <- lapply(l, epicumgetter, obj=object, intl = fb$delta); rm(l)
 
   ## collate & compute relative survivals --------------------------------------
   tab <- lapply(tab, as.data.table)
@@ -142,9 +154,12 @@ rpcurve <- function(object = NULL, conf.int = 0.95) {
   setkey(tab, FOT); setkey(fb, FOT)
   tab <- fb[tab]
   
-  setattr(tab, "class", c("pe", "data.table", "data.frame"))
+  ## disabled CI computation in 0.2.2 due to lack of testing & certainty of correctness
+  setcolsnull(tab, c("lo", "hi"))
+  
+  setattr(tab, "class", c("data.table", "data.frame"))
   if (!getOption("popEpi.datatable")) setDFpe(tab)
-  tab
+  tab[]
 }
 
 #' @title Relative Poisson family object

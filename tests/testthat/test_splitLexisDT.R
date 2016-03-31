@@ -2,6 +2,7 @@ context("Compare splitLexisDT results with splitLexis results")
 
 test_that("splitLexisDT and splitLexis are congruent", {
   skip_on_cran()
+  skip_on_travis()
   library(Epi)
   
   sire2 <- copy(sire)
@@ -11,31 +12,21 @@ test_that("splitLexisDT and splitLexis are congruent", {
   sire2[, id := 1:.N]
   
   BL <- list(fot = 0:5, fot = 2:6, fot = c(10,Inf), fot = c(0, Inf),
-             per = 1990:1995, per = 1950:1990, per = c(1900, 2100), 
+             per = 1990:1995, per = seq(1950,2010,10), per = c(1900, 2100), 
              age = seq(0,150,5), age = c(25,100), age = c(0, 60))
   
   x <- Lexis(data=sire2[dg_date < ex_date], entry=list(fot=0, per=dg_yrs, age=dg_age),
              exit=list(per=ex_yrs), merge=TRUE, exit.status=1L, entry.status = 0L)
-  # if (!is.data.table(x)) setDT(x)
-  #   
-  #     x2 <- splitLexis(x, breaks = BL[[1]], time.scale = "fot")
-  #     x3 <- splitLexisDT(x, breaks = BL[[1]], timeScale = "fot", drop = FALSE)
-  #   x2 <- intelliDrop(x2,  breaks = list(fot = BL[[1]]))
-  #   x3 <- intelliDrop(x3,  breaks = list(fot = BL[[1]]))
-  #   x3 <- splitLexisDT(x, breaks = BL[[1]], timeScale = "fot", drop = TRUE)
+  setDT(x)
+  forceLexisDT(x, breaks = list(fot=NULL,per=NULL,age=NULL),
+               allScales = c("fot", "per", "age"))
   
-  #   x2 <- copy(x)
-  #   setDT(x2)
-  #   intelliCrop(x2, breaks = list(per = 1995:2000))
-  #   x3 <- intelliDrop(x2, breaks = list(per = 1995:2000))
-  #   setattr(x3, "class", c("Lexis", "data.table", "data.frame"))
-  #   setattr(x3, "time.scales", attr(x, "time.scales"))
-  #   x4 <- splitLexisDT(x, breaks = 1995:2000, timeScale = "per", drop = T)
   
-  #   
-  #   x5 <- splitLexis(x,  breaks = 1995:2000, time.scale = "per")
-  #   setDT(x5)
-  #   x5 <- intelliDrop(x5, breaks = list(per = 1995:2000))
+  # x2 <- splitLexis(x, breaks = BL[[3]], time.scale = "fot")
+  # x3 <- splitLexisDT(x, breaks = BL[[3]], timeScale = "fot", drop = FALSE)
+  # x2 <- intelliDrop(setDT(x2),  breaks = list(fot = BL[[3]]))
+  # x3 <- intelliDrop(x3,  breaks = list(fot = BL[[3]]))
+  # x4 <- splitLexisDT(x, breaks = BL[[3]], timeScale = "fot", drop = TRUE)
   
   
   # one row per id ---------------------------------------------------------------

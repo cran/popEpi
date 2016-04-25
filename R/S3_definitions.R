@@ -1019,14 +1019,16 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
 #' ## or
 #' plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
-lines.survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, col=NULL, lty=NULL, ...) {
+lines.survtab <- function(x, y = NULL, subset = NULL, 
+                          conf.int = TRUE, col=NULL, lty=NULL, ...) {
   Tstop <- NULL ## APPEASE R CMD CHECK
   ## prep ----------------------------------------------------------------------
   PF <- parent.frame(1L)
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data = x, subset, enclos = PF)
   
-  l <- prep_plot_survtab(x = x, y = y, subset = subset, conf.int = conf.int, enclos = environment())
+  l <- prep_plot_survtab(x = x, y = y, subset = subset, 
+                         conf.int = conf.int, enclos = environment())
   x <- l$x
   y <- l$y
   y.ci <- l$y.ci
@@ -1035,65 +1037,119 @@ lines.survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, col=NULL,
   strata <- l$strata ## character vector of var names
   
   
-  ## need to determine total number of strata; also used in casting ------------
-  ## note: if no strata, create a dummy repeating 1L as strata
-  tmpBy <- makeTempVarName(x)
-  if (length(strata) == 0L) {
-    strata <- tmpBy
-    x[, c(tmpBy) := 1L]
-  }
-  x[, c(tmpBy) := interaction(mget(rev(strata)))]
-  x[, c(tmpBy) := factor(get(tmpBy), labels = 1:uniqueN(get(tmpBy)))]
-  x[, c(tmpBy) := robust_values(get(tmpBy))]
-  
-  Nstrata <- x[, uniqueN(get(tmpBy))]
-  
-  ## color and line type matching to strata ------------------------------------
-  if (is.null(lty)) {
-    lty <- if (conf.int) c(1,2,2) else 1
-  } else {
-    lty <- if(conf.int) rep(lty, each = 3) else lty
-  }
-  if (is.null(col)) {
-    col <- if(conf.int) rep(1, 3) else 1
-  } else {
-    col <- if(conf.int) rep(col, each = 3) else col 
-  }
-  
   ## impute first values (time = 0, surv = 1 / cif = 0) ------------------------
   
   is_CIF <- if (substr(y, 1, 3) == "CIF") TRUE else FALSE
-  first <- x[!duplicated(get(tmpBy)), ]
+  setkeyv(x, c(strata, "Tstop"))
+  first <- x[1, ]
+  if (length(strata)) first <- unique(x, by = strata)
   first[, c(y) := ifelse(is_CIF, 0, 1)]
   first[, Tstop := 0]
   
   if (length(y.ci) > 0) first[, (y.ci) := get(y) ]
   x <- rbindlist(list(first, x[, ]), use.names = TRUE)
-  setkeyv(x, c(tmpBy, "surv.int"))
-  
-  ## cast to accommodate strata ------------------------------------------------
-  x <- cast_simple(x, columns = tmpBy, rows = "Tstop", 
-                   values = c(y, y.ci))
-  estVars <- names(x)[1:Nstrata+1]
-  strata <- lapply(rep(y, Nstrata), gsub, replacement = "", x = estVars)
-  strata <- unique(unlist(strata))
-  newOrder <- NULL
-  
-  ## reorder to match col, lty, etc. -------------------------------------------
-  for (k in strata) {
-    newOrder <- c(newOrder, names(x)[grep(k, names(x))])
-  }
-  setcolorder(x, c("Tstop", newOrder))
-  setDF(x)
+  setkeyv(x, c(strata, "Tstop"))
   
   ## plotting ------------------------------------------------------------------
-  graphics::matlines(x = x$Tstop, 
-                     y = x[, setdiff(names(x), "Tstop")], 
-                     col=col, lty=lty, ...)
+  
+  if (is.null(lty)) {
+    lty <- list(c(1,2,2))
+    if (!length(y.ci)) lty <- list(1)
+  }
+  
+  lines_by(x = "Tstop", y = c(y, y.ci), 
+           strata.vars = strata, 
+           data = x, col = col, lty = lty, ...)
   
   
 }
 
+
+
+lines_by <- function(x, y, strata.vars = NULL, data, col, lty, ...) {
+  ## INTENTION: plots lines separately by strata,
+  ## which may have different colours / linetypes.
+  ## @param x a variable to plot y by; a character string
+  ## @param y a character vector of variables to plot by x;
+  ## e.g. the estimate and confidence interval variables
+  ## @param strata.vars a character string vector; variables
+  ## to add lines by, which may have different colours etc for identification
+  ## @param data a data.frame where x, y, and strata.vars are found
+  ## @param col a vector of colors passed to lines(); if vector length 1,
+  ## used for each level of strata. If vector length > 1, 
+  ## has to match to total number of strata. If list, must match
+  ## to number of strata by length and contain elements of length
+  ## length(y).
+  ## @param see col; line type passed to lines().
+  ## @param ... other arguments passed on to lines().
+  
+  TF <- environment()
+  PF <- parent.frame(1L)
+  
+  stopifnot(is.data.frame(data))
+  stopifnot(is.character(x) && length(x) == 1L)
+  stopifnot(is.character(y) && length(y) > 0L)
+  stopifnot(is.character(strata.vars) || is.null(strata.vars))
+  all_names_present(data, c(x,y,strata.vars))
+  
+  d <- mget(c(strata.vars, y, x), envir = as.environment(data))
+  setDT(d)
+  setkeyv(d, c(strata.vars, x))
+  
+  ## create list of datas
+  l <- list(d)
+  inter <- 1L
+  if (length(strata.vars)) {
+    inter <- do.call(interaction, d[, strata.vars, with = FALSE])
+    l <- vector("list", uniqueN(inter))
+    l <- split(d, f = inter, drop = TRUE)
+  }
+  
+  l <- lapply(l, function(tab) {
+    setDT(tab)
+    setcolsnull(tab, keep = c(x, y))
+    tab
+  })
+  
+  
+  ## figure out colours and ltys
+  for (objname in c("col", "lty")) {
+    obj <- TF[[objname]]
+    
+    if (missing(obj) || !length(obj)) obj <- 1
+    if (!length(obj) %in% c(1, length(l))) {
+      stop("Argument ", objname, " is not of length 1 or ",
+           "of length equal to total number of strata (",
+           length(l), ").")
+    }
+    
+    ol <- unlist(lapply(obj, length))
+    if (length(y) > 1 && is.list(obj) && !all(ol %in% c(1, length(y)))) {
+      stop("Argument y is of length > 1, and you passed ",
+           objname, " as a list of values, but at least one element is not ",
+           "of length 1 or length(y).")
+    }
+    
+    ## NOTE: rep works for vector and list just the same
+    if (length(obj) == 1) obj <- rep(obj, length(l))
+    obj <- as.list(obj)
+    
+    assign(x = objname, value = obj)
+  }
+  
+  lapply(seq_along(l), function(i) {
+    
+    tab <- l[[i]]
+    cols <- col[[i]]
+    ltys <- lty[[i]]
+    
+    matlines(x = tab[[x]], y = tab[, y, with = FALSE], 
+             col = cols, lty = ltys, ...)
+    
+  })
+  
+  invisible(NULL)
+}
 
 
 

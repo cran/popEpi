@@ -5,7 +5,7 @@
 \title{Excess hazard Poisson model}
 \usage{
 relpois_ag(formula, data, d.exp, offset = NULL, breaks = NULL,
-  subset = NULL, piecewise = TRUE, ...)
+  subset = NULL, piecewise = TRUE, check = TRUE, ...)
 }
 \arguments{
 \item{formula}{a formula with the counts of events as the response.
@@ -38,6 +38,10 @@ Otherwise the time scale left as it is, usually a numeric variable.
 E.g. if \code{formula = counts ~ TS1*VAR1}, \code{TS1} is transformed
 into a factor before fitting model.}
 
+\item{check}{\code{logical}; if \code{TRUE}, performs check on the 
+negativity excess cases by factor-like covariates in formula - 
+negative excess cases will very likely lead to non-converging model}
+
 \item{...}{any other argument passed on to \code{\link[stats]{glm}} such as 
 \code{control} or \code{weights}}
 }
@@ -50,17 +54,18 @@ Hazards Model
 }
 \examples{
 ## use the simulated rectal cancer cohort
-sr <- copy(sire)
-sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
+data(sire, package = "popEpi")
+sire$agegr <- cut(sire$dg_age, c(0,45,60,Inf), right=FALSE)
 
-## usable straight away after splitting
+## create aggregated example data
 fb <- c(0,3/12,6/12,1,2,3,4,5)
-x <- lexpand(sr, birth = bi_date, entry = dg_date,
+x <- lexpand(sire, birth = bi_date, entry = dg_date,
              exit = ex_date, status=status \%in\% 1:2,
              breaks = list(fot=fb), 
              pophaz=popmort, pp = FALSE,
              aggre = list(agegr, fot))
              
+## fit model using aggregated data
 rpm <- relpois_ag(formula = from0to1 ~ fot + agegr,  data = x,
                   d.exp = d.exp, offset = log(pyrs))
 summary(rpm)
@@ -69,11 +74,22 @@ summary(rpm)
 rpm2 <- update(rpm, . ~ fot*agegr)
 anova(rpm, rpm2, test="LRT")
 AIC(rpm, rpm2)
+
+## other features such as residuals or predicting are not guaranteed
+## to work as intended.
 }
 \author{
 Joonas Miettinen, Karri Seppa
 }
 \seealso{
 \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
+
+Other main_functions: \code{\link{rate}},
+  \code{\link{relpois}}, \code{\link{sirspline}},
+  \code{\link{sir}}, \code{\link{survmean}},
+  \code{\link{survtab_ag}}, \code{\link{survtab}}
+
+Other relpois_related: \code{\link{RPL}},
+  \code{\link{relpois}}, \code{\link{rpcurve}}
 }
 

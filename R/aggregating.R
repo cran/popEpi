@@ -9,22 +9,31 @@
 #' @param values a character string vector; the names of value variables
 #' @param by a character string vector; the names of variables by which 
 #' \code{values} have been tabulated
+#' @param breaks a list of breaks, where each element is a breaks vector
+#' as usually passed to e.g. \code{\link{splitLexisDT}}. The list must be
+#' fully named, with the names corresponding to time scales at the aggregate
+#' level in your data. Every unique value in a time scale variable in data must
+#' also exist in the corresponding vector in the breaks list.
 #' @details 
 #' 
 #' \code{setaggre} sets \code{x} to the \code{aggre} class in place 
 #' without taking a copy as e.g. \code{as.data.frame.XXX} functions do; see e.g. 
 #' \code{\link[data.table]{setDT}}.
 #' 
-#' @seealso 
-#' \code{\link{as.aggre}}
+#' @family aggregation_related
 #' 
 #' @export setaggre
 #' @examples 
 #' df <- data.frame(sex = rep(c("male", "female"), each = 5), 
 #'                  obs = rpois(10, rep(7,5, each=5)), 
 #'                  pyrs = rpois(10, lambda = 10000))
+#' ## without any breaks
 #' setaggre(df, values = c("obs", "pyrs"), by = "sex")
-setaggre <- function(x, values = NULL, by = setdiff(names(x), values)) {
+#' df <- data.frame(df)
+#' df$FUT <- 0:4
+#' ## with breaks list
+#' setaggre(df, values = c("obs", "pyrs"), by = "sex", breaks = list(FUT = 0:5))
+setaggre <- function(x, values = NULL, by = NULL, breaks = NULL) {
   ## input: aggregated data in data.frame or data.table format
   ## intention: any user can define their data as an aggregated data set
   ## which will be usable by survtab / sir / other
@@ -32,6 +41,9 @@ setaggre <- function(x, values = NULL, by = setdiff(names(x), values)) {
   ## sets "aggre.meta" attribute, a list of names of various variables.
   ## survtab for aggregated data will need this attribute to work.
   all_names_present(x, c(values, by))
+  
+  if (!length(by) && length(values)) by <- setdiff(names(x), values)
+  if (length(by) && !length(values)) values <- setdiff(names(x), by)
   
   if (!inherits(x, "aggre")) {
     cl <- class(x)
@@ -44,7 +56,8 @@ setaggre <- function(x, values = NULL, by = setdiff(names(x), values)) {
   }
   
   
-  setattr(x, "aggre.meta", list(values = values, by = by))
+  setattr(x, "aggre.meta", list(values = values, by = by, breaks = breaks))
+  setattr(x, "breaks", breaks)
   invisible(x)
 }
 
@@ -53,17 +66,13 @@ setaggre <- function(x, values = NULL, by = setdiff(names(x), values)) {
 #' @description Coerces an R object to an \code{aggre} object, identifying
 #' the object as one containing aggregated counts, person-years and other
 #' information. 
-#' @param x an R object to coerce to \code{aggre}; must be 
-#' a \code{data.frame} or \code{data.table}
-#' @param values a character string vector; the names of value variables
-#' @param by a character string vector; the names of variables by which 
-#' \code{values} have been tabulated
+#' @inheritParams setaggre
 #' @param ... arguments passed to or from methods
-#' @seealso 
-#' \code{\link{setaggre}} for modifying in place
+#' @family aggregation_related
 #' 
 #' 
 #' @examples 
+#' library("data.table")
 #' df <- data.frame(sex = rep(c("male", "female"), each = 5), 
 #'                  obs = rpois(10, rep(7,5, each=5)), 
 #'                  pyrs = rpois(10, lambda = 10000))
@@ -75,25 +84,29 @@ setaggre <- function(x, values = NULL, by = setdiff(names(x), values)) {
 #' class(df)
 #' class(dt)
 #' 
+#' BL <- list(fot = 0:5)
+#' df <- data.frame(df)
+#' df <- as.aggre(df, values = c("pyrs", "obs"), by = "sex", breaks = BL)
+#' 
 #' @export
-as.aggre <- function(x, values = NULL, by = setdiff(names(x), values), ...) {
+as.aggre <- function(x, values = NULL, by = NULL, breaks = NULL, ...) {
   UseMethod("as.aggre", x)
 }
 
 #' @describeIn as.aggre Coerces a \code{data.frame} to an \code{aggre} object
 #' @export
-as.aggre.data.frame <- function(x, values = NULL, by = setdiff(names(x), values), ...) {
+as.aggre.data.frame <- function(x, values = NULL, by = NULL, breaks = NULL, ...) {
   x <- copy(x)
-  setaggre(x, values = values, by = by, ...)
+  setaggre(x, values = values, by = by, breaks = breaks, ...)
   setattr(x, "class", c("aggre", "data.frame"))
   x[]
 }
 
 #' @describeIn as.aggre Coerces a \code{data.table} to an \code{aggre} object
 #' @export
-as.aggre.data.table <- function(x, values = NULL, by = setdiff(names(x), values), ...) {
+as.aggre.data.table <- function(x, values = NULL, by = NULL, breaks = NULL, ...) {
   x <- copy(x)
-  setaggre(x, values = values, by = by, ...)
+  setaggre(x, values = values, by = by, breaks = breaks, ...)
   setattr(x, "class", c("aggre", "data.table", "data.frame"))
   x[]
 }
@@ -226,6 +239,7 @@ as.aggre.default <- function(x, ...) {
 #' and \code{\link{ltable}} for a \code{data.table} based aggregator. Neither
 #' are directly applicable to split \code{Lexis} data.
 #' 
+#' @family aggregation_related
 #' 
 #' @examples 
 #' 
@@ -576,10 +590,11 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   
   ## final touch ---------------------------------------------------------------
   setDT(trans)
-  alloc.col(trans) ## some problems with internal errors...
-  setaggre(trans, values = c("pyrs", "at.risk", transitions, sumNames), by = byNames)
-  setattr(trans, "breaks", breaks)
-  if (!getOption("popEpi.datatable")) setDFpe(trans)
+  ## some problems with internal errors...
+  alloc.col(trans, n = max(truelength(trans), ncol(trans) + 1024L)) 
+  setaggre(trans, values = c("pyrs", "at.risk", transitions, sumNames), 
+           by = byNames, breaks = breaks)
+  if (!return_DT()) setDFpe(trans)
   if (verbose) cat("Time taken by aggre(): ", timetaken(allTime), "\n")
   
   

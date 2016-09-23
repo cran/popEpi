@@ -83,7 +83,8 @@
 #' @export ltable
 #' 
 #' @examples
-#' sr <- copy(sire)
+#' data("sire", package = "popEpi")
+#' sr <- sire
 #' sr$agegroup <- cut(sr$dg_age, breaks=c(0,45,60,75,85,Inf))
 #' ## counts by default
 #' ltable(sr, "agegroup")
@@ -142,7 +143,7 @@ ltable <- function(data,
   
   ## final touch ---------------------------------------------------------------
   
-  if (!getOption("popEpi.datatable")) {
+  if (!return_DT()) {
     setDFpe(res)
   }
   res
@@ -220,22 +221,20 @@ expr.by.cj <- function(data,
     if (use.levels && is.factor(x)) {
       factor(levels(x), levels = levels(x))
     } else {
-      sort(unique(x))
+      sort(unique(x), na.last = TRUE)
     }
   }
-  
   cj <- lapply(as.list(tab)[by.vars], lev_fun)
   cj <- do.call(CJ, c(cj, unique = FALSE, sorted = FALSE))
   if (na.rm) cj <- na.omit(cj)
   
   ## eval expression -----------------------------------------------------------
-  exprVars <- setdiff(names(tab), by.vars)
-  if (!length(.SDcols)) .SDcols <- exprVars
-  if (!length(.SDcols)) .SDcols <- tabVars
-  res <- tab[subset][cj, eval(e, envir = .SD), 
-                     on = by.vars, 
-                     by = .EACHI, 
-                     .SDcols = .SDcols, ...]
+  tabe <- "tab[subset][cj, eval(e), 
+                       on = by.vars, 
+                       by = .EACHI, ..."
+  tabe <- if (is.null(.SDcols)) tabe else paste0(tabe, ", .SDcols = .SDcols")
+  tabe <- paste0(tabe ,"]")
+  res <- eval(parse(text = tabe))
   
   setcolsnull(res, delete = tmpDum, soft = TRUE)
   by.vars <- setdiff(by.vars, tmpDum)
@@ -243,7 +242,7 @@ expr.by.cj <- function(data,
   ## final touch ---------------------------------------------------------------
   if (length(res)) setcolorder(res, c(by.vars, setdiff(names(res), by.vars)))
   if (length(by.vars)) setkeyv(res, by.vars)
-  if (!getOption("popEpi.datatable")) {
+  if (!return_DT()) {
     setDFpe(res)
   }
   res

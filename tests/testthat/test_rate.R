@@ -31,6 +31,37 @@ test_that("rate works with different weights", {
   }
 })
 
+test_that("rate CIs and SEs are correct", {
+  
+  ci <-data.table(agegroup = c(1,2,3,4),
+                  obs=c(4,13,8,7),
+                  pyrs=c(96,237,105,32),
+                  rate=c(4.2,5.5,7.6,21.9),
+                  std.pop=c(2773,2556,1113,184))
+  
+  a1 <- ci[,sum(obs/pyrs*std.pop)/sum(std.pop)] # oikea estimaatti
+  a2 <- ci[,sqrt(sum(std.pop^2*((obs/pyrs)*(1-obs/pyrs))/pyrs))/sum(std.pop)] # myös oikea tulos  
+  
+  ci0 <- rate(data = ci, obs = 'obs', pyrs = 'pyrs', print = NULL, adjust = 'agegroup', weights = list(agegroup = c(2773,2556,1113,184)))
+  expect_equal(ci0[,SE.rate.adj], a2, tolerance=0.0005) # test
+  expect_equal(ci0[,rate.adj],a1)
+
+  # another...
+  ci <-data.table(agegroup = c(1,2,3,4),
+                  obs=c(4,13,8,7),
+                  pyrs=c(960,2370,1050,320),
+                  rate=c(4.2,5.5,7.6,21.9),
+                  std.pop=c(2773,2556,1113,184))
+  
+  a1 <- ci[,sum(obs/pyrs*std.pop)/sum(std.pop)] # oikea estimaatti
+  a2 <- ci[,sqrt(sum(std.pop^2*((obs/pyrs)*(1-obs/pyrs))/pyrs))/sum(std.pop)] # myös oikea tulos  
+  
+  ci0 <- rate(data = ci, obs = 'obs', pyrs = 'pyrs', print = NULL, adjust = 'agegroup', weights = list(agegroup = c(2773,2556,1113,184)))
+  expect_equal(c(ci0$rate.adj.lo, ci0$rate.adj.hi),c(a1 - a2*1.96, a1 + a2*1.96), tolerance = 0.0006)
+  expect_gt(ci0[,SE.rate.adj], a2) # WHYY?!
+  expect_equal(ci0[,rate.adj],a1) # ok
+})
+
 test_that("makeWeightsDT works in rate", {
   set.seed(5)
   p18 <- data.table( OBS=round(runif(36)*10), PYRS=round(runif(36)*10000), AGEGROUP=1:18, COV = rep(c(1,2), each = 18))
@@ -155,10 +186,90 @@ test_that("rate works with different weights and syntaxies", {
 })
 
 
+test_that("in rate levels of adjust are printable", {
+  w1 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = list(COV, AG=findInterval(AGEGROUP, c(0,8,20))), adjust ='AGEGROUP', weights = 'cohort')
+  w2 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = list(COV, ag=findInterval(AGEGROUP, c(1,8,20))), adjust ='AGEGROUP', weights = 'world_2000_20of5')
+  expect_equal(w1[,.N]  ,4)
+})
+
+test_that("rate.plot doesnt throw an error", {
+  w1 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = list(COV, AG=findInterval(AGEGROUP, c(0,8,20))), adjust ='AGEGROUP', weights = 'cohort')
+  w2 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = list(COV), adjust ='AGEGROUP', weights = 'world_2000_20of5')
+  w3 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS')
+  expect_silent(plot(w1))
+  expect_silent(plot(w2, col = 4:5, conf.int = FALSE))
+  expect_silent(plot(w3, eps = 0.01))
+})
+
+
 test_that("rate works with missing values", {
   p18c <- copy(p18)
   p18c[c(1,6), PYRS := NA]
   expect_warning( rate(data = p18c, obs = 'OBS', pyrs = 'PYRS', adjust = 'AGEGROUP', weights = 1:18), "Data contains 2 NA values." )
+})
+
+test_that("rate standard error and CIS works", {
+  se <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', adjust = 'AGEGROUP', weights = 1:18)
+  
+  expect_equal(se[, SE.rate.adj] , se[, SE.rate], tolerance = 0.00002)
+  expect_lt(se[, rate.adj.lo], se[, rate.adj])
+  expect_lt(se[, rate.adj], se[, rate.adj.hi])
+  expect_lt(se[, rate.lo], se[, rate])
+  expect_lt(se[, rate], se[, rate.hi])
+  expect_equal(se[, sqrt(OBS/PYRS^2)], se[, SE.rate])
+  expect_equal( se[, rate.adj - SE.rate.adj*2], se[,rate.adj.lo], tolerance = 0.00002)
+  expect_equal( se[, rate.adj + SE.rate.adj*2], se[,rate.adj.hi], tolerance = 0.00002)
+})
+
+
+
+test_that("rate_ratio works", {
+
+  w1 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = c(1:18))
+  w2 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = 'world_2000_20of5')
+  w3 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = 'COV')
+  cru <- round((88/109818)/(78/110421),3)
+  
+  
+  # rate obj, one line
+  expect_equal( rate_ratio( w1[1], w1[2], crude = FALSE, SE.method = FALSE),
+                rate_ratio( w1[1], w1[2], crude = TRUE, SE.method = FALSE))  # oikein, crude ignoorattu
+  expect_equal( rate_ratio( w1[1], w1[2], crude = FALSE, SE.method = TRUE)$rate_ratio, 
+                round(w1[1, rate.adj]/ w1[2, rate.adj],3))
+  
+  expect_equal( rate_ratio( w1[1], w1[2], crude = TRUE, SE.method = TRUE),
+                data.frame(rate_ratio = 1.134, lower=1.087, upper=1.182))
+  
+  # rate obj crude
+  suppressMessages(
+    expect_equal( rate_ratio( w3[1], w3[2], crude = TRUE, SE.method = TRUE),  # oikein, hiljaa
+                  rate_ratio( w3[1], w3[2], crude = FALSE, SE.method = TRUE))  # oikein, message
+  )
+  # rate + SE
+  x <- c(w1[1, rate], w1[1, SE.rate])
+  y <- c(w1[2, rate], w1[2, SE.rate])
+  
+  expect_error( rate_ratio( x, y, crude = FALSE, SE.method = FALSE) ) # error, käyttäjän vastuu?
+  expect_error( rate_ratio( x, y, crude = TRUE,  SE.method = FALSE) )  # error, käyttäjän vastuu?
+  expect_equal( rate_ratio( x, y, crude = FALSE, SE.method = TRUE), 
+                rate_ratio( x, y, crude = TRUE,  SE.method = TRUE))
+  
+  # Obs + Pyrs
+  expect_warning( rate_ratio( c(88,78), c(109818,110421), crude = FALSE, SE.method = TRUE) ) # oikein, message
+  a <- rate_ratio( c(88,78), c(109818,110421), crude = TRUE, SE.method = FALSE)$rate_ratio
+  expect_equal(a, (c(88,78)/c(109818,110421))[1]/(c(88,78)/c(109818,110421))[2], tolerance = 0.001 )
+  
+  # multi row rate objects
+  a0 <- rate_ratio( w1, w2, crude = FALSE, SE.method = TRUE) 
+  b0 <- rate_ratio( w1[1], w2[1], crude = FALSE, SE.method = TRUE) 
+  c0 <- rate_ratio( w1[2], w2[2], crude = FALSE, SE.method = TRUE) 
+  
+  expect_equal(a0[1,], b0)
+  expect_equal(c(a0[2,]), c(c0))
+
+  #rate_ratio( w1, w2[1], crude = FALSE, SE.method = TRUE) # väärä, pitäisi tulla data.frame
+  #rate_ratio( w1, c(0.0005,0.00002), crude = FALSE, SE.method = TRUE) # väärä, pitäisi tulla data.frame
+ 
 })
 
 

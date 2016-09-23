@@ -240,10 +240,12 @@ test_that("its possible to pass dynamically created arguments", {
   a <- aggre(x, by = list(group, agegr, FUT))
   
   group <- a$group
-  a$group <- NULL
+  set(a, j = "group", value = NULL)
+  
   form <- FUT ~ group + adjust(agegr)
   pyrs <- a$pyrs
-  a$pyrs <- NULL
+  set(a, j = "pyrs", value = NULL)
+  
   st2 <- survtab_ag(form, data = a, surv.type = "surv.obs",
                     surv.method = "hazard",
                     d = c("from0to1"),
@@ -253,3 +255,138 @@ test_that("its possible to pass dynamically created arguments", {
   expect_equal(st1$surv.obs, st2$surv.obs)
   
 })
+
+
+test_that("getCall & formula methods for survtab work", {
+  data("sire")
+  BL <- list(fot=seq(0, 5, by = 1/12),
+             per = c("2008-01-01", "2013-01-01"))
+  set.seed(1)
+  x <- lexpand(sire[sample(1:.N, 100)], 
+               birth = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks = BL,
+               pophaz = popmort,
+               aggre = list(sex, fot))
+  form <- fot ~ sex
+  e <- quote(survtab_ag(formula = form, data = x))
+  st <- eval(e)
+  
+  expect_equal(formula(st), form)
+  expect_equal(getCall(st), e)
+  
+})
+
+
+
+
+test_that("update() works with survtab objects", {
+  data(sire)
+  set.seed(1)
+  sire <- sire[sample(1:.N, 100)]
+  
+  BL <- list(fot=seq(0, 5, by = 1/12),
+             per = c("2008-01-01", "2013-01-01"))
+  x <- lexpand(sire, 
+               birth = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks = BL,
+               pophaz = popmort,
+               aggre = list(sex, fot))
+  
+  
+  st <- survtab_ag(fot ~ 1, data = x)
+  sts <- survtab_ag(fot ~ sex, data = x)
+  
+  expect_equal(sts, update(st, formula. = fot ~ sex))
+  
+  
+  library(Epi)
+  library(survival)
+  x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
+             exit = list(CAL = get.yrs(ex_date)), 
+             data = sire[sire$dg_date < sire$ex_date, ],
+             exit.status = factor(status, levels = 0:2, 
+                                  labels = c("alive", "canD", "othD")), 
+             merge = TRUE)
+  
+  set.seed(1L)
+  x$group <- rbinom(nrow(x), 1, 0.5)
+  
+  st <- survtab(FUT ~ group, data = x, 
+                surv.type = "surv.obs",
+                breaks = list(FUT = seq(0, 5, 1/12)))
+  
+  sts <- survtab(FUT ~ 1, data = x, 
+                 surv.type = "surv.obs",
+                 breaks = list(FUT = seq(0, 5, 1/12)))
+  
+  expect_equal(sts, update(st, . ~ -group))
+  
+})
+
+
+
+
+
+test_that("internal weights work as intended", {
+  library("data.table")
+  data("sire")
+  sire$agegr <- cut(sire$dg_age,c(0,45,55,65,75,Inf),right=F)
+  BL <- list(fot=seq(0, 5, by = 1/12),
+             per = c("2008-01-01", "2013-01-01"))
+  x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks = BL,
+               pophaz = popmort,
+               aggre = list(fot,agegr))
+
+  ## age standardisation using internal weights (age distribution of
+  ## patients diagnosed within the period window)
+  w <- x[fot == 0, .(weights = sum(at.risk)), keyby = agegr]
+
+  st <- survtab_ag(fot ~ adjust(agegr), data = x, weights=w)
+  
+  st2 <- survtab_ag(fot ~ adjust(agegr), data = x, weights = "internal")
+  
+  expect_equal(st$surv.obs.as.lo, st2$surv.obs.as.lo)
+  
+})
+
+
+
+
+
+test_that("survtab_ag works with bare data.frames", {
+  
+  data(sire)
+  
+  BL <- list(fot = 0:5,
+             per = c("2008-01-01", "2013-01-01"))
+  x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks = BL,
+               aggre = list(fot))
+  
+  e <- quote(survtab_ag(fot ~ 1, data = x, surv.type = "surv.obs"))
+  eb <- quote(survtab_ag(fot ~ 1, data = x, surv.type = "surv.obs", 
+                         surv.breaks = 0:5))
+  
+  la <- list(eval(e), eval(eb))
+  expect_equal(la[[1]]$surv.obs.hi, la[[2]]$surv.obs.hi)
+  
+  
+  x <- data.frame(x)
+  er <- paste0("Data did not contain breaks and no breaks ",
+               "were supplied by hand.")
+  expect_error(eval(e), regexp = er)
+  expect_equal(eval(eb)$surv.obs.hi, la[[2]]$surv.obs.hi)
+  
+})
+
+
+
+
+
+
+

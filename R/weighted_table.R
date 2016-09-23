@@ -37,6 +37,7 @@
 #' E.g. \code{"Missing \%\%NA_COUNTS\%\% observations due to derpness."}
 #' @examples 
 #' library(survival)
+#' library(data.table)
 #' 
 #' makeWeightsDT <- popEpi:::makeWeightsDT ## this avoids errors during tests
 #' 
@@ -201,6 +202,15 @@ makeWeightsDT <- function(data, values = NULL,
   
   if (is.null(weights) && length(adVars)) {
     stop("Variables to adjust by were defined but no weights were supplied.")
+  }
+  
+  if (!length(adVars)) {
+    
+    if (!is.null(weights)) {
+      message("NOTE: Weights ignored since no adjusting variables given")
+    }
+    
+    weights <- NULL
   }
   
   # variables to sum -----------------------------------------------------------
@@ -394,16 +404,14 @@ makeWeightsDT <- function(data, values = NULL,
                             "to the pkg maintainer if you see this."
                           ))
         
-        weights <- mapply(function(levs, colname) {
-          setkeyv(data, colname)
-          data[.(levs), lapply(.SD, sum), .SDcols = eval(iwVar), by = .EACHI]
-        }, 
-        colname = names(adjust), levs = adjust,
-        SIMPLIFY = FALSE)
-        
-        weights <- lapply(weights, function(x) {
-          x[[iwVar]]
+        weights <- lapply(seq_along(adjust), function(i) {
+          cn <- names(adjust)[i]
+          le <- unique(adjust[[i]])
+          le <- structure(list(le), names = cn)
+          data[le, lapply(.SD, sum), .SDcols = iwVar, by = .EACHI, on = cn][[iwVar]]
         })
+        names(weights) <- names(adjust)
+        
         
         setcolsnull(data, iwVar)
         setkeyv(data, c(prVars, adVars, boVars))

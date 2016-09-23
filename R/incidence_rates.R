@@ -77,7 +77,9 @@
 #' r3
 #'
 #' @import data.table
-#' @export rate
+#' @export
+#' @family main_functions
+#' @family rate_related
 
 rate <- function( data,
                   obs = NULL,
@@ -192,7 +194,7 @@ rate <- function( data,
            c(obsNames, pyrNames, prNames))
   
   # data.frame output option  
-  if (!getOption("popEpi.datatable")) {
+  if (!return_DT()) {
     setDFpe(data)
   }
   
@@ -251,73 +253,6 @@ stdr.weights <- function(wp = 'world00_1') {
 globalVariables(c('stdpop18','stdpop101','agegroup','world_std'))
 
 
-# rate_table <- function(data, 
-#                        obs = 'obs',
-#                        pyrs = 'pyrs',
-#                        adjust = NULL,
-#                        print = NULL,
-#                        weight.data = 'world66_5',
-#                        weights = NULL
-# ) {
-#   ## This one fetches and merges the standard population
-#   ## or transforms the population already in the data to standard format.
-#   
-#   colsum1 <- function(c) c/sum(c)
-#   # merge WHO weights to data
-#   # Everything should sum to one on each level of print
-#   data <- data.table(data)
-#   if (!is.null(weights) && all(weights %in% colnames(data)) ) {
-#     ## use predefined weights
-#     if ( !is.null(print)) {
-#       data[, reference := colsum1(.SD), .SDcols = weights, by = c(print)]
-#     }
-#     else {
-#       data[, reference := colsum1(.SD), .SDcols = weights]
-#     }
-#     data[, (weights) := NULL]
-#   }
-#   else if ( !is.null(adjust) ) { # add: if ( !is.null(adjust) )
-#     ## aggregate data before adding weights
-#     eval0 <- paste0('list(obs = sum(',obs,',na.rm=TRUE),pyrs = sum(',pyrs,', na.rm=TRUE))')
-#     eval0 <- parse(text = eval0)
-#     data <- data[, eval(eval0), by = c(adjust, print) ] 
-#     setnames(data, c('obs','pyrs'), c(obs, pyrs))
-#     stdr.list <- c('world66_5','europe','nordic',"world00_1",
-#                    "world00_20of5","world00_18of5")
-#     
-#     if ( !is.null(weight.data) && weight.data %in% stdr.list) {
-#       ## get preloaded WHO std data
-#       
-#       if (length(adjust) > 1) stop('Set only one variable name for indicating age group')
-# 
-#       wd <- stdr.weights(wp = weight.data)
-#       wd <- wd[, reference := colsum1(.SD), .SDcols = 'agegroup']
-#       setnames(wd, 'agegroup', adjust)
-#     }
-#   
-#     else if (is.null(weight.data) || weight.data=='cohort') {
-#       # get cohort std
-#       p1 <- paste0('sum(',pyrs,', na.rm=TRUE)')
-#       p1 <- parse(text = p1)
-#       wd <- data[,list( pyrs = eval(p1)), by = c(unique(adjust))]
-#       wd[, reference := colsum1(.SD), .SDcols = 'pyrs']
-#       wd[,c('pyrs') := NULL]
-#     }
-# 
-#     data <- merge(x  = data, y  = wd[, c('reference', adjust) , with=FALSE],
-#                   by = adjust, all.x = TRUE)
-#   }
-#   else {
-#     if (!is.null(print)) {
-#       data <- data[, list(obs = sum(get(obs), na.rm=TRUE), pyrs = sum(get(pyrs), na.rm=TRUE)), by = c(print) ]
-#       setnames(data, c('obs','pyrs'), c(obs, pyrs))
-#     }
-#   }
-#   return(data[])
-# }
-# 
-# globalVariables(('reference'))
-
 rate_est <- function(data = data, 
                      obs = 'obs', 
                      pyrs = 'pyrs', 
@@ -369,11 +304,12 @@ rate_est <- function(data = data,
 
     data <- data[, eval(l), by=print]
     # rate.adj: S.E.
-    data[, SE.rate.adj := exp( sqrt((1/lam.temp)^2 * var.temp)) ]
+    data[, SE.log.rate.adj := sqrt((1/lam.temp)^2 * var.temp) ] # tämä on log-rate
+    data[, SE.rate.adj := sqrt(var.temp)]
     # rate.adj: CI
-    data[, ':='(rate.adj.lo = exp(log(rate.adj)-log(SE.rate.adj)*1.96),
-                rate.adj.hi = exp(log(rate.adj)+log(SE.rate.adj)*1.96)) ]
-    data[,c('lam.temp','var.temp') := NULL]
+    data[, ':='(rate.adj.lo = exp( log(rate.adj) - SE.log.rate.adj*1.96 ),
+                rate.adj.hi = exp( log(rate.adj) + SE.log.rate.adj*1.96 )) ]
+    data[,c('lam.temp','var.temp','SE.log.rate.adj') := NULL]
   }
   
   else {
@@ -381,15 +317,24 @@ rate_est <- function(data = data,
     l <- parse(text = ie)
     data <- data[, eval(l), by=print]
   }
+  # rate
   ia <- paste0('rate := ',obs,'/', pyrs)
   k <- parse(text = ia)
   data[, eval(k), by = print]
-  eval.me3 <- paste('exp(1/',obs,')')
+  
+  # var(rate)
+  var_r <- paste0('SE.rate := sqrt(',obs,'/(',pyrs,'*',pyrs,'))')
+  k <- parse(text = var_r)
+  data[, eval(k), by = print]
+  
+  # var(log(rate)) and CI
+  eval.me3 <- paste('exp(sqrt(1/',obs,'))')
   eval.me3 <- parse(text = eval.me3)
-  data[, SE.rate := eval(eval.me3)]
-  data[, ':='(rate.lo = exp(log(rate)-log(SE.rate)*1.96),
-              rate.hi = exp(log(rate)+log(SE.rate)*1.96)) ]
+  data[, SE.log.rate := eval(eval.me3)]
+  data[, ':='(rate.lo = exp(log(rate)-log(SE.log.rate)*1.96),
+              rate.hi = exp(log(rate)+log(SE.log.rate)*1.96)) ]
+  data[, SE.log.rate := NULL]
   return(data[])
 }
 
-globalVariables(c('var.temp','lam.temp','rate.adj','SE.rate.adj','SE.rate'))
+globalVariables(c('var.temp','lam.temp','rate.adj','SE.rate.adj','SE.rate','SE.log.rate','SE.log.rate.adj'))

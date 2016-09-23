@@ -19,7 +19,7 @@
 \item{...}{arguments passed on to lines()}
 }
 \description{
-Plot SIR spline lines wtih R base graphics
+Plot SIR spline lines with R base graphics
 }
 \details{
 In \code{lines.sirspline} most of graphical parameters is user 
@@ -36,6 +36,8 @@ give different colours for each level.
 Matti Rantanen
 }
 \seealso{
-\code{\link{sir}},  \code{\link{sirspline}}, \code{\link{plot.sirspline}}
+Other sir_related: \code{\link{plot.sirspline}},
+  \code{\link{sir_ratio}}, \code{\link{sirspline}},
+  \code{\link{sir}}
 }
 

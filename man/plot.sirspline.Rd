@@ -28,7 +28,7 @@
 Plot SIR splines using R base graphics.
 }
 \details{
-In \code{plot.sirspline} almost every graphical parameter is user
+In \code{plot.sirspline} almost every graphical parameter are user
 adjustable, such as \code{ylim}, \code{xlim}.
 \code{plot.sirsplines} calls \code{lines.splines} to add lines.
 
@@ -40,6 +40,8 @@ On top of the frame it's then possible to add a \code{grid},
 Matti Rantanen
 }
 \seealso{
-\code{\link{sir}},  \code{\link{sirspline}}, \code{\link{lines.sirspline}}
+Other sir_related: \code{\link{lines.sirspline}},
+  \code{\link{sir_ratio}}, \code{\link{sirspline}},
+  \code{\link{sir}}
 }
 

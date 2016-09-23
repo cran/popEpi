@@ -20,7 +20,8 @@
 #' the marginal curve is constructed only for those whose follow-up started
 #' in the respective period.
 #' 
-#' @export rpcurve
+#' @export 
+#' @family relpois_related
 #' 
 #' @import data.table
 #' @import Epi
@@ -29,13 +30,13 @@
 #' @examples
 #' \dontrun{
 #' ## use the simulated rectal cancer cohort
-#' sr <- copy(sire)
+#' data("sire", package = "popEpi")
 #' ab <- c(0,45,55,65,70,Inf)
-#' sr$agegr <- cut(sr$dg_age, breaks = ab, right = FALSE)
+#' sire$agegr <- cut(sire$dg_age, breaks = ab, right = FALSE)
 #'
 #' BL <- list(fot= seq(0,10,1/12))
 #' pm <- data.frame(popEpi::popmort)
-#' x <- lexpand(sr, breaks=BL, pophaz=pm, 
+#' x <- lexpand(sire, breaks=BL, pophaz=pm, 
 #'              birth = bi_date, 
 #'              entry = dg_date, exit = ex_date, 
 #'              status  = status %in% 1:2)
@@ -158,7 +159,7 @@ rpcurve <- function(object = NULL) {
   setcolsnull(tab, c("lo", "hi"))
   
   setattr(tab, "class", c("data.table", "data.frame"))
-  if (!getOption("popEpi.datatable")) setDFpe(tab)
+  if (!return_DT()) setDFpe(tab)
   tab[]
 }
 
@@ -167,7 +168,8 @@ rpcurve <- function(object = NULL) {
 #' @description A family object for glm fitting of relative Poisson models
 #' @format 
 #' A list very similary to that created by \code{poisson()}.
-#' @export RPL
+#' @export
+#' @family relpois_related
 RPL <- copy(poisson())
 RPL$link <- "glm relative survival model with Poisson error"
 RPL$linkfun <- function(mu, d.exp) log(mu - d.exp)

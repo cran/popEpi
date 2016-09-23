@@ -38,10 +38,11 @@
 #' (depending on \code{options("popEpi.datatable")}; see \code{?popEpi}) 
 #' object expanded to accommodate split observations.
 #' 
-#' @export splitLexisDT
+#' @export
+#' @family splitting_related
 #' @examples
 #' library(Epi)
-#' data(sire)
+#' data("sire", package = "popEpi")
 #' x <- Lexis(data=sire[1000:1100, ], 
 #'            entry = list(fot=0, per=get.yrs(dg_date), age=dg_age), 
 #'            exit=list(per=get.yrs(ex_date)), exit.status=status)
@@ -67,7 +68,7 @@
 #' x3 <- splitLexisDT(x, breaks = BL$fot, timeScale = "fot", drop = FALSE)
 #' x3 <- splitLexisDT(x3, breaks = BL$per, timeScale = "per", drop = FALSE)
 #' 
-#' ## splitLexis may not work
+#' ## splitLexis may not work when using Dates
 splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   
   TF <- environment()
@@ -234,7 +235,7 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   setattr(l, "time.scales", allScales)
   setattr(l, "time.since", rep("", times = length(allScales)))
   setattr(l, "class", c("Lexis","data.table","data.frame"))
-  if (!getOption("popEpi.datatable")) setDFpe(l)
+  if (!return_DT()) setDFpe(l)
   
   l[]
 }

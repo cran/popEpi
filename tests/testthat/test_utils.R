@@ -22,6 +22,23 @@ test_that("subsetting in ltable works and ltable has no side effects", {
 
 
 
+test_that("ltable works with NA values", {
+  
+  skip_on_cran()
+  
+  sr <- setDT(popEpi::sire[1:100, ])
+  set.seed(1L)
+  sr[, sex := rbinom(.N, 1, prob = 0.5)]
+  sr[c(1, 50), sex := NA]
+  
+  lt1 <- ltable(sr, by = "sex", na.rm = FALSE)
+  lt2 <- ltable(sr, by = "sex", na.rm = TRUE)
+  
+  expect_equal(lt1[!is.na(sex),], lt2)
+  
+})
+
+
 
 test_that("evalPopArg produces intended results",{
   set.seed(1L)
@@ -129,8 +146,8 @@ test_that("cutLowMerge merges succesfully what is intended", {
   setDT(sr)
   sr1 <- lexpand(sr, birth = bi_date, entry = dg_date, exit = ex_date,
                  status = status, fot = seq(0, 5, 1/12))
+  sr1 <- data.table(sr1)
   setattr(sr1, "class", c("Lexis", "data.table", "data.frame"))
-  alloc.col(sr1)
   
   sr1[, year := per + 0.5*lex.dur]
   sr1[, agegroup := age + 0.5*lex.dur]
@@ -225,8 +242,8 @@ test_that("evalPopFormula & usePopFormula output is stable", {
   TF <- environment()
   
   res <- data.table(time = rep(0, 5), status = c(1,1,0,1,1), sex = c(1,0,1,0,1))
-  res[, "factor(sex + 1)" := factor(sex+1)]
-  res[, lex.Xst := c(1,1,0,1,1)]
+  res[["factor(sex + 1)"]] <- factor(res$sex+1)
+  res$lex.Xst <- as.integer(c(1,1,0,1,1))
   
   
   ## evalPopFormula
@@ -376,7 +393,23 @@ test_that("evalPopFormula & usePopFormula output is stable", {
 
 
 
-
+test_that("fractional years computation works", {
+  library("data.table")
+  c <- paste0("2004-", c("01-01", "07-01", "12-31", "02-01"))
+  D <- as.Date(c)
+  
+  expect_equal(get.yrs(c), get.yrs(D))
+  
+  yl <- 365.242199
+  my <- year(D) + (yday(D) - 1L)/yl
+  
+  expect_equal(as.numeric(get.yrs(D)), my)
+  
+  yl <- ifelse(is_leap_year(year(D)), 366L, 365L)
+  my <- year(D) + (yday(D) - 1L)/yl
+  
+  expect_equal(as.numeric(get.yrs(D, year.length = "actual")), my)
+})
 
 
 

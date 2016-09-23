@@ -2,7 +2,7 @@
 % Please edit documentation in R/S3_definitions.R
 \name{summary.aggre}
 \alias{summary.aggre}
-\title{Summaryize an aggre Object}
+\title{Summarize an aggre Object}
 \usage{
 \method{summary}{aggre}(object, by = NULL, subset = NULL, ...)
 }
@@ -24,5 +24,10 @@ before summarizing; use this to limit to a certain stratum. E.g.
 }
 \author{
 Joonas Miettinen
+}
+\seealso{
+Other aggregation_related: \code{\link{aggre}},
+  \code{\link{as.aggre}}, \code{\link{lexpand}},
+  \code{\link{setaggre}}
 }
 

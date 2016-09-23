@@ -70,25 +70,30 @@
 #' 
 #' @seealso
 #' \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
-#' 
+#' @family main_functions
+#' @family relpois_related
 #' @export relpois
 #' 
 #' @examples
 #' ## use the simulated rectal cancer cohort
-#' sr <- copy(sire)
-#' sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
+#' data("sire", package = "popEpi")
+#' sire$agegr <- cut(sire$dg_age, c(0,45,60,Inf), right=FALSE)
 #' 
 #' ## usable straight away after splitting
 #' fb <- c(0,3/12,6/12,1,2,3,4,5)
-#' x <- lexpand(sr, birth = bi_date, entry = dg_date,
+#' x <- lexpand(sire, birth = bi_date, entry = dg_date,
 #'              exit = ex_date, status=status,
 #'              breaks = list(fot=fb), pophaz=popmort)
 #' rpm <- relpois(x, formula = lex.Xst %in% 1:2 ~ FOT + agegr)
 #'  
 #' ## some methods for glm work. e.g. test for interaction
-#' # rpm2 <- relpois(x, formula = lex.Xst %in% 1:2 ~ FOT*agegr)
-#' # anova(rpm, rpm2, test="LRT")
-#' # AIC(rpm, rpm2)
+#' \dontrun{
+#' rpm2 <- relpois(x, formula = lex.Xst %in% 1:2 ~ FOT*agegr)
+#' anova(rpm, rpm2, test="LRT")
+#' AIC(rpm, rpm2)
+#' ## update won't work currently
+#' }
+
 
 relpois <- function(data, 
                     formula, 
@@ -205,18 +210,17 @@ relpois <- function(data,
   ## custom poisson family -----------------------------------------------------
   RPL <- copy(poisson())
   RPL$link <- "glm relative survival model with Poisson error"
-  RPL$linkfun <- function(mu, d.exp = data[subset, ][[tmpdexp]]) log(mu - d.exp)
-  RPL$linkinv <- function(eta, d.exp = data[subset, ][[tmpdexp]]) d.exp + exp(eta)
+  RPL$linkfun <- function(mu, d.exp = data[[tmpdexp]][subset]) log(mu - d.exp)
+  RPL$linkinv <- function(eta, d.exp = data[[tmpdexp]][subset]) d.exp + exp(eta)
   
   
-  init_maker <- quote( {
+  RPL$initialize <- substitute( {
     if (any(y < 0)) stop(paste("Negative values not allowed for", 
                                "the Poisson family"))
     n <- rep.int(1, nobs)
-    mustart <- pmax(y, rep(1,times=length(y))) + 0.1
-  } )
+    mustart <- pmax(y, d.exp) + 0.1
+  }, list(d.exp = data[[tmpdexp]][subset]) )
   
-  RPL$initialize <- init_maker
   
   
   ## glm call ------------------------------------------------------------------
@@ -271,6 +275,9 @@ relpois <- function(data,
 #' Otherwise the time scale left as it is, usually a numeric variable.
 #' E.g. if \code{formula = counts ~ TS1*VAR1}, \code{TS1} is transformed
 #' into a factor before fitting model.
+#' @param check \code{logical}; if \code{TRUE}, performs check on the 
+#' negativity excess cases by factor-like covariates in formula - 
+#' negative excess cases will very likely lead to non-converging model
 #' @param ... any other argument passed on to \code{\link[stats]{glm}} such as 
 #' \code{control} or \code{weights}
 #' @import stats
@@ -280,20 +287,22 @@ relpois <- function(data,
 #' 
 #' @seealso
 #' \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
-#' 
+#' @family main_functions
+#' @family relpois_related
 #' @examples
 #' ## use the simulated rectal cancer cohort
-#' sr <- copy(sire)
-#' sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
+#' data(sire, package = "popEpi")
+#' sire$agegr <- cut(sire$dg_age, c(0,45,60,Inf), right=FALSE)
 #' 
-#' ## usable straight away after splitting
+#' ## create aggregated example data
 #' fb <- c(0,3/12,6/12,1,2,3,4,5)
-#' x <- lexpand(sr, birth = bi_date, entry = dg_date,
+#' x <- lexpand(sire, birth = bi_date, entry = dg_date,
 #'              exit = ex_date, status=status %in% 1:2,
 #'              breaks = list(fot=fb), 
 #'              pophaz=popmort, pp = FALSE,
 #'              aggre = list(agegr, fot))
 #'              
+#' ## fit model using aggregated data
 #' rpm <- relpois_ag(formula = from0to1 ~ fot + agegr,  data = x,
 #'                   d.exp = d.exp, offset = log(pyrs))
 #' summary(rpm)
@@ -302,28 +311,61 @@ relpois <- function(data,
 #' rpm2 <- update(rpm, . ~ fot*agegr)
 #' anova(rpm, rpm2, test="LRT")
 #' AIC(rpm, rpm2)
+#' 
+#' ## other features such as residuals or predicting are not guaranteed
+#' ## to work as intended.
 #' @export
 
-relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subset = NULL, piecewise = TRUE, ...) {
+relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subset = NULL, piecewise = TRUE, check = TRUE, ...) {
   
   TF <- environment()
   PF <- parent.frame(1L)
   original_formula <- formula
   
-  if (!inherits(data, "aggre")) stop("data is not an aggre object. Please aggregate your data first using e.g. lexpand(). If your data is aggregated, use as.aggre() to mark it as such.")
+  if (!inherits(data, "aggre")) {
+    stop("data is not an aggre object. Please aggregate your data first using ",
+         "e.g. lexpand(). If your data is pre-aggregated, use as.aggre() to ",
+         "mark it as such.")
+  }
   
   formula <- evalRecursive(formula, env = TF, enc = PF)$arg
   if (missing(formula) || !inherits(formula, "formula")) stop("formula not defined")
   
+  
+  
+  
   ## detect survival time scale ------------------------------------------------
-  oldBreaks <- attr(data, "breaks")
-  if (is.null(oldBreaks)) stop("data does not have breaks information. Is it a result of using aggre() or as.aggre()?")
-  survScale <- intersect(all.vars(formula), names(oldBreaks))
-  if (length(survScale) > 1L) stop("Found several used time scales in formula, which is not supported (found ", paste0("'", survScale, "'", collapse = ", "), ")")
+  oldBreaks <- copy(attr(data, "breaks"))
+  allScales <- names(oldBreaks)
+  if (is.null(oldBreaks)) {
+    stop("data does not have breaks information. Is it a result of using ",
+         "aggre() or as.aggre()?")
+  }
+  survScale <- intersect(all.vars(formula), allScales)
+  if (length(survScale) > 1L) {
+    stop("Found several used time scales in formula, which is not supported ",
+         "(found ", paste0("'", survScale, "'", collapse = ", "), ")")
+  }
+  
+  ## check supplied breaks -----------------------------------------------------
+  if (is.numeric(breaks)) {
+    breaks <- list(breaks)
+    names(breaks) <- survScale
+  }
+  
+  if (!is.null(breaks)) {
+    if (!all_breaks_in(breaks, oldBreaks)) {
+      stop("Supplied breaks must be subset of the breaks used in splitting/",
+           "aggregating data. See the latter using e.g. ",
+           "attributes(x)$aggre.meta$breaks where x is your aggregated data.")
+    }
+  }
   
   ## pre-find args -------------------------------------------------------------
-  sub_d.exp <- evalRecursive(substitute(d.exp), env = data[1L, ], enc = PF)$argSub
-  sub_offset <- evalRecursive(substitute(offset), env = data[1L, ], enc = PF)$argSub
+  desub <- substitute(d.exp)
+  sub_d.exp <- evalRecursive(desub, env = data[1L, ], enc = PF)$argSub
+  offsub <- substitute(offset)
+  sub_offset <- evalRecursive(offsub, env = data[1L, ], enc = PF)$argSub
   
   ## prep & subset data --------------------------------------------------------
   subset <- substitute(subset)
@@ -339,20 +381,28 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
   
   ## handle breaks -------------------------------------------------------------
   if (!is.null(breaks)) {
-    if (!piecewise) stop("Supplied breaks but piecewise = FALSE. Please select piecewise = TRUE if you want piecewise estimates defined by the breaks.")
-    breaks <- sort(unique(breaks))
-    if (!all(breaks %in% oldBreaks[[survScale]])) stop("Supplied breaks are not a subset of the breaks in data. See the breaks in data using e.g. attr(data, 'breaks')")
+    if (!piecewise) {
+      stop("Supplied breaks but piecewise = FALSE. Please select piecewise = ",
+           "TRUE if you want piecewise estimates defined by the breaks.")
+    }
     
-  } else breaks <- oldBreaks[[survScale]]
+  } 
   
-  if (piecewise && length(survScale) > 0L) {
-    breaks <- breaks - .Machine$double.eps^0.5 ## ensures cutting correctness
+  cutBreaks <- breaks
+  othScales <- setdiff(names(oldBreaks), names(cutBreaks))
+  cutBreaks[othScales] <- oldBreaks[othScales]
+  cutBreaks[sapply(cutBreaks, length) < 2L] <- NULL
+  
+  if (piecewise && length(cutBreaks)) {
     
-    set(x, j = survScale, value = cut(x[[survScale]], breaks = breaks, right = FALSE, labels = FALSE))
-    
-    breaks <- round(breaks, 2L)
-    pieces <- paste0("[", breaks[-length(breaks)], ", ", breaks[-1L], ")")
-    set(x, j = survScale, value = pieces[x[[survScale]]])
+    for (sc in names(cutBreaks)) {
+      set(x, j = sc, value = cut(x[[sc]], breaks = cutBreaks[[sc]], 
+                                 right = FALSE, labels = FALSE))
+      
+      pieces <- round(cutBreaks[[sc]], 2L)
+      pieces <- paste0("[", pieces[-length(pieces)], ", ", pieces[-1L], ")")
+      set(x, j = sc, value = pieces[x[[sc]]])
+    }
     
   }
   
@@ -368,6 +418,10 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
   if (!is.null(offset)) offset <- rowSums(offset)
   if (length(offset) == nrow(data)) offset <- offset[subset]
   
+  ## check excess cases --------------------------------------------------------
+  d <- eval(formula[[2]], envir = x, enclos = PF)
+  check_excess_cases(d = d, d.exp = d.exp, data = x, 
+                     formula = formula, enclos = PF)
   
   ## custom poisson family -----------------------------------------------------
   RPL <- copy(poisson())
@@ -379,16 +433,12 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
     d.exp + exp(eta)
   }
   
-  
-  init_maker <- quote( {
+  RPL$initialize <- substitute( {
     if (any(y < 0)) stop(paste("Negative values not allowed for", 
                                "the Poisson family"))
     n <- rep.int(1, nobs)
-    mustart <- pmax(y, rep(1,times=length(y))) + 0.1
-  } )
-  
-  RPL$initialize <- init_maker
-  
+    mustart <- pmax(y, d.exp) + 0.1
+  }, list(d.exp = TF$d.exp) )
   
   ## glm call ------------------------------------------------------------------
   
@@ -407,3 +457,150 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
 
 
 
+
+check_excess_cases <- function(d, d.exp, formula, data, enclos = parent.frame(1)) {
+  # @title Check Excess Counts for a Relative Poisson Model
+  # @description Checks that the excess counts by strata all exceed 0.
+  # @param d a vector of observed counts of cases
+  # @param d.exp a vector of expected counts of cases
+  # @param a formula, the right side of which is inspected for factor-like 
+  # stratifying variables (factors and character variables)
+  # @param data a data set to eval formula in its context
+  # @param enclos passed on to RHS2DT() to evaluate formula to columns;
+  # enclosing environment of data
+  PF <- parent.frame(1)
+  tF <- environment()
+  
+  d.exc <- NULL
+  
+  by <- RHS2DT(formula, data = data, enclos = enclos)
+  if (!length(by)) by <- list()
+  facVars <- names(by)[sapply(by, function(col) is.factor(col) || is.character(col))]
+  
+  d <- substitute(d)
+  d <- eval(d, envir = data, enclos = PF)
+  d.exp <- substitute(d.exp)
+  d.exp <- eval(d.exp, envir = data, enclos = PF)
+  
+  if (length(facVars)) {
+    by <- setDT(mget(facVars, as.environment(by)))
+  } else {
+    by <- list()
+  }
+  
+  dt <- data.table(d = d, d.exp = d.exp)
+  dt[, d.exc := d - d.exp]
+  
+  for (k in seq_along(names(by))) {
+    bycol <- names(by)[k]
+    
+    tab <- dt[, lapply(.SD, sum), keyby = .(by[[bycol]])][d.exc <= 0L, ]
+    setnames(tab, 1, bycol)
+    if (nrow(tab)) {
+      on.exit(print(tab))
+      stop("There are negative excess cases in the data calculated separately ",
+           "by the factor-like variables ", 
+           paste0("'", facVars, "'", collapse = ", "), ". The model is not ",
+           "estimable with negative excess cases in strata. ",
+           "Infracting levels:")
+    }
+    
+  }
+
+  if (!length(by)) {
+    tab <- dt[, lapply(.SD, sum)]
+    if (tab$d.exc <= 0L) {
+      stop("The marginal sum of excess cases is negative; the model cannot ",
+           "be fitted. ")
+    }
+  }
+ 
+  
+ 
+  
+  invisible(NULL)
+}
+
+
+
+
+
+
+relpois_lex <- function(formula, 
+                        data, 
+                        pophaz = NULL, 
+                        breaks = NULL, 
+                        subset = NULL, 
+                        check = TRUE, 
+                        ...) {
+  PF <- parent.frame(1)
+  TF <- environment()
+  
+  form <- agVars <- NULL
+  
+  
+  ## checks --------------------------------------------------------------------
+  
+  checkLexisData(data)
+  checkPophaz(lex = data, ph = pophaz)
+  if (!is.null(breaks)) checkBreaksList(breaks)
+  
+  oldBreaks <- copy(attr(data, "breaks"))
+  allScales <- copy(attr(data, "time.scales"))
+  
+  
+  ## detect which time scale used ----------------------------------------------
+  
+  survScale <- intersect(all.vars(formula), allScales)
+  if (length(survScale) > 1L) {
+    stop("Found several used time scales in formula, which is not supported ",
+         "(found ", paste0("'", survScale, "'", collapse = ", "), ")")
+  }
+  ## subset --------------------------------------------------------------------
+  
+  sb <- substitute(subset)
+  subset <- evalLogicalSubset(data, sb, enclos = PF)
+  x <- data[subset, ]
+  
+  ## essentially same steps as in survtab() here, maybe make that
+  ## into a function / generalize lexpand.
+  
+  ## splitting -----------------------------------------------------------------
+  if (is.numeric(breaks) && length(survScale)) {
+    breaks <- list(breaks)
+    names(breaks) <- survScale
+  }
+  if (!is.null(breaks)) x <- splitMulti(x, breaks = breaks, drop = TRUE)
+  newBreaks <- copy(attr(x, "breaks"))
+  
+  ## merge in pophaz -----------------------------------------------------------
+  haz <- makeTempVarName(x, pre = "haz_")
+  ph <- data.table(pophaz)
+  phVars <- setdiff(names(ph), "haz")
+  setnames(ph, "haz", haz)
+  x <- cutLowMerge(x, pophaz, by = phVars, all.x = TRUE, all.y = FALSE, 
+                   old.nums = TRUE, mid.scales = intersect(allScales, phVars))
+  
+  # expected cases
+  d.exp <- makeTempVarName(x, pre = "d.exp_")
+  set(x, j = d.exp, value = x$lex.dur * x[[haz]])
+  
+  ## aggregating ---------------------------------------------------------------
+  ag <- model.frame(formula[-2], data = x) ## without response
+  setDT(ag)
+  set(ag, j = d.exp, value = x[[d.exp]])
+  d <- makeTempVarName(x, pre = "d_")
+  set(ag, j = d, value = eval(form))
+  ag <- aggre(x, by = agVars, sum.values = d.exp)
+  rm(x)
+  
+  ag_form <- formula
+  ag_form[[2]] <- quote(from0to1)
+  
+  rp <- relpois_ag(ag_form, data = data, breaks = NULL)
+  
+  rp$call <- match.call()
+  rp$formula <- formula
+  
+  rp
+}

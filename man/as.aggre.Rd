@@ -7,24 +7,29 @@
 \alias{as.aggre.default}
 \title{Coercion to Class \code{aggre}}
 \usage{
-as.aggre(x, values = NULL, by = setdiff(names(x), values), ...)
+as.aggre(x, values = NULL, by = NULL, breaks = NULL, ...)
 
-\method{as.aggre}{data.frame}(x, values = NULL, by = setdiff(names(x),
-  values), ...)
+\method{as.aggre}{data.frame}(x, values = NULL, by = NULL, breaks = NULL,
+  ...)
 
-\method{as.aggre}{data.table}(x, values = NULL, by = setdiff(names(x),
-  values), ...)
+\method{as.aggre}{data.table}(x, values = NULL, by = NULL, breaks = NULL,
+  ...)
 
 \method{as.aggre}{default}(x, ...)
 }
 \arguments{
-\item{x}{an R object to coerce to \code{aggre}; must be 
-a \code{data.frame} or \code{data.table}}
+\item{x}{a \code{data.frame} or \code{data.table}}
 
 \item{values}{a character string vector; the names of value variables}
 
 \item{by}{a character string vector; the names of variables by which 
 \code{values} have been tabulated}
+
+\item{breaks}{a list of breaks, where each element is a breaks vector
+as usually passed to e.g. \code{\link{splitLexisDT}}. The list must be
+fully named, with the names corresponding to time scales at the aggregate
+level in your data. Every unique value in a time scale variable in data must
+also exist in the corresponding vector in the breaks list.}
 
 \item{...}{arguments passed to or from methods}
 }
@@ -43,6 +48,7 @@ information.
 if no class-specific method found)
 }}
 \examples{
+library("data.table")
 df <- data.frame(sex = rep(c("male", "female"), each = 5), 
                  obs = rpois(10, rep(7,5, each=5)), 
                  pyrs = rpois(10, lambda = 10000))
@@ -54,11 +60,17 @@ dt <- as.aggre(dt, values = c("pyrs", "obs"), by = "sex")
 class(df)
 class(dt)
 
+BL <- list(fot = 0:5)
+df <- data.frame(df)
+df <- as.aggre(df, values = c("pyrs", "obs"), by = "sex", breaks = BL)
+
 }
 \author{
 Joonas Miettinen
 }
 \seealso{
-\code{\link{setaggre}} for modifying in place
+Other aggregation_related: \code{\link{aggre}},
+  \code{\link{lexpand}}, \code{\link{setaggre}},
+  \code{\link{summary.aggre}}
 }
 

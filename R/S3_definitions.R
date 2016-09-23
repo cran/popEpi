@@ -1,9 +1,4 @@
 
-#' @title Print method for \code{sir} objects
-#' @author Matti Rantanen, Joonas Miettinen
-#' @description Prints the results of the \code{sir} function
-#' @param x a \code{sir} object
-#' @param ... unused
 #' @export
 print.sir <- function(x, ...) {
   
@@ -36,11 +31,6 @@ print.sir <- function(x, ...) {
   return(invisible())
 }
 
-#' @title Print method for \code{sirspline} objects
-#' @author Matti Rantanen, Joonas Miettinen
-#' @description Prints the results of the \code{sirspline} function
-#' @param x a \code{sir} object
-#' @param ... unused
 #' @import grDevices
 #' @export
 print.sirspline <- function(x, ...) {
@@ -193,7 +183,7 @@ plot.sir <- function(x, plot.type = 'model',
     logarithm <- ''
     if(log){
       logarithm <- 'x'
-      xlimit[1] <- xlimit[1] + 1
+      if(xlimit[1]==0) xlimit[1] <- xlimit[1] + 0.01
     }
     y.axis.levels <- c(1:length(levels))
     plot(c(xlimit), c(min(y.axis.levels)-0.5, max(y.axis.levels)+0.5), 
@@ -224,7 +214,6 @@ plot.sir <- function(x, plot.type = 'model',
 #' 
 #' @description Plot SIR splines using R base graphics.
 #' 
-#' @seealso \code{\link{sir}},  \code{\link{sirspline}}, \code{\link{lines.sirspline}}
 #' 
 #' @import graphics
 #' 
@@ -240,7 +229,7 @@ plot.sir <- function(x, plot.type = 'model',
 #' @param ... arguments passed on to plot()
 #' 
 #' @details
-#' In \code{plot.sirspline} almost every graphical parameter is user
+#' In \code{plot.sirspline} almost every graphical parameter are user
 #' adjustable, such as \code{ylim}, \code{xlim}.
 #' \code{plot.sirsplines} calls \code{lines.splines} to add lines.
 #' 
@@ -248,6 +237,7 @@ plot.sir <- function(x, plot.type = 'model',
 #' On top of the frame it's then possible to add a \code{grid}, 
 #' \code{abline} or text before plotting the lines (see: \code{sirspline}).
 #' @export
+#' @family sir_related
 plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, ylab, xlab,  ...) {
 
   #print(list(...))
@@ -320,7 +310,7 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
 
 
 #' @title lines method for sirspline-object
-#' @description Plot SIR spline lines wtih R base graphics
+#' @description Plot SIR spline lines with R base graphics
 #' 
 #' 
 #' @author Matti Rantanen
@@ -341,7 +331,7 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
 #' \code{print.levels}. Printing the levels seperately enables  e.g. to
 #' give different colours for each level.
 #' 
-#' @seealso \code{\link{sir}},  \code{\link{sirspline}}, \code{\link{plot.sirspline}}
+#' @family sir_related
 #' 
 #' @import graphics
 #' @export
@@ -401,75 +391,155 @@ lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline
   }
 }
 
+#' @title Print an rate object
+#' @author Matti Rantanen
+#' @description Print method function for \code{rate} objects; see
+#' \code{\link{rate}}.
+#' @param x an \code{rate} object
+#' @param subset a logical condition to subset results table by
+#' before printing; use this to limit to a certain stratum. E.g.
+#' \code{subset = sex == "female"}
+#' @param ... arguments for data.tables print method, e.g. row.names = FALSE suppresses row numbers.
+#' @export
+print.rate <- function(x, subset = NULL, ...) {
+  
+  ra <- attributes(x)$rate.meta
+  PF <- parent.frame(1L)
+  TF <- environment()
+  subset <- evalLogicalSubset(x, substitute(subset), enclos = PF)
+  x <- x[subset, ]
+  
+  # pre texts:
+  cat('\n')
+  if(!is.null(ra$adjust)){
+    if(is.character(ra$weights)) {
+      a <- paste(ra$weights, collapse = ',')
+    }
+    if(all(is.numeric(ra$weights))) {
+      a <- length(ra$weights)
+    }
+    if(is.list(ra$weights)) {
+      a <- sapply(ra$weights, length)
+    }
+    
+    b <- paste(ra$adjust,a, collapse = ', ', sep = '; ')
+    cat('Adjusted rates (', b,') ', sep = '')
+  }
+  else{
+    cat('Crude rates ')
+  }
+  cat('and', '95%', 'confidence intervals:', fill=TRUE)
+  cat('\n')
+  # table itself
+
+  
+  setDT(x)
+  print(x, ...)
+}
+
+
+#' @title plot method for rate object
+#' @description Plot rate estimates with confidence intervals lines using R base graphics
+#' @author Matti Rantanen
+#' 
+#' @param x a rate object (see \code{\link{rate}})
+#' @param conf.int logical; default TRUE draws the confidence intervals
+#' @param eps is the height of the ending of the error bars
+#' @param left.margin set a custom left margin for long variable names. Function
+#' tries to do it by default.
+#' @param xlim change the x-axis location
+#' @param ... arguments passed on to grafical functions points and segment (e.g. col, lwd, pch and cex)
+#' 
+#' @details This is limited explonatory tool but most graphical parameters are user 
+#' adjustable. 
+#' 
+#' @import graphics
+#' @export
+plot.rate <- function(x, conf.int = TRUE, eps = 0.2, left.margin, xlim, ...) {
+  
+  ra <- attributes(x)$rate.meta
+  varcol <- ra$print
+  
+  if(is.null(varcol)) {
+    lvl.name <- 'Crude'
+  }
+  else {
+    pp <- paste0('paste(', paste(varcol, collapse=','),',sep = ":")')
+    q <- parse(text=pp)
+    lvl.name <- x[,eval(q)]
+  }
+  lvls <- 1:length(lvl.name)
+  
+  # WHICH RATE:
+  if('rate.adj' %in% names(x)) {
+    r <- x$rate.adj
+    hi <- x$rate.adj.hi
+    lo <- x$rate.adj.lo
+  }
+  else {
+    r <- x$rate
+    hi <- x$rate.hi
+    lo <- x$rate.lo
+  }
+  # X-AXIS LIMITs
+  if(missing(xlim)) {
+    t <- range(na.omit(c(lo , r, hi)))
+    t0 <- (t[2]-t[1])/4
+    xlimit <- c(pmax(t[1]-t0, 0), t[2] + t0)
+  } 
+  else {
+    xlimit <- xlim
+  }
+  
+  # MARGINS  
+  if(missing(left.margin)) {
+   old.margin <- new.margin <- par("mar")
+   new.margin[2] <- 4.1 + sqrt( max(nchar(as.character(lvl.name))) )*2
+  }
+  else {
+   new.margin[2] <- left.margin
+  }
+  par(mar = new.margin)
+  
+  plot(c(xlimit), c(min(lvls)-0.5, max(lvls)+0.5), type='n', yaxt = 'n', ylab = '', xlab='')
+  axis(side = 2, at = lvls, labels = lvl.name, las = 1)
+  points(r, lvls, ...)
+  
+  if(conf.int) {
+    segments(lo, lvls, hi, lvls, ...)
+    segments(lo, lvls - eps, lo, lvls + eps, ...)
+    segments(hi, lvls - eps, hi, lvls + eps, ...)
+  }
+  par(mar = old.margin) # revert margins
+}
+
+
+#' @export 
 print.yrs <- function(x, ...) {
-  # NextMethod() ## this still prints attributes
   print(as.numeric(x))
 }
 
-## yrs objects, from get.yrs
+
+#' @export 
 `[.yrs` <- function(x, ...) {
   yl <- attr(x, "year.length")
   structure(NextMethod(), year.length = yl, class = c("yrs", "numeric"))
 }
 
-#' @title Coerce Fractional Year Values to Date Values
-#' @author Joonas Miettinen
-#' @param x an \code{yrs} object created by \code{get.yrs}
-#' @param ... unused, included for compatibility with other \code{as.Date}
-#' methods
-#' @description Coerces an \code{yrs} object to a \code{Date} object.
-#' Some loss of information comes if \code{year.length = "approx"} 
-#' was set when using \code{\link{get.yrs}}, so the transformation back
-#' to \code{Date} will not be perfect there. With \code{year.length = "actual"}
-#' the original values are perfectly retrieved.
-#' @examples 
-#' 
-#' test <- copy(sire)
-#' 
-#' ## approximate year lengths: here 20 % have an extra day added
-#' test$dg_yrs <- get.yrs(test$dg_date)
-#' summary(test$dg_yrs)
-#' dg_date2 <- as.Date(test$dg_yrs)
-#' summary(as.numeric(dg_date2 - test$dg_date))
-#' 
-#' ## using actual year lengths
-#' test$dg_yrs <- get.yrs(test$dg_date, year.length = "actual")
-#' summary(test$dg_yrs)
-#' dg_date2 <- as.Date(test$dg_yrs)
-#' summary(as.numeric(dg_date2 - test$dg_date))
-#' @export
-as.Date.yrs <- function(x, ...) {
-  
-  yl <- attr(x, "year.length")
-  if (is.null(yl)) {
-    warning("x did not contain meta information about year length used ",
-            "when forming the yrs object. Assuming 'approx'.")
-    yl <- "approx"
-  }
-  
-  y <- as.integer(x)
-  
-  mu <- 365.242199
-  if (yl == "actual") {
-    mu <- ifelse(is_leap_year(y), rep(365L, length(x)), rep(364L, length(x)))
-  }
-  x <- x + 1L/mu
-  yd <- as.integer((x-y)*mu)
-  d <- as.Date(paste0(y, "-01-01")) + yd
-  d
-}
 
-## subsetting for aggre objects that retains attributes
+#' @export 
 `[.aggre` <- function(x, ...) {
+  xa <- attributes(x)
   y <- NextMethod()
   if (is.data.frame(y)) {
-    setattr(y, "class", class(x))
-    setattr(y, "aggre.meta", attr(x, "aggre.meta"))
-    setattr(y, "breaks", attr(x, "breaks"))
+    setattr(y, "class", xa$class)
+    setattr(y, "aggre.meta", xa$aggre.meta)
+    setattr(y, "breaks", xa$breaks)
   }
   y
 }
 
+#' @export 
 subset.aggre <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
@@ -546,7 +616,7 @@ print.aggre <- function(x, subset = NULL, ...) {
   
 }
 
-#' @title Summaryize an aggre Object
+#' @title Summarize an aggre Object
 #' @author Joonas Miettinen
 #' @description \code{summary} method function for \code{aggre} objects; see
 #' \code{\link{as.aggre}} and \code{\link{aggre}}.
@@ -558,6 +628,7 @@ print.aggre <- function(x, subset = NULL, ...) {
 #' \code{subset = sex == "male"}
 #' @param ... unused
 #' @export
+#' @family aggregation_related
 summary.aggre <- function(object, by = NULL, subset = NULL, ...) {
   
   PF <- parent.frame(1L)
@@ -594,6 +665,7 @@ summary.aggre <- function(object, by = NULL, subset = NULL, ...) {
 #' if the table is large, 
 #' \code{nrow = 100} for number of rows to print, etc.
 #' @export
+#' @family survtab_related
 print.survtab <- function(x, subset = NULL, ...) {
   
   Tstart <- Tstop <- NULL ## APPEASE R CMD CHECK
@@ -652,25 +724,39 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' @author Joonas Miettinen
 #' @description Summary method function for \code{survtab} objects; see
 #' \code{\link{survtab_ag}}. Returns estimates at given time points
-#' or all time points.
+#' or all time points if \code{t} and \code{q} are both \code{NULL}.
 #' @param object a \code{survtab} object
-#' @param t a vector of times at which time points to print
-#' summary table of survival function estimates by strata;
-#' will automatically use values in breaks used to split data
-#' for aggregation closest to these values, so e.g. supplyig 
-#' \code{t = c(2.5, 5.1)}
-#' with data that was split by the breaks \code{seq(0, 5, 1/12)}
-#' causes the times \code{c(2.5, 5.0)} to be used. 
-#' Since the estimates at the time points closest to \code{t} are selected,
-#' values of \code{t} are compared with column \code{Tstop} in the data.
-#' If \code{NULL}, prints all rows.
-#' @param q a named \code{list} of quantiles to include in returned data set.
-#' E.g. \code{list(surv.obs = 0.5)} for rows closest to the median survival
-#' for each strata in the \code{survtab} object. See Examples.
+#' @param t a vector of times at which time points (actually intervals that
+#' contain t) to print summary table of survival function estimates by strata;
+#' values not existing in any interval cause rows containing only \code{NAs} to
+#' be returned. 
+#' @param q a named \code{list} of quantiles to include in returned data set,
+#' where names must match to estimates in \code{object};
+#' returns intervals where the quantiles are reached first;
+#' e.g. \code{list(surv.obs = 0.5)} finds the interval where \code{surv.obs}
+#' is 0.45 and 0.55 at the beginning and end of the interval, respectively;
+#' returns rows with \code{NA} values for quantiles not reached in estimates
+#' (e.g. if \code{q = list(surv.obs = 0.5)} but lowest estimate is 0.6);
+#' see Examples.
 #' @param subset a logical condition to subset results table by
 #' before printing; use this to limit to a certain stratum. E.g.
 #' \code{subset = sex == "male"}
 #' @param ... unused; required for congruence with other \code{summary} methods
+#' 
+#' @details
+#' Note that this function returns the intervals and NOT the time points
+#' corresponding to quantiles / estimates corresponding to time points.
+#' If you want precise estimates at time points that are not interval breaks,
+#' add the time points as breaks and re-estimate the survival time function.
+#' In interval-based estimation, the estimates denote e.g. probability of 
+#' dying \emph{during} the interval, so time points within the intervals
+#' are not usually considered at all. See e.g. Seppa, Dyba, and Hakulinen 
+#' (2015).
+#' 
+#' @references
+#' Seppa K., Dyba T. and Hakulinen T.: Cancer Survival, 
+#' Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015 
+#' doi: 10.1016/B978-0-12-801238-3.02745-8.
 #' 
 #' @examples 
 #' 
@@ -706,15 +792,20 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' x <- as.data.frame(st)
 #' 
 #' @export
+#' @family survtab_related
 summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   
   PF <- parent.frame(1L)
-  at <- attr(object, "survtab.meta")
+  at <- copy(attr(object, "survtab.meta"))
+  subr <- copy(at$surv.breaks)
   
-  subset <- evalLogicalSubset(object, substitute(subset), enclos = PF)
+  if (!is.null(t) && !is.null(q)) {
+    stop("Only supply either t or q.")
+  } 
+  
+  sb <- substitute(subset)
+  subset <- evalLogicalSubset(object, sb, enclos = PF)
   x <- object[subset, ]
-  setDT(x)
-  setattr(x, "class", class(object))
   
   ## to avoid e.g. 'factor(V1, 1:2)' going bonkers
   pv_orig <- pv <- at$print.vars
@@ -723,57 +814,88 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
     setnames(x, pv_orig, pv)
   }
   
+  setDT(x)
+  
   ## quantile detection --------------------------------------------------------
-  if (!is.null(q) && !is.null(t)) stop("Only define use argument 't' or argument 'q'")
-  if (is.null(q)) q <- list()
-  bn <- setdiff(names(q), at$est.vars)
-  if (length(bn) > 0L) stop("No survival time function estimates named ",
-                            paste0("'", bn, "'", collapse = ", "), 
-                            " found in supplied survtab object. Available survival time function estimates: ", 
-                            paste0("'", at$est.vars, "'", collapse = ", "))
-  q <- lapply(q, function(x) eval(x, envir = PF))
-  
-  lapply(q, function(x) if (min(x < 0L) || max(x > 1L)) stop("Quantiles must be expressed as numbers between 0 and 1, e.g. surv.obs = 0.5."))
-  
-  for (k in names(q)) {
+  if (!is.null(q)) {
+    bn <- setdiff(names(q), at$est.vars)
+    if (length(bn) > 0L) {
+      stop("No survival time function estimates named ",
+           paste0("'", bn, "'", collapse = ", "), 
+           " found in supplied survtab object. Available ",
+           "survival time function estimates: ", 
+           paste0("'", at$est.vars, "'", collapse = ", "))
+    }
     
-    q[[k]] <- rbindlist(lapply(q[[k]], function(y) x[, list(Tstop = .SD[[2L]][which.min(abs(.SD[[1L]] - y))]), 
-                                                     .SDcols = c(k, "Tstop"), by = eval(pv)]))
+    lapply(q, function(x) {
+      if (min(x <= 0L) || max(x >= 1L)) {
+        stop("Quantiles must be expressed as numbers between 0 and 1, ",
+             "e.g. surv.obs = 0.5.")
+      }
+    })
     
+    
+    m <- x[, .SD[1, ], keyby = eval(pv)][, c(pv, "Tstop"), with = FALSE]
+    setDF(m)
+    
+    rollVars <- makeTempVarName(x, pre = names(q))
+    x[, c(rollVars) := lapply(.SD, copy), .SDcols = names(q)]
+    
+    m <- lapply(seq_along(q), function(i) {
+      m <- merge(m, q[[i]])
+      setnames(m, "y", rollVars[i])
+      if (length(pv)) setorderv(m, pv)
+      m[, c(pv, rollVars[i]), drop = FALSE]
+    })
+    names(m) <- names(q)
+    
+    l <- vector("list", length(q))
+    names(l) <- names(q)
+    for (k in names(q)) {
+      
+      l[[k]] <- setDT(x[m[[k]], on = names(m[[k]]), roll = 1L])
+      
+    }
+    l <- rbindlist(l)
+    set(l, j = rollVars, value = NULL)
+    if (length(pv)) setkeyv(l, pv)
+    x <- l
   }
-  q <- rbindlist(q)
-  
   
   ## time point detection ------------------------------------------------------
-  if (is.null(t) && length(q) == 0L) t <- sort(unique(x$Tstop))
-  if (length(q) == 0L && !is.null(t)) {
+  
+  if (!is.null(t)) {
     
-    t <- sort(unique(t))
+    tcutv <- makeTempVarName(x, pre = "cut_time_")
     
-    t <- lapply(t, function(y) x[, list(Tstop = .SD[[1L]][which.min(abs(.SD[[1L]] - y))]), 
-                                 .SDcols = "Tstop", by = eval(pv)])
-    t <- rbindlist(t)
+    set(x, j = tcutv, value = cut(x$Tstop, breaks = subr, right = T, 
+                                  include.lowest = F))
+    cutt <- cut(t, breaks = subr, right = T, include.lowest = F)
     
-    setkeyv(t, c(pv, "Tstop"))
-    t <- unique(t)
+    l <- list(cutt)
+    names(l) <- tcutv
+    if (length(pv)) {
+      pvdt <- setDF(unique(x, by = pv))[, pv, drop = FALSE]
+      l <- setDT(merge(pvdt, as.data.frame(l)))
+      setkeyv(l, pv)
+    }
+    
+    x <- x[l, on = c(pv, tcutv)]
+    
+    set(x, j = tcutv, value = NULL)
+    if (length(pv)) setkeyv(x, pv)
   }
   
-  if (length(q) > 0L && is.null(t)) t <- q 
   
   ## final touches -------------------------------------------------------------
-  # preface_survtab.print(x)
-  
-  x <- data.table(x)
-  setkeyv(x, c(pv, "Tstop"))
-  x <- x[t]
   if (length(pv) > 0L) setnames(x, pv, pv_orig)
   
-  if (!getOption("popEpi.datatable")) setDFpe(x)
+  if (!return_DT()) setDFpe(x)
   
   x
 }
 
-## subsetting for survtab objects that retains attributes
+#' @export 
 `[.survtab` <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
@@ -783,6 +905,7 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   y
 }
 
+#' @export 
 subset.survtab <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
@@ -792,30 +915,29 @@ subset.survtab <- function(x, ...) {
   y
 }
 
-## subsetting for meansurv objects that retains attributes
+
+#' @export 
 `[.survmean` <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
     setattr(y, "class", class(x))
-    setattr(y, "surv.breaks", attr(x, "surv.breaks"))
-    setattr(y, "by.vars", attr(x, "by.vars"))
-    setattr(y, "curves", attr(x, "curves"))
+    setattr(y, "survmean.mean", attr(x, "survmean.mean"))
   }
   y
 }
 
+
+#' @export 
 subset.survmean <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
     setattr(y, "class", class(x))
-    setattr(y, "surv.breaks", attr(x, "surv.breaks"))
-    setattr(y, "by.vars", attr(x, "by.vars"))
-    setattr(y, "curves", attr(x, "curves"))
+    setattr(y, "survmean.mean", attr(x, "survmean.mean"))
   }
   y
 }
 
-## subsetting for rate objects that retains attributes
+#' @export 
 `[.rate` <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
@@ -825,6 +947,7 @@ subset.survmean <- function(x, ...) {
   y
 }
 
+#' @export 
 subset.rate <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
@@ -931,6 +1054,7 @@ prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, enclo
 #' ## or
 #' plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
+#' @family survtab_related
 plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=NULL, ylab = NULL, xlab = NULL, ...) {
   
   Tstop <- delta <- NULL ## APPEASE R CMD CHECK
@@ -950,8 +1074,7 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
   min_y <- min(x[, c(y,y.lo), with=FALSE], na.rm=TRUE)
   min_y <- max(min_y, 0)
   
-  max_y <- max(x[, c(y,y.hi), with=FALSE], na.rm=TRUE) + 0.025
-  if (substr(y[1], 1, 3) == "CIF") min_y <- 0L else max_y <- 1L
+  max_y <- max(x[, c(y), with=FALSE], na.rm=TRUE) + 0.025
   
   max_x <- max(x[, Tstop])
   min_x <- min(x[, Tstop-delta])
@@ -1019,13 +1142,17 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
 #' ## or
 #' plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
+#' @family survtab_related
 lines.survtab <- function(x, y = NULL, subset = NULL, 
                           conf.int = TRUE, col=NULL, lty=NULL, ...) {
   Tstop <- NULL ## APPEASE R CMD CHECK
   ## prep ----------------------------------------------------------------------
   PF <- parent.frame(1L)
+  global_breaks <- attr(x, "survtab.meta")$surv.breaks
+  
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data = x, subset, enclos = PF)
+  
   
   l <- prep_plot_survtab(x = x, y = y, subset = subset, 
                          conf.int = conf.int, enclos = environment())
@@ -1044,7 +1171,7 @@ lines.survtab <- function(x, y = NULL, subset = NULL,
   first <- x[1, ]
   if (length(strata)) first <- unique(x, by = strata)
   first[, c(y) := ifelse(is_CIF, 0, 1)]
-  first[, Tstop := 0]
+  first$Tstop <- min(global_breaks)
   
   if (length(y.ci) > 0) first[, (y.ci) := get(y) ]
   x <- rbindlist(list(first, x[, ]), use.names = TRUE)
@@ -1175,6 +1302,7 @@ lines_by <- function(x, y, strata.vars = NULL, data, col, lty, ...) {
 #' 
 #' where \code{x} is a \code{survmean} object.
 #' @export
+#' @family survmean_related
 plot.survmean <- function(x, ...) {
   at <- attr(x, "survmean.meta")
   curves <- at$curves
@@ -1221,6 +1349,7 @@ plot.survmean <- function(x, ...) {
 #' 
 #' where \code{x} is a \code{survmean} object.
 #' @export
+#' @family survmean_related
 lines.survmean <- function(x, ...) {
   at <- copy(attr(x, "survmean.meta"))
   curves <- at$curves
@@ -1250,6 +1379,33 @@ lines.survmean <- function(x, ...) {
 
 
 
+
+
+#' @export
+getCall.survtab <- function(x, ...) {
+  attributes(x)$survtab.meta$call
+}
+
+
+#' @export
+formula.survtab <- function(x, ...) {
+  attr(x, "survtab.meta")$arguments$formula
+}
+
+
+
+
+
+#' @export
+getCall.survmean <- function(x, ...) {
+  attributes(x)$survmean.meta$call
+}
+
+
+#' @export
+formula.survmean <- function(x, ...) {
+  attr(x, "survmean.meta")$formula
+}
 
 
 

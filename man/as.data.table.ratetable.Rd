@@ -18,10 +18,12 @@ However, the names and levels of variables in the result
 may not match names and levels of variables in your data.
 }
 \examples{
-library(relsurv)
-data(slopop)
-dt <- as.data.table(slopop)
-dt
+if (requireNamespace("relsurv", quietly = TRUE)) {
+  library("data.table")
+  data(slopop, package = "relsurv")
+  dt <- as.data.table(slopop)
+  dt
+}
 }
 \author{
 Joonas Miettinen

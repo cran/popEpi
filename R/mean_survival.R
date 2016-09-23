@@ -249,8 +249,8 @@
 
 #' 
 #' @export survmean
-#' 
-#' 
+#' @family survmean_related
+#' @family main_functions
 #' 
 
 survmean <- function(formula, data, adjust = NULL, weights = NULL, 
@@ -260,6 +260,8 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   pt <- proc.time()
   TF <- environment()
   PF <- parent.frame(1L)
+  
+  attr_form <- copy(formula)
   
   surv.method <- match.arg(surv.method, c("hazard", "lifetable"))
   
@@ -446,7 +448,7 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   pt <- proc.time()
   setkeyv(x, c("lex.id", survScale))
   tol <- .Machine$double.eps^0.5
-  xe <- unique(x)[x[[survScale]] < TF$tol, ] ## pick rows with entry to FU
+  xe <- unique(x, by = key(x))[x[[survScale]] < TF$tol, ] ## pick rows with entry to FU
   
   if (length(breaks) > 1L) {
     ## e.g. a period window was defined and we only use subjects
@@ -624,14 +626,18 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   
   this_call <- match.call()
   at <- list(call = this_call, 
-             print = prNames, adjust = adNames, 
-             tprint = tmpPrNames, tadjust = tmpAdNames,
+             formula = attr_form,
+             print = prNames, 
+             adjust = adNames, 
+             tprint = tmpPrNames, 
+             tadjust = tmpAdNames,
              breaks = breaks, 
-             e1.breaks = e1.breaks, survScale = survScale,
+             e1.breaks = e1.breaks, 
+             survScale = survScale,
              curves = copy(x))
   setattr(sm, "class", c("survmean","data.table", "data.frame"))
   setattr(sm, "survmean.meta", at)
-  if (!getOption("popEpi.datatable")) setDFpe(sm)
+  if (!return_DT()) setDFpe(sm)
   return(sm[])
 }
 

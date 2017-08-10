@@ -78,18 +78,17 @@ AIC(rpm, rpm2)
 ## other features such as residuals or predicting are not guaranteed
 ## to work as intended.
 }
-\author{
-Joonas Miettinen, Karri Seppa
-}
 \seealso{
 \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
 
-Other main_functions: \code{\link{rate}},
+Other main functions: \code{\link{rate}},
   \code{\link{relpois}}, \code{\link{sirspline}},
   \code{\link{sir}}, \code{\link{survmean}},
   \code{\link{survtab_ag}}, \code{\link{survtab}}
 
-Other relpois_related: \code{\link{RPL}},
+Other relpois functions: \code{\link{RPL}},
   \code{\link{relpois}}, \code{\link{rpcurve}}
 }
-
+\author{
+Joonas Miettinen, Karri Seppa
+}

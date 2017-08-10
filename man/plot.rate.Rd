@@ -18,16 +18,16 @@ tries to do it by default.}
 
 \item{xlim}{change the x-axis location}
 
-\item{...}{arguments passed on to grafical functions points and segment (e.g. col, lwd, pch and cex)}
+\item{...}{arguments passed on to graphical functions points and segment 
+(e.g. \code{col}, \code{lwd}, \code{pch} and \code{cex})}
 }
 \description{
 Plot rate estimates with confidence intervals lines using R base graphics
 }
 \details{
-This is limited explonatory tool but most graphical parameters are user 
-adjustable.
+This is limited explanatory tool but most graphical 
+parameters are user adjustable.
 }
 \author{
 Matti Rantanen
 }
-

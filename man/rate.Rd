@@ -36,7 +36,7 @@ and examples.}
 }
 \value{
 Returns a \code{data.table} with observations, person-years, rates and
-adjusted rates, if availble. Results are stratified by \code{print}.
+adjusted rates, if available. Results are stratified by \code{print}.
 Adjusted rates are identified with suffix \code{.adj} and  
 \code{.lo} and \code{.hi} are for confidence intervals lower and upper 
 95\% bounds, respectively.
@@ -89,17 +89,16 @@ r3 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat,
 r3
 
 }
-\author{
-Matti Rantanen, Joonas Miettinen
-}
 \seealso{
 \code{\link{lexpand}}, \code{\link{ltable}}
 
-Other main_functions: \code{\link{relpois_ag}},
+Other main functions: \code{\link{relpois_ag}},
   \code{\link{relpois}}, \code{\link{sirspline}},
   \code{\link{sir}}, \code{\link{survmean}},
   \code{\link{survtab_ag}}, \code{\link{survtab}}
 
-Other rate_related: \code{\link{rate_ratio}}
+Other rate functions: \code{\link{rate_ratio}}
 }
-
+\author{
+Matti Rantanen, Joonas Miettinen
+}

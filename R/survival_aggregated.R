@@ -103,7 +103,7 @@
 #' \code{surv.breaks} must be a subset of the pertinent 
 #' pre-existing breaks. When data is not an \code{aggre} object, breaks
 #' must always be specified. Interval lengths (\code{delta} in output) are 
-#' also calculated based on whichever breaks ares used, 
+#' also calculated based on whichever breaks are used, 
 #' so the upper limit of the breaks should
 #' therefore be meaningful and never e.g. \code{Inf}. 
 #' 
@@ -467,10 +467,10 @@ survtab_ag <- function(formula = NULL,
   
   # formulate some needed variables --------------------------------------------
   setkeyv(data, c(byVars, surv.scale))
-  data[, Tstop := surv.breaks[-1]]
+  data[, "Tstop" := surv.breaks[-1]]
   setnames(data, surv.scale, "Tstart")
-  data[, delta := Tstop - Tstart]
-  data[, surv.int := 1:.N, by = eval(byVars)]
+  data[, "delta" := Tstop - Tstart]
+  data[, "surv.int" := 1:.N, by = eval(byVars)]
   setcolorder(data, c(byVars, "surv.int", "Tstart", "Tstop", "delta", valVars, intersect(names(data), "weights")))
   
   if (surv.method == "lifetable") {
@@ -499,7 +499,7 @@ survtab_ag <- function(formula = NULL,
            if (interactive())" See table below and check your variables.")
     }
     rm(testEvents)
-    data[, n.eff := n - n.cens/2L]
+    data[, "n.eff" := n - n.cens/2L]
   }
   
   
@@ -566,9 +566,9 @@ survtab_ag <- function(formula = NULL,
   if (surv.type == "surv.cause") {
     
     ## NOTE: these related to adjusting life-table estimates for delayed entry...
-    #       data[, n.eff := n - n.cens/2 + n.de/2 + n.de.cens/4] # + d.de/2
-    #       n.cens_1 := n.cens + (d-d_1)
-    #       n.de.cens := n.de.cens + (d.de - d.de_1)
+    #       data[, "n.eff" := n - n.cens/2 + n.de/2 + n.de.cens/4] # + d.de/2
+    #       "n.cens_1" := n.cens + (d-d_1)
+    #       "n.de.cens" := n.de.cens + (d.de - d.de_1)
     
     if (surv.method == "lifetable") {
       for (k in eventVars) {
@@ -615,11 +615,11 @@ survtab_ag <- function(formula = NULL,
     setnames(data, paste0(surv_names, ".orig"), surv_names)
   }
   
-  # compute cause-specifc/excess-case CIFs -------------------------------------
+  # compute cause-specific/excess-case CIFs ------------------------------------
   if (surv.type %in% c("cif.obs", "cif.rel")) {
     
-    data[, lag1_surv.obs := shift(surv.obs, n = 1L, type = "lag", fill = 1), by = eval(byVars)]
-    data[, p.obs := surv.obs/lag1_surv.obs]
+    data[, "lag1_surv.obs" := shift(surv.obs, n = 1L, type = "lag", fill = 1), by = eval(byVars)]
+    data[, "p.obs" := surv.obs/lag1_surv.obs]
     
     if (surv.type == "cif.obs") {
       for (k in eventVars) {
@@ -638,9 +638,9 @@ survtab_ag <- function(formula = NULL,
     
     if (surv.type == "cif.rel") {
       ## assuming d.exp in data
-      data[, CIF.rel := (1-p.obs)*(d-d.exp)/d]
-      data[d.exp>d, CIF.rel := NA]
-      data[, CIF.rel := cumsum(lag1_surv.obs*CIF.rel), by = eval(byVars)]
+      data[, "CIF.rel" := (1-p.obs)*(d-d.exp)/d]
+      data[d.exp>d, "CIF.rel" := NA]
+      data[, "CIF.rel" := cumsum(lag1_surv.obs*CIF.rel), by = eval(byVars)]
     }
     
     ## SEs currently not known for CIFs; impute 0 to make adjusting work
@@ -664,15 +664,15 @@ survtab_ag <- function(formula = NULL,
       
       ##-------------
       if (surv.method == "hazard") {
-        rs.table[, p.exp := exp(-delta*d.exp/pyrs)] 
-        rs.table[, surv.exp := cumprod(p.exp), by = eval(rs.by.vars)]
+        rs.table[, "p.exp" := exp(-delta*d.exp/pyrs)] 
+        rs.table[, "surv.exp" := cumprod(p.exp), by = eval(rs.by.vars)]
         comp.st.r.e2.haz(surv.table = rs.table, surv.by.vars = rs.by.vars)
       } else {
-        rs.table[, p.exp := 1 - d.exp/n]
-        rs.table[, surv.exp := cumprod(p.exp), by = eval(rs.by.vars)]
+        rs.table[, "p.exp" := 1 - d.exp/n]
+        rs.table[, "surv.exp" := cumprod(p.exp), by = eval(rs.by.vars)]
         
         if (rs.table[, min(surv.obs, na.rm=T) == 0]) {
-          rs.table[surv.obs == 0, surv.exp := 1]
+          rs.table[surv.obs == 0, "surv.exp" := 1]
         }
         
         comp.st.r.e2.lif(surv.table = rs.table, surv.by.vars = rs.by.vars)
@@ -708,7 +708,7 @@ survtab_ag <- function(formula = NULL,
                                        "to package maintainer if you see this."))
         comp.st.r.pp.haz(surv.table = pp.table, surv.by.vars = by.vars)
       } else {
-        data[, n.eff.pp := n.pp - 0.5*n.cens.pp]
+        data[, "n.eff.pp" := n.pp - 0.5*n.cens.pp]
         all_names_present(data, c("n.pp", "n.cens.pp", "n.eff.pp"),
                           msg = paste0("internal error: work data did not have",
                                        " variable named n.eff.pp. Complain ",
@@ -729,20 +729,31 @@ survtab_ag <- function(formula = NULL,
   
   # compute adjusted estimates -------------------------------------------------
   if ("weights" %in% names(data)) {
-    adEsts <- names(data)[substr(names(data), 1, 8) == "surv.obs"]
-    adEsts <- c(adEsts, "r.e2", "r.pp")
-    adEsts <- c(adEsts,  names(data)[substr(names(data),1,3)=="CIF"])
-    adEsts <- intersect(adEsts, names(data))
-    adEsts <- adEsts[unlist(lapply(adEsts, function(x) !substr(x, nchar(x)-2L, nchar(x)) %in% c(".lo", ".hi")))]
-    adSEs <- paste0("SE.", adEsts)
+    w_est_vars <- names(data)[substr(names(data), 1, 8) == "surv.obs"]
+    w_est_vars <- c(w_est_vars, "r.e2", "r.pp")
+    w_est_vars <- c(w_est_vars,  names(data)[substr(names(data),1,3)=="CIF"])
+    w_est_vars <- intersect(w_est_vars, names(data))
+    w_est_vars <- w_est_vars[unlist(lapply(w_est_vars, function(x) {
+      !substr(x, nchar(x)-2L, nchar(x)) %in% c(".lo", ".hi")
+      }))]
+    w_se_vars <- paste0("SE.", w_est_vars)
     
-    data.w <- data[, lapply(mget(c(adEsts, adSEs)), function(x) sum(x*weights)), keyby = c(prVars, "surv.int")]
-    data <- data[, lapply(mget(valVars), sum), keyby = c(prVars, "surv.int", "Tstart", "Tstop", "delta")]
-    data <- merge(data, data.w, by = c(prVars, "surv.int"), all = TRUE)
-    setnames(data, c(adEsts, adSEs), paste0(c(adEsts, adSEs), ".as"))
+    w_est <- data[, lapply(.SD, function(x) sum(x*weights)), 
+                   keyby = c(prVars, "surv.int"), .SDcols = w_est_vars]
+    w_se <- data[, lapply(.SD, function(x) sqrt(sum((x^2)*(weights^2)))),
+                   keyby = c(prVars, "surv.int"), .SDcols = w_se_vars]
     
-    for (var in paste0(adEsts, ".as")) {
-      data <- comp.st.conf.ints(data, al=1-conf.level, surv=var, transform =conf.type)
+    data <- data[, lapply(mget(valVars), sum), 
+                 keyby = c(prVars, "surv.int", "Tstart", "Tstop", "delta")]
+    set(data, j = w_se_vars, value = mget(w_se_vars, as.environment(w_se)))
+    set(data, j = w_est_vars, value = mget(w_est_vars, as.environment(w_est)))
+    
+    setnames(data, old = c(w_est_vars, w_se_vars), 
+             new = paste0(c(w_est_vars, w_se_vars), ".as"))
+    
+    for (var in paste0(w_est_vars, ".as")) {
+      data <- comp.st.conf.ints(data, al = 1-conf.level, 
+                                surv = var, transform = conf.type)
     }
     
     

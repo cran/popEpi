@@ -7,7 +7,7 @@
 splitLexisDT(lex, breaks, timeScale, merge = TRUE, drop = TRUE)
 }
 \arguments{
-\item{lex}{a Lexis object, splitted or not}
+\item{lex}{a Lexis object, split or not}
 
 \item{breaks}{a vector of \code{[a,b)} breaks to split \code{data} by}
 
@@ -79,11 +79,10 @@ x3 <- splitLexisDT(x3, breaks = BL$per, timeScale = "per", drop = FALSE)
 
 ## splitLexis may not work when using Dates
 }
+\seealso{
+Other splitting functions: \code{\link{lexpand}},
+  \code{\link{splitMulti}}
+}
 \author{
 Joonas Miettinen
 }
-\seealso{
-Other splitting_related: \code{\link{lexpand}},
-  \code{\link{splitMulti}}
-}
-

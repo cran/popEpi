@@ -44,7 +44,7 @@ window to compute
 data to extrapolate up to 100 years from where the observed survival
 curve ends. \strong{NOTE:} the breaks on the survival time scale
 MUST include the breaks supplied to argument \code{breaks}; see Examples.
-If \code{NULL}, uses decent defaults (max follow-up time of 50 years).}
+If \code{NULL}, uses decent defaults (maximum follow-up time of 50 years).}
 
 \item{e1.pophaz}{Same as \code{pophaz}, except this defines the 
 population hazard in the time window where \strong{expected} 
@@ -54,7 +54,7 @@ argument \code{pophaz}.}
 \item{r}{either a numeric multiplier such as \code{0.995}, \code{"auto"}, or
 \code{"autoX"} where \code{X} is an integer;
 used to determine the relative survival ratio (RSR) persisting after where 
-the estimated obsered survival curve ends. See Details.}
+the estimated observed survival curve ends. See Details.}
 
 \item{surv.method}{passed to \code{survtab}; see that help for more info.}
 
@@ -105,10 +105,10 @@ This function also computes the "full" expected survival curve from
 T = 0 till e.g. T = 50 depending on supplied arguments. The
 expected mean survival time is the area under the 
 mean expected survival curve.
-This function returns the mean expected survival time to be omcpared with 
+This function returns the mean expected survival time to be compared with 
 the mean survival time and for computing years of potential life lost (YPLL).
 
-Results can be requested by strata and adjusted for e.g. age by using
+Results can be formed by strata and adjusted for e.g. age by using
 the \code{formula} argument as in \code{survtab}. See also Examples.
 
 \strong{Extrapolation tweaks}
@@ -118,7 +118,7 @@ persist beyond the time window where observed survival is computed
 (defined by argument \code{breaks}; e.g. up to \code{FUT = 10}).
 The RSR is simply \code{RSR_i = p_oi / p_ei} for a time interval \code{i}, 
 i.e. the observed divided by the expected 
-(conditional, not cumulative) probablity of surviving from the beginning of
+(conditional, not cumulative) probability of surviving from the beginning of
 a time interval till its end. The cumulative product of \code{RSR_i}
 over time is the (cumulative) relative survival curve. 
 
@@ -266,16 +266,15 @@ plot(smd)
 
 
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
-Other main_functions: \code{\link{rate}},
+Other survmean functions: \code{\link{lines.survmean}},
+  \code{\link{plot.survmean}}
+
+Other main functions: \code{\link{rate}},
   \code{\link{relpois_ag}}, \code{\link{relpois}},
   \code{\link{sirspline}}, \code{\link{sir}},
   \code{\link{survtab_ag}}, \code{\link{survtab}}
-
-Other survmean_related: \code{\link{lines.survmean}},
-  \code{\link{plot.survmean}}
 }
-
+\author{
+Joonas Miettinen
+}

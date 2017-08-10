@@ -93,7 +93,7 @@ Returns some of the following estimates of survival time functions:
 
 \itemize{
  \item \code{surv.obs} - observed (raw, overall) survival
- \item \code{surv.obs.K} - observed cause-specifc survival for cause K
+ \item \code{surv.obs.K} - observed cause-specific survival for cause K
  \item \code{CIF_k} - cumulative incidence function for cause \code{k}
  \item \code{CIF.rel} - cumulative incidence function using excess cases
  \item \code{r.e2} -  relative survival, EdererII
@@ -194,6 +194,7 @@ To calculate e.g. period analysis (delayed entry) estimates,
 limit the data when/before supplying to this function.See 
 \href{../doc/survtab_examples.html}{survtab_examples}.
 }
+
 \examples{
 \dontrun{
 data("sire", package = "popEpi")
@@ -296,13 +297,12 @@ doi: 10.1016/B978-0-12-801238-3.02745-8.
 \code{\link{ICSS}}, \code{\link{sire}}
 \href{../doc/survtab_examples.html}{The survtab_examples vignette}
 
-Other main_functions: \code{\link{rate}},
+Other main functions: \code{\link{rate}},
   \code{\link{relpois_ag}}, \code{\link{relpois}},
   \code{\link{sirspline}}, \code{\link{sir}},
   \code{\link{survmean}}, \code{\link{survtab_ag}}
 
-Other survtab_related: \code{\link{lines.survtab}},
+Other survtab functions: \code{\link{lines.survtab}},
   \code{\link{plot.survtab}}, \code{\link{print.survtab}},
   \code{\link{summary.survtab}}, \code{\link{survtab_ag}}
 }
-

@@ -29,11 +29,10 @@ the \code{survmean} output using
 
 where \code{x} is a \code{survmean} object.
 }
+\seealso{
+Other survmean functions: \code{\link{lines.survmean}},
+  \code{\link{survmean}}
+}
 \author{
 Joonas Miettinen
 }
-\seealso{
-Other survmean_related: \code{\link{lines.survmean}},
-  \code{\link{survmean}}
-}
-

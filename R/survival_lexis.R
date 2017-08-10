@@ -1,15 +1,3 @@
-`[.Lexis` <- function(x, ...) {
-  ## intended to override Epi::`[.Lexis`
-
-  y <- NextMethod(x)
-  if (is.data.frame(y)) {
-    for (a in c("class", "time.scales", "time.since", "breaks")) {
-      setattr(y ,a, attr(x, a))
-    }
-  }
-  y
-}
-
 
 
 
@@ -564,7 +552,7 @@ detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id"
     ## whEv now indicates rows that may be events AND which reside within breaks window. 
   }
   
-  ## censorings are not transitions, but must reside within breaks window.
+  ## censored events are not transitions, but must reside within breaks window.
   whCe <- whLa & !whTr & whEv
   
   ## need to add event indicator to data since it has been reordered,

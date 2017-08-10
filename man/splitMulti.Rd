@@ -120,14 +120,13 @@ xm2[xm2$lex.id == 6L, ]
 }
 
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 \code{\link[Epi]{splitLexis}}, \code{\link[Epi]{Lexis}},  
 \code{\link[survival]{survSplit}}
 
-Other splitting_related: \code{\link{lexpand}},
+Other splitting functions: \code{\link{lexpand}},
   \code{\link{splitLexisDT}}
 }
-
+\author{
+Joonas Miettinen
+}

@@ -2,7 +2,7 @@
 #' @author Joonas Miettinen, Karri Seppa
 #' @description Estimate a Poisson piecewise constant excess
 #' hazards model
-#' @param data a dataset splitted with e.g. \code{\link{lexpand}};
+#' @param data a dataset split with e.g. \code{\link{lexpand}};
 #' must have expected hazard merged within
 #' @param formula a formula which is passed on to \code{glm}; see Details
 #' @param fot.breaks optional; a numeric vector of [a,b) breaks to specify
@@ -13,7 +13,7 @@
 #' limits the data before estimation
 #' @param check logical; if \code{TRUE}, tabulates excess cases by all
 #' factor variables in the formula to check for negative / \code{NA} 
-#' excess cases before fitting the glm
+#' excess cases before fitting the GLM
 #' @param ... any argument passed on to \code{glm}
 #' @import stats
 #' @details
@@ -70,8 +70,8 @@
 #' 
 #' @seealso
 #' \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
-#' @family main_functions
-#' @family relpois_related
+#' @family main functions
+#' @family relpois functions
 #' @export relpois
 #' 
 #' @examples
@@ -131,7 +131,8 @@ relpois <- function(data,
   surv.breaks <- attr(data, "breaks")$fot
   if (is.null(surv.breaks)) {
     stop("did not find any breaks information in data attributes named 'fot';
-            probable reason: splitted data was edited after splitting - don't do that")
+            probable reason: split data was edited after splitting - ",
+         "don't do that")
   } else {
     if (!is.null(fot.breaks)) {
       if (any(!fot.breaks %in% surv.breaks)) {
@@ -287,8 +288,8 @@ relpois <- function(data,
 #' 
 #' @seealso
 #' \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
-#' @family main_functions
-#' @family relpois_related
+#' @family main functions
+#' @family relpois functions
 #' @examples
 #' ## use the simulated rectal cancer cohort
 #' data(sire, package = "popEpi")

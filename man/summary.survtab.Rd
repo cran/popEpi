@@ -79,17 +79,16 @@ summary(st, q = list(surv.obs = c(0.75, 0.90), CIF_canD = 0.20))
 x <- as.data.frame(st)
 
 }
-\author{
-Joonas Miettinen
-}
 \references{
 Seppa K., Dyba T. and Hakulinen T.: Cancer Survival, 
 Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015 
 doi: 10.1016/B978-0-12-801238-3.02745-8.
 }
 \seealso{
-Other survtab_related: \code{\link{lines.survtab}},
+Other survtab functions: \code{\link{lines.survtab}},
   \code{\link{plot.survtab}}, \code{\link{print.survtab}},
   \code{\link{survtab_ag}}, \code{\link{survtab}}
 }
-
+\author{
+Joonas Miettinen
+}

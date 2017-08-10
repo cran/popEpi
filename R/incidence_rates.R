@@ -31,7 +31,7 @@
 #' 
 #' 
 #' @return Returns a \code{data.table} with observations, person-years, rates and
-#' adjusted rates, if availble. Results are stratified by \code{print}.
+#' adjusted rates, if available. Results are stratified by \code{print}.
 #' Adjusted rates are identified with suffix \code{.adj} and  
 #' \code{.lo} and \code{.hi} are for confidence intervals lower and upper 
 #' 95\% bounds, respectively.
@@ -78,8 +78,8 @@
 #'
 #' @import data.table
 #' @export
-#' @family main_functions
-#' @family rate_related
+#' @family main functions
+#' @family rate functions
 
 rate <- function( data,
                   obs = NULL,
@@ -201,7 +201,10 @@ rate <- function( data,
   return(data[])
 }
 
-
+#' @export
+getCall.rate <- function (x, ...) {
+  attributes(x)$rate.meta$call
+}
 
 stdr.weights <- function(wp = 'world00_1') {
   

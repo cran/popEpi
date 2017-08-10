@@ -7,7 +7,7 @@
 #' 
 #' @details \code{sir} is a comprehensive tool for modelling SIRs/SMRs with flexible 
 #' options to adjust and print SIRs, test homogeneity and utilize 
-#' multistate data. The cohort data and the variable names for observation 
+#' multi-state data. The cohort data and the variable names for observation 
 #' counts and person-years are required.
 #' The reference data is optional, since the cohort data 
 #' can be stratified (\code{print}) and compared to total.
@@ -22,7 +22,7 @@
 #' 
 #' \code{print} is used to stratify the SIR output. In other words, the variables 
 #' assigned to \code{print} are the covariates of the Poisson model.
-#' Variable levels are treaded as categorical.
+#' Variable levels are treated as categorical.
 #' Variables can be assigned in both \code{print} and \code{adjust}. 
 #' This means the output it adjusted and printed by these variables.
 #' 
@@ -44,7 +44,7 @@
 #' 
 #' 
 #' Note that if all the stratifying variables in 
-#' \code{ref.data} aren't listed in \code{adjust}, 
+#' \code{ref.data} are not listed in \code{adjust}, 
 #' or when the categories are otherwise combined,
 #' the (unweighted) mean of rates is used for computing expected cases.
 #' This might incur a small bias in comparison to when exact numbers of observations
@@ -72,18 +72,18 @@
 #' \strong{Other parameters}
 #' 
 #' \code{univariate} confidence intervals are calculated using exact 
-#' Poisson intervals (poisson.ci). The options \code{profile} and \code{wald} are
-#' is based on a poisson regression model: profile-likelihood confidence intervals 
+#' Poisson intervals (\code{poisson.ci}). The options \code{profile} and \code{wald} are
+#' is based on a Poisson regression model: profile-likelihood confidence intervals 
 #' or Wald's normal-approximation. P-value is Poisson model based \code{conf.type}
 #' or calculated using the method described by Breslow and Day. Function automatically
-#' switches to another conf.type if calculation is not possible with a message.
+#' switches to another \code{conf.type} if calculation is not possible with a message.
 #' Usually model fit fails if there is print stratum with zero expected values.
 #' 
 #' 
 #' The LRT p-value tests the levels of \code{print}. The test can be either 
-#' \code{"homogeneity"}, a likelihood ratio test where the model varibles defined in
+#' \code{"homogeneity"}, a likelihood ratio test where the model variables defined in
 #' \code{print} (factor) is compared to the constant model.
-#' Option \code{"trend"} tests if the linear trend of the continous variable in
+#' Option \code{"trend"} tests if the linear trend of the continuous variable in
 #' \code{print} is significant (using model comparison).
 #' 
 #' 
@@ -100,7 +100,7 @@
 #' 
 #' The data should be given in tabulated format. That is the number of observations 
 #' and person-years are represented for each stratum.
-#' Note that also individual data is allowed as long as each observeations, 
+#' Note that also individual data is allowed as long as each observations, 
 #' person-years, and print and adjust variables are presented in columns.
 #' The extra variables and levels are reduced automatically before estimating SIRs. 
 #' Example of data format:
@@ -130,7 +130,7 @@
 #' @param test.type Test for equal SIRs. Test available are 'homogeneity' and 'trend'.
 #' @param conf.type Confidence interval type: 'profile'(=default), 'wald' or 'univariate'.
 #' @param conf.level Level of type-I error in confidence intervals, default 0.05 is 95\% CI.
-#' @param EAR logical; TRUE calculates Excess Absolute Risks for univarite SIRs.
+#' @param EAR logical; TRUE calculates Excess Absolute Risks for univariate SIRs.
 #' (see details)
 
 #' 
@@ -150,8 +150,8 @@
 #' 
 #' @seealso \code{\link{lexpand}}
 #' \href{../doc/sir.html}{A SIR calculation vignette}
-#' @family sir_related
-#' @family main_functions
+#' @family sir functions
+#' @family main functions
 #' 
 #' @return A sir-object that is a \code{data.table} with meta information in the attributes.
 #' 
@@ -284,8 +284,8 @@ sir <- function( coh.data,
 #' @author Matti Rantanen, Joonas Miettinen
 #' 
 #' @description Splines for standardised incidence or mortality ratio. A useful 
-#' tool to e.g. check whether a constant SIR can be assumed for all calendar periods, a
-#' gegroups or follow-up intervals. Splines can be fitted for these time dimensions
+#' tool to e.g. check whether a constant SIR can be assumed for all calendar periods,
+#' agegroups or follow-up intervals. Splines can be fitted for these time dimensions
 #' separately or in the same model.
 #' 
 #' @param coh.data cohort data with observations and at risk time variables
@@ -300,7 +300,7 @@ sir <- function( coh.data,
 #' @param adjust variable names for adjusting the expected cases
 #' @param print variable names for which to estimate SIRs/SMRs and 
 #' associated splines separately 
-#' @param mstate set column names for cause spesific observations. Relevant only
+#' @param mstate set column names for cause specific observations. Relevant only
 #' when coh.obs length is two or more. See help for \code{sir}.
 #' @param spline variable name(s) for the splines
 #' @param knots number knots (vector),  pre-defined knots (list of vectors) or for optimal number of knots left NULL
@@ -365,7 +365,7 @@ sir <- function( coh.data,
 #' 
 #' \strong{p-values}
 #' 
-#' The outputted p-value is a test of whether the splines are equal (homogenous)
+#' The output p-value is a test of whether the splines are equal (homogenous)
 #' at different levels of \code{print}. 
 #' The test is based on the likelihood ratio test, where the full model 
 #' includes \code{print} and is 
@@ -381,8 +381,8 @@ sir <- function( coh.data,
 #' 
 #' @seealso \code{\link{splitMulti}} 
 #' \href{../doc/sir.html}{A SIR calculation vignette}
-#' @family sir_related
-#' @family main_functions
+#' @family sir functions
+#' @family main functions
 #' 
 #' @export sirspline
 #' @import data.table 
@@ -775,8 +775,8 @@ sir_est <- function( table,
   
   cols1 <- c('sir','sir.lo','sir.hi','expected','pyrs')
   
-  table[,(cols1) := lapply(.SD, round, digits=3), .SDcols=cols1]
-  combined[,(cols1) := lapply(.SD, round, digits=3), .SDcols=cols1]
+  table[,(cols1) := lapply(.SD, round, digits=4), .SDcols=cols1]
+  combined[,(cols1) := lapply(.SD, round, digits=4), .SDcols=cols1]
 
   
   # tests -----------------------------------
@@ -1184,27 +1184,66 @@ data_list <- function( data, arg.list, env ) {
 
 #' @export
 coef.sir <- function(object, ...) {
-  return(object$sir)
+  factors <- attr(object, 'sir.meta')$print
+  
+  q <- paste("paste(",paste(factors,collapse=","),", sep = ':')")
+  q <- parse(text=q)
+  n <- object[,eval(q)]
+  
+  res <- object$sir
+  attr(res, 'names') <- n
+  
+  res
 }
 
+
+
+
 #' @export
-confint.sir <- function(object, parm, level, ...) {
-  return( cbind(object$sir.lo, object$sir.hi) )
+confint.sir <- function(object, parm, level = 0.95, conf.type = 'profile', 
+                        test.type = 'homogeneity', ...) {
+
+  meta <- attr(object, 'sir.meta')
+  object <- copy(object)
+  object <- sir_est(table = object,
+                    print = meta$print,
+                    adjust = NULL,
+                    conf.type = conf.type, 
+                    test.type = test.type,
+                    conf.level = level,
+                    EAR = FALSE)
+  object <- object$table
+  q <- paste("paste(",paste(meta$print,collapse=","),", sep = ':')")
+  q <- parse(text=q)
+  n <- object[,eval(q)]
+
+  res <- cbind(object$sir.lo, object$sir.hi)
+  
+  rownames(res) <- n
+  colnames(res) <- paste( c( (1-level)/2*100, (1 - (1-level)/2)*100), '%')
+
+  res
 }
 
 
 #' @title Calculate SMR
 #' @author Matti Rantanen
-#' @description Calculate SMRs using a single data set which includes
-#' observed and expected cases and person-years.
+#' @description Calculate Standardized Mortality Ratios (SMRs) using 
+#' a single data set that includes
+#' observed and expected cases and additionally person-years.
 #' 
-#' @details These functions are for simple SMRs . tofrom a data 
-#' that has been merged with population death rates calculated ready in lexpand (\code{pop.haz}).
+#' @details These functions are intended to calculate SMRs from a single data set 
+#' that includes both observed and expected number of cases. For example utilizing the
+#' argument \code{pop.haz} of the \code{\link{lexpand}}.
 #' 
-#' @param x Data in a aggre or Lexis object (see: \code{\link{lexpand}})
+#' \code{sir_lex} automatically exports the transition \code{fromXtoY} using the first
+#' state in \code{lex.Str} as \code{0} and all other as \code{1}. No missing values
+#' is allowed in observed, pop.haz or person-years.
+#' 
+#' @param x Data set e.g. aggre or Lexis object (see: \code{\link{lexpand}})
 #' @param obs Variable name of the observed cases in the data set
-#' @param exp Name or expression of expected cases
-#' @param pyrs Variable name for person-years
+#' @param exp Variable name or expression for expected cases
+#' @param pyrs Variable name for person-years (optional)
 #' @param print Variables or expression to stratify the results
 #' @param test.type Test for equal SIRs. Test available are 'homogeneity' and 'trend'
 #' @param conf.level Level of type-I error in confidence intervals, default 0.05 is 95\% CI
@@ -1213,9 +1252,9 @@ confint.sir <- function(object, parm, level, ...) {
 #' 
 #' @seealso \code{\link{lexpand}}
 #' \href{../doc/sir.html}{A SIR calculation vignette}
-#' @family sir_related
+#' @family sir functions
 #' 
-#' @return A sir-object that is a \code{data.table} with meta information in the attributes.
+#' @return A sir object
 #' 
 #' @examples 
 #' 
@@ -1240,7 +1279,7 @@ confint.sir <- function(object, parm, level, ...) {
 #' @import data.table
 #' @import stats
 #' @export
-sir_exp <- function(x, obs, exp, pyrs, print = NULL, 
+sir_exp <- function(x, obs, exp, pyrs=NULL, print = NULL, 
                     conf.type = 'profile', test.type = 'homogeneity',
                     conf.level = 0.95, subset = NULL) {
   
@@ -1254,9 +1293,6 @@ sir_exp <- function(x, obs, exp, pyrs, print = NULL,
   c.obs <- evalPopArg(data = x, arg = obs)
   obs <- names(c.obs)
   
-  pyrs <- substitute(pyrs)
-  c.pyr <- evalPopArg(data = x, arg = pyrs)
-  pyrs <- names(c.pyr)
   
   print <- substitute(print)
   c.pri <- evalPopArg(data = x, arg = print)
@@ -1265,6 +1301,11 @@ sir_exp <- function(x, obs, exp, pyrs, print = NULL,
   exp <- substitute(exp)
   c.exp <- evalPopArg(data = x, arg = exp)
   exp <- names(c.exp)
+  
+  pyrs <- substitute(pyrs)
+  c.pyr <- evalPopArg(data = x, arg = pyrs)
+  if(is.null(c.pyr)) c.pyr <- data.table(pyrs=0)
+  pyrs <- names(c.pyr)
   
   # collect data
   x <- cbind(c.obs, c.pyr, c.exp)
@@ -1308,15 +1349,14 @@ sir_exp <- function(x, obs, exp, pyrs, print = NULL,
 
 
 
-#' sir method for Lexis object
-#' @description \code{sir_lex} solves SMR from a \code{\link{Lexis}} object.
+#' Calculate SMRs from a split Lexis object  
 #' 
-#' @param breaks not yet fully implemented
+#' @description \code{sir_lex} solves SMR from a \code{\link{Lexis}} object 
+#' calculated with \code{lexpand}.
+#' 
+#' @param breaks a named list to split age group (age), period (per) or follow-up (fot). 
 #' @param ... pass arguments to \code{sir_exp}
 #' 
-#' @details sir_lex automatically export the transition fromXtoY using the first
-#' state in lex.Str as \code{0} and all other as \code{1}. No missing values
-#' is allowed in observed, pop.haz or pyrs.
 #' 
 #' @describeIn sir_exp
 #' 
@@ -1326,6 +1366,10 @@ sir_lex <- function(x, print = NULL, breaks = NULL, ... ) {
   if(!inherits(x, 'Lexis')) {
     stop('x has to be a Lexis object (see lexpand or Lexis)')
   }
+  if(!"pop.haz" %in% names(x)) {
+    stop("Variable pop.haz not found in the data.")
+  }
+
 
   # reformat date breaks
   if(!is.null(breaks)) {
@@ -1334,9 +1378,12 @@ sir_lex <- function(x, print = NULL, breaks = NULL, ... ) {
       else x
     })
   }
+  
   print <- substitute(print)
+  # copy to retain the attributes
   x <- copy(x)
-
+  
+  # guess the first value
   first_value <- lapply(c("lex.Cst", "lex.Xst"), function(var) {
     if (is.factor(x[[var]])) levels(x[[var]]) else sort(unique(x[[var]]))
   })
@@ -1346,29 +1393,28 @@ sir_lex <- function(x, print = NULL, breaks = NULL, ... ) {
   set(x, j = "lex.Cst", value = 0L)
   set(x, j = "lex.Xst", value = ifelse(col == first_value, 0L, 1L))
   
-  # maybe works:
   if(!is.null(breaks)) {
     x <- splitMulti(x, breaks = breaks)
   }
-
+  
   a <- names(get_breaks(x))
   x[, d.exp := pop.haz*lex.dur]
   
   if(any(is.na(x[,d.exp]))) stop('Missing values in either pop.haz or lex.dur.')
-  
   x <- aggre(x, by = a, sum.values = 'd.exp')
   if(!'from0to1' %in% names(x)) {
     stop('Could not find any transitions between states in lexis')
   }
   x <- sir_exp(x = x, obs = 'from0to1', print = print, exp = 'd.exp', pyrs = 'pyrs', ...)
+  # override the match.call from sir_exp 
   attr(x, 'sir.meta')$call <- match.call()
   return(x)
 }
 
 
-#' sir method for an aggre object
+#' SMR method for an \code{aggre} object.
 #' 
-#' @description \code{sir_ag} solves SMR from a \code{\link{aggre}} object that is 
+#' @description \code{sir_ag} solves SMR from a \code{\link{aggre}} object 
 #' calculated using \code{\link{lexpand}}.
 #' 
 #' @describeIn sir_exp
@@ -1385,7 +1431,7 @@ sir_ag <- function(x, obs = 'from0to1', print = attr(x, 'aggre.meta')$by, exp = 
   
   x <- copy(x)
   x <- sir_exp(x = x, obs = obs, print = print, exp = 'd.exp', pyrs = 'pyrs', ...) # original
-  attr(x, 'sir.meta')$call <- match.call()
+  attr(x, 'sir.meta')$call <- match.call() # override the call from sir_exp
   x
 }
 

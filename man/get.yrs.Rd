@@ -7,7 +7,7 @@
 get.yrs(x, year.length = "approx", ...)
 }
 \arguments{
-\item{x}{a \code{Date} obbject, or anything that \code{link{as.Date}}
+\item{x}{a \code{Date} object, or anything that \code{link{as.Date}}
 accepts}
 
 \item{year.length}{character string, either \code{'actual'} or 
@@ -70,10 +70,9 @@ get.yrs(100, origin = "1970-01-01")
 
 
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 \code{\link[Epi]{cal.yr}}, \code{\link{as.Date.yrs}}, \code{\link{as.Date}}
 }
-
+\author{
+Joonas Miettinen
+}

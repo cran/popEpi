@@ -116,16 +116,16 @@ print.sirspline <- function(x, ...) {
 #' @param ylab overwrites default y-axis label
 #' @param xlim x-axis minimum and maximum values
 #' @param main optional plot title
-#' @param abline logical; draws a gray line in SIR = 1
+#' @param abline logical; draws a grey line in SIR = 1
 #' @param log logical; SIR is not in log scale by default
 #' @param eps error bar vertical bar height (works only in 'model' or 'univariate')
-#' @param left.margin adjust left marginal of the plot to fit long variablenames
+#' @param left.margin adjust left marginal of the plot to fit long variable names
 #' @param ... arguments passed on to plot(), segment and lines()
 #' 
 #' 
 #' @details Plot SIR estimates and confidence intervals 
 #' \itemize{
-#'  \item univariate - plots SIR with univariates confidence intervals
+#'  \item univariate - plots SIR with univariate confidence intervals
 #'  \item model - plots SIR with Poisson modelled confidence intervals
 #' }
 #' 
@@ -138,10 +138,10 @@ print.sirspline <- function(x, ...) {
 #'  \item \code{lwd} - point/line size
 #' }
 #'
-#' \strong{Tips for plottin splines}
+#' \strong{Tips for plotting splines}
 #' It's possible to use \code{plot} to first draw the 
 #' confidence intervals using specific line type or colour and then plotting 
-#' againg the estimate using \code{lines(... , conf.int = FALSE)} with different 
+#' again the estimate using \code{lines(... , conf.int = FALSE)} with different 
 #' settings. This works only when \code{plot.type} is 'splines'.
 #' 
 #' 
@@ -252,7 +252,7 @@ plot.sir <- function(x, conf.int = TRUE, ylab, xlab, xlim, main,
 #' On top of the frame it's then possible to add a \code{grid}, 
 #' \code{abline} or text before plotting the lines (see: \code{sirspline}).
 #' @export
-#' @family sir_related
+#' @family sir functions
 plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, ylab, xlab,  ...) {
 
   #print(list(...))
@@ -332,7 +332,7 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
 #' 
 #' @param x an object returned by function sirspline
 #' @param conf.int logical; default TRUE draws also the 95 confidence intervals
-#' @param print.levels name(s) to be plottet. Default plots all levels.
+#' @param print.levels name(s) to be plotted. Default plots all levels.
 #' @param select.spline select which spline variable (a number or a name) is plotted.
 #' @param ... arguments passed on to lines()
 #' 
@@ -343,10 +343,10 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
 #' several levels, e.g. gender (these are the levels of \code{print}
 #' from \code{sirspline}). All levels are printed by default, but a
 #' specific level can be selected using argument
-#' \code{print.levels}. Printing the levels seperately enables  e.g. to
+#' \code{print.levels}. Printing the levels separately enables  e.g. to
 #' give different colours for each level.
 #' 
-#' @family sir_related
+#' @family sir functions
 #' 
 #' @import graphics
 #' @export
@@ -463,10 +463,11 @@ print.rate <- function(x, subset = NULL, ...) {
 #' @param left.margin set a custom left margin for long variable names. Function
 #' tries to do it by default.
 #' @param xlim change the x-axis location
-#' @param ... arguments passed on to grafical functions points and segment (e.g. col, lwd, pch and cex)
+#' @param ... arguments passed on to graphical functions points and segment 
+#' (e.g. \code{col}, \code{lwd}, \code{pch} and \code{cex})
 #' 
-#' @details This is limited explonatory tool but most graphical parameters are user 
-#' adjustable. 
+#' @details This is limited explanatory tool but most graphical 
+#' parameters are user adjustable. 
 #' 
 #' @import graphics
 #' @export
@@ -643,7 +644,7 @@ print.aggre <- function(x, subset = NULL, ...) {
 #' \code{subset = sex == "male"}
 #' @param ... unused
 #' @export
-#' @family aggregation_related
+#' @family aggregation functions
 summary.aggre <- function(object, by = NULL, subset = NULL, ...) {
   
   PF <- parent.frame(1L)
@@ -680,7 +681,7 @@ summary.aggre <- function(object, by = NULL, subset = NULL, ...) {
 #' if the table is large, 
 #' \code{nrow = 100} for number of rows to print, etc.
 #' @export
-#' @family survtab_related
+#' @family survtab functions
 print.survtab <- function(x, subset = NULL, ...) {
   
   Tstart <- Tstop <- NULL ## APPEASE R CMD CHECK
@@ -812,7 +813,7 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' x <- as.data.frame(st)
 #' 
 #' @export
-#' @family survtab_related
+#' @family survtab functions
 summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   
   PF <- parent.frame(1L)
@@ -977,15 +978,28 @@ subset.rate <- function(x, ...) {
   y
 }
 
-prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, enclos = parent.frame(1L), ...) {
+
+
+
+
+prep_plot_survtab <- function(x, 
+                              y = NULL, 
+                              subset = NULL, 
+                              conf.int = TRUE, 
+                              enclos = parent.frame(1L), 
+                              ...) {
   
   ## subsetting ----------------------------------------------------------------
-  subset <- evalLogicalSubset(data = x, substiset = substitute(subset), enclos = environment())
+  subset <- evalLogicalSubset(data = x, substiset = substitute(subset), 
+                              enclos = environment())
   
   attrs <- attributes(x)
   
   if (!inherits(x, "survtab")) stop("x is not a survtab object")
-  if (is.null(attrs$survtab.meta)) stop("Missing meta information (attributes) in survtab object; have you tampered with it after estimation?")
+  if (is.null(attrs$survtab.meta)) {
+    stop("Missing meta information (attributes) in survtab object; ",
+         "have you tampered with it after estimation?")
+  }
   strata.vars <- attrs$survtab.meta$print.vars
   x <- copy(x)
   setDT(x)
@@ -999,21 +1013,34 @@ prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, enclo
   }
   surv_vars <- names(x)[wh]
   surv_vars <- surv_vars[!substr(surv_vars, nchar(surv_vars)-1, nchar(surv_vars)) %in% c("hi","lo")]
-  if (length(surv_vars) == 0) stop("x does not appear to have any survival variables; did you tamper with it after estimation?")
+  if (length(surv_vars) == 0) {
+    stop("x does not appear to have any survival variables; ",
+         "did you tamper with it after estimation?")
+  }
   
   
   ## getting y -----------------------------------------------------------------
   if (!is.null(y)) {
-    if (!is.character(y)) stop("please supply y as a character string indicating the name of a variable in x")
+    if (!is.character(y)) {
+      stop("please supply y as a character string indicating ",
+           "the name of a variable in x")
+    }
     if (length(y) > 1) stop("y must be of length 1 or NULL")
-    if (!all_names_present(x, y, stops = FALSE)) stop("Given survival variable in argument 'y' not present in survtab object ('", y, "')")
+    if (!all_names_present(x, y, stops = FALSE)) {
+      stop("Given survival variable in argument 'y' ",
+           "not present in survtab object ('", y, "')")
+    }
   } else {
     y <- surv_vars[length(surv_vars)]
     if (length(surv_vars) > 1L) message("y was NULL; chose ", y, " automatically")
   }
   rm(surv_vars)
   
-  if (substr(y, 1, 3) == "CIF" && conf.int) stop("No confidence intervals currently supported for CIFs. Hopefully they will be added in a future version; meanwhile use conf.int = FALSE when plotting CIFs.")
+  if (substr(y, 1, 3) == "CIF" && conf.int) {
+    stop("No confidence intervals currently supported for CIFs. ",
+         "Hopefully they will be added in a future version; ",
+         "meanwhile use conf.int = FALSE when plotting CIFs.")
+  }
   
   
   ## confidence intervals ------------------------------------------------------
@@ -1025,13 +1052,21 @@ prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, enclo
     y.ci <- c(y.lo, y.hi)
     
     badCIvars <- setdiff(y.ci, names(x))
-    if (sum(length(badCIvars))) stop("conf.int = TRUE, but missing confidence interval variables in data for y = '", y, "' (could not detect variables named", paste0("'", badCIvars, "'", collapse = ", ") ,")")
+    if (sum(length(badCIvars))) {
+      stop("conf.int = TRUE, but missing confidence interval ",
+           "variables in data for y = '", y, "' (could not detect ",
+           "variables named", paste0("'", badCIvars, "'", collapse = ", ") ,")")
+    }
     
   } 
   
-  list(x = x, y = y, y.ci = y.ci, y.lo = y.lo, y.hi = y.hi, strata = strata.vars, attrs = attrs)
+  list(x = x, y = y, y.ci = y.ci, y.lo = y.lo, y.hi = y.hi, 
+       strata = strata.vars, attrs = attrs)
   
 }
+
+
+
 
 
 #' \code{plot} method for survtab objects
@@ -1074,7 +1109,7 @@ prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, enclo
 #' ## or
 #' plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
-#' @family survtab_related
+#' @family survtab functions
 plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=NULL, ylab = NULL, xlab = NULL, ...) {
   
   Tstop <- delta <- NULL ## APPEASE R CMD CHECK
@@ -1083,7 +1118,8 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data = x, subset, enclos = PF)
   
-  l <- prep_plot_survtab(x = x, y = y, subset = subset, conf.int = conf.int, enclos = PF)
+  l <- prep_plot_survtab(x = x, y = y, subset = subset, 
+                         conf.int = conf.int, enclos = PF)
   x <- l$x
   y <- l$y
   y.ci <- l$y.ci
@@ -1091,10 +1127,16 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
   y.hi <- l$y.hi
   
   ## figure out limits, etc. to pass to plot() ---------------------------------
-  min_y <- min(x[, c(y,y.lo), with=FALSE], na.rm=TRUE)
-  min_y <- max(min_y, 0)
   
-  max_y <- max(x[, c(y), with=FALSE], na.rm=TRUE) + 0.025
+  min_y <- do.call("min", c(mget(c(y, y.lo), as.environment(x)), na.rm = TRUE))
+  min_y <- max(min_y, 0)
+  max_y <- max(x[[y]], na.rm=TRUE)
+  
+  if (substr(y, 1, 3) == "CIF") {
+    min_y <- 0.0
+  } else {
+    max_y <- max(1.0, max_y)
+  }
   
   max_x <- max(x[, Tstop])
   min_x <- min(x[, Tstop-delta])
@@ -1162,7 +1204,7 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
 #' ## or
 #' plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
-#' @family survtab_related
+#' @family survtab functions
 lines.survtab <- function(x, y = NULL, subset = NULL, 
                           conf.int = TRUE, col=NULL, lty=NULL, ...) {
   Tstop <- NULL ## APPEASE R CMD CHECK
@@ -1322,7 +1364,7 @@ lines_by <- function(x, y, strata.vars = NULL, data, col, lty, ...) {
 #' 
 #' where \code{x} is a \code{survmean} object.
 #' @export
-#' @family survmean_related
+#' @family survmean functions
 plot.survmean <- function(x, ...) {
   at <- attr(x, "survmean.meta")
   curves <- at$curves
@@ -1369,7 +1411,7 @@ plot.survmean <- function(x, ...) {
 #' 
 #' where \code{x} is a \code{survmean} object.
 #' @export
-#' @family survmean_related
+#' @family survmean functions
 lines.survmean <- function(x, ...) {
   at <- copy(attr(x, "survmean.meta"))
   curves <- at$curves

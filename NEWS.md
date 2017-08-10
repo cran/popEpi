@@ -1,3 +1,9 @@
+Changes in 0.4.2
+================
+
+-   **`survtab()` bug fix: standard errors were misspecificied for adjusted curves, e.g. age-adjusted Ederer II estimates. This resulted in too wide confidence intervals! SEE HERE FOR EAXMPLE: [\#135](https://github.com/WetRobot/popEpi/issues/135)**. The standard errors and confidence intervals of non-adjusted curves have always been correct.
+-   `survtab()` bug fix: confidence level was always 95 % regardless of `conf.level` [\#134](https://github.com/WetRobot/popEpi/issues/134)
+
 Changes in 0.4.1
 ================
 
@@ -54,9 +60,6 @@ sr$status <- factor(sr$status, levels = 0:2,
 library(Epi)
 #> 
 #> Attaching package: 'Epi'
-#> The following object is masked from 'package:popEpi':
-#> 
-#>     [.Lexis
 #> The following object is masked from 'package:base':
 #> 
 #>     merge.data.frame

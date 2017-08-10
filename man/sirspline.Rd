@@ -32,7 +32,7 @@ associated splines separately}
 
 \item{adjust}{variable names for adjusting the expected cases}
 
-\item{mstate}{set column names for cause spesific observations. Relevant only
+\item{mstate}{set column names for cause specific observations. Relevant only
 when coh.obs length is two or more. See help for \code{sir}.}
 
 \item{spline}{variable name(s) for the splines}
@@ -52,8 +52,8 @@ in \code{spline.seq.A/B/C} for manual plotting
 }
 \description{
 Splines for standardised incidence or mortality ratio. A useful 
-tool to e.g. check whether a constant SIR can be assumed for all calendar periods, a
-gegroups or follow-up intervals. Splines can be fitted for these time dimensions
+tool to e.g. check whether a constant SIR can be assumed for all calendar periods,
+agegroups or follow-up intervals. Splines can be fitted for these time dimensions
 separately or in the same model.
 }
 \details{
@@ -110,7 +110,7 @@ This allows for searching interactions, e.g. by fitting spline for period
 
 \strong{p-values}
 
-The outputted p-value is a test of whether the splines are equal (homogenous)
+The output p-value is a test of whether the splines are equal (homogenous)
 at different levels of \code{print}. 
 The test is based on the likelihood ratio test, where the full model 
 includes \code{print} and is 
@@ -123,20 +123,19 @@ Otherwise the p-value is spline-specific.
 ## for examples see: vignette('sir')
 }
 }
-\author{
-Matti Rantanen, Joonas Miettinen
-}
 \seealso{
 \code{\link{splitMulti}} 
 \href{../doc/sir.html}{A SIR calculation vignette}
 
-Other main_functions: \code{\link{rate}},
+Other sir functions: \code{\link{lines.sirspline}},
+  \code{\link{plot.sirspline}}, \code{\link{sir_exp}},
+  \code{\link{sir_ratio}}, \code{\link{sir}}
+
+Other main functions: \code{\link{rate}},
   \code{\link{relpois_ag}}, \code{\link{relpois}},
   \code{\link{sir}}, \code{\link{survmean}},
   \code{\link{survtab_ag}}, \code{\link{survtab}}
-
-Other sir_related: \code{\link{lines.sirspline}},
-  \code{\link{plot.sirspline}}, \code{\link{sir_exp}},
-  \code{\link{sir_ratio}}, \code{\link{sir}}
 }
-
+\author{
+Matti Rantanen, Joonas Miettinen
+}

@@ -24,8 +24,8 @@
 #' }
 #' @author Karri Seppa
 #' @name sire
-#' @family popEpi_data
-#' @family survival_data
+#' @family popEpi data
+#' @family survival data
 NULL
 
 
@@ -53,8 +53,8 @@ NULL
 #' }
 #' @author Karri Seppa
 #' @name sibr
-#' @family popEpi_data
-#' @family survival_data
+#' @family popEpi data
+#' @family survival data
 NULL
 
 
@@ -78,7 +78,7 @@ NULL
 #'  \item ICSS3 - third set of weights, sums to 100 000
 #' }
 #' @name ICSS
-#' @family popEpi_data
+#' @family popEpi data
 #' @family weights
 #' @examples 
 #' ## aggregate weights to a subset of age groups
@@ -97,13 +97,13 @@ NULL
 #' @source Statistics Finland
 #' @format \code{data.table} with columns
 #' \itemize{
-#'  \item sex gender coded as male, female (0, 1)
-#'  \item year calendar year
-#'  \item agegroup - coded 0 to 100; one-year age groups
-#'  \item haz the average population mortality rate per person year
+#'  \item \code{sex} gender coded as male, female (0, 1)
+#'  \item \code{year} calendar year
+#'  \item \code{agegroup} - coded 0 to 100; one-year age groups
+#'  \item \code{haz} the average population mortality rate per person year
 #' }
 #' @name popmort
-#' @family popEpi_data
+#' @family popEpi data
 #' @seealso \code{\link{pophaz}}
 NULL
 
@@ -126,27 +126,49 @@ NULL
 #'  \item \code{nordic}, Nordic standard population (numeric)
 #' }
 #' @name stdpop18
-#' @family popEpi_data
+#' @family popEpi data
 #' @family weights
 NULL
 
 
 # stdpop101 -----------------------------------------------------------------
 
-#' World standard population by 1 year agegroups from 1 to 101. Sums to 100 000.
+#' World standard population by 1 year age groups from 1 to 101. Sums to 100 000.
 #'
 #'
 #' @source Standard population is from:
-#' \href{http://seer.cancer.gov/stdpopulations/stdpop.singleages.html}{world standard pop "101of1"}
+#' \href{http://seer.cancer.gov/stdpopulations/stdpop.singleages.html}{world standard population "101of1"}
 #' 
 #' @format data.table with columns
 #' \itemize{
-#'  \item \code{world_std} weight in 100000 years (numeric)
+#'  \item \code{world_std} weight that sums to 100000 (numeric)
 #'  \item \code{agegroup} age group from 1 to 101 (numeric)
 #' }
 #' @name stdpop101
-#' @family popEpi_data
+#' @family popEpi data
 #' @family weights
 NULL
 
+
+
+
+
+# meanpop_fi -------------------------------------------------------------------
+#' Mean population counts in Finland year, sex, and age group.
+#'
+#' @source Statistics Finland
+#' @format \code{data.table} with columns
+#' \itemize{
+#'  \item \code{sex} gender coded as male, female (0, 1)
+#'  \item \code{year} calendar year 1981-2016
+#'  \item \code{agegroup} - coded 0 to 100; one-year age groups
+#'  \item \code{meanpop} the mean population count; that is, the mean of the
+#'  annual population counts of two consecutive years; e.g. for 1990 
+#'  \code{meanpop} is the mean of population counts for 1990 and 1991 
+#'  (counted at 1990-01-01 and 1991-01-01, respectively)
+#' }
+#' @name meanpop_fi
+#' @family popEpi data 
+#' @seealso \href{http://pxnet2.stat.fi/PXWeb/pxweb/fi/StatFin/StatFin__vrm__vaerak/071_vaerak_tau_109.px/?rxid=81efcb98-00c6-46ba-9f8f-8bc6f110895f}{Table on the web}
+NULL
 

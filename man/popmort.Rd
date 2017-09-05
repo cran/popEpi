@@ -6,10 +6,10 @@
 by gender}
 \format{\code{data.table} with columns
 \itemize{
- \item sex gender coded as male, female (0, 1)
- \item year calendar year
- \item agegroup - coded 0 to 100; one-year age groups
- \item haz the average population mortality rate per person year
+ \item \code{sex} gender coded as male, female (0, 1)
+ \item \code{year} calendar year
+ \item \code{agegroup} - coded 0 to 100; one-year age groups
+ \item \code{haz} the average population mortality rate per person year
 }}
 \source{
 Statistics Finland
@@ -21,7 +21,8 @@ by gender
 \seealso{
 \code{\link{pophaz}}
 
-Other popEpi_data: \code{\link{ICSS}}, \code{\link{sibr}},
+Other popEpi data: \code{\link{ICSS}},
+  \code{\link{meanpop_fi}}, \code{\link{sibr}},
   \code{\link{sire}}, \code{\link{stdpop101}},
   \code{\link{stdpop18}}
 }

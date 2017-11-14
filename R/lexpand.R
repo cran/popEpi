@@ -359,7 +359,7 @@ lexpand <- function(data,
   ## to instate global variables to appease R CMD CHECK 
   .EACHI <- lex.status <- lexpand.id <- lex.exit <- lex.birth <- 
     lex.entry <- lex.event <- temp.id <- cd <- fot <- age <- per <- 
-    lex.id <- lex.multi <- pop.haz <- NULL
+    lex.id <- lex.multi <- pop.haz <- lex.Cst <- lex.Xst <- lex.dur <- NULL
   
   
   ## test conflicting variable names -------------------------------------------
@@ -654,6 +654,7 @@ lexpand <- function(data,
                        "lex.dur", "lex.Cst", "lex.Xst", "lex.event", "temp.id"))
   setattr(l, "class", c("Lexis", "data.table", "data.frame"))
   setattr(l, "time.scales", c("fot","per","age"))
+  setattr(l, "time.since", c("","",""))
   
   if (verbose) cat("data just after Lexis coercion: \n")
   if (verbose) print(l)  
@@ -912,10 +913,16 @@ lexpand <- function(data,
     ## sometimes problems with releasing memory
     gc()
     
+    breaks <- lapply(c("fot","per","age"), function(ts_nm) {
+      breaks[[ts_nm]]
+    })
+    names(breaks) <- c("fot","per","age")
+    
     ## handle attributes
     setkeyv(l, c("lex.id", "lex.multi"))
     set(l, j = "lex.multi", value = NULL)
     setattr(l, "time.scales", c("fot","per","age"))
+    setattr(l, "time.since", c("","",""))
     setattr(l, "breaks", breaks)
     setattr(l, "class", c("Lexis","data.table","data.frame"))
     if (!return_DT() && is.data.table(l)) setDFpe(l)
@@ -924,7 +931,7 @@ lexpand <- function(data,
     
   }
   
-  if (verbose) cat("Time taken by lexpand(): ",timetaken(start_time), "\n")
+  if (verbose) cat("Time taken by lexpand(): ", timetaken(start_time), "\n")
   
   return(l[])
 }

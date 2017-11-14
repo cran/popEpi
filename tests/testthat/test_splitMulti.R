@@ -1,8 +1,11 @@
 context("Compare splitMulti results with splitLexis results")
 
+
+
+
+
 test_that("splitMulti and splitLexis are congruent", {
-  skip_on_cran()
-  skip_on_travis()
+  skip_usually()
   library(Epi)
   
   sire2 <- copy(sire)
@@ -30,15 +33,6 @@ test_that("splitMulti and splitLexis are congruent", {
              exit=list(per=ex_yrs), merge=TRUE, exit.status=1L, entry.status = 0L)
   setDT(x)
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
-  
-  #   x2 <- splitMulti(x, breaks = BL[[6]], drop = F)
-  #   x3 <- splitMultiEpi(x, breaks = BL[[6]], drop = F)
-  #   
-  #   x2d <- splitMulti(x, breaks = BL[[6]], drop = T)
-  #   x3d <- splitMultiEpi(x, breaks = BL[[6]], drop = T)
-  #   x2d <- intelliDrop(x2, breaks = BL[[6]])
-  #   x3d <- intelliDrop(x3, breaks = BL[[6]])
-  #   compareSMWithEpi(x, BL[[6]], drop = F)
   
   
   # one row per id ---------------------------------------------------------------
@@ -88,13 +82,60 @@ test_that("splitMulti and splitLexis are congruent", {
     })
   }
   
-  # multistate using mstate ----------------------------------------------------
-  
-#   test_that("splitMulti works with data produced by mstate", {
-#     
-#   }
   
 })
+
+
+
+
+test_that("splitMulti agrees with splitLexis, vol. II", {
+  
+  library("Epi")
+  
+  data(nickel, package = "Epi")
+  
+  lex <- Lexis( entry = list(age=agein,
+                             per=agein+dob),
+                exit = list(age=ageout),
+                exit.status = factor(icd>0, labels=c("Alive","Dead")),
+                entry.status = factor(0, 0:1, labels = c("Alive", "Dead")),
+                data = nickel )
+  
+  set.seed(1337)
+  lex$lex.id <- sample(paste0("abcd_", 1:nrow(lex)), size = nrow(lex))
+  
+  lex_copy <- copy(lex)
+  
+  BL <- list(
+    per = 1920:1990,
+    age = 0:100
+  )
+  
+  epi_s1 <- splitLexis(lex, breaks = BL$per, time.scale = "per")
+  epi_s2 <- splitLexis(epi_s1, breaks = BL$age, time.scale = "age")
+  
+  pop_s1 <- splitLexisDT(lex, breaks=BL$per, timeScale="per", drop = FALSE)
+  pop_s2 <- splitLexisDT(pop_s1, breaks=BL$age, timeScale="age" , drop = FALSE)
+  
+  pop_sm <- splitMulti(lex, breaks = BL, drop = FALSE)
+  
+  expect_equal(
+    setDT(epi_s2), setDT(pop_sm), check.attributes = FALSE
+  )
+  expect_equal(
+    setDT(epi_s2), setDT(pop_s2), check.attributes = FALSE
+  )
+  expect_identical(
+    lex, lex_copy
+  )
+  
+})
+
+
+
+
+
+
 
 
 

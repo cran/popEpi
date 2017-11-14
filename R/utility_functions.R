@@ -1392,3 +1392,45 @@ set2 <- function(x, j, ...) {
 
 
 
+
+mget_cols <- function(cols, data) {
+  
+  stopifnot(all(cols %in% names(data)))
+  
+  setDT(mget(x = cols, envir = as.environment(data), inherits = FALSE))
+}
+
+
+
+
+
+get_random_seed <- function() {
+  t <- Sys.time()
+  s <- as.numeric(t) %% as.integer(t)
+  nc <- nchar(s)
+  s <- as.integer(substr(s, nc-8, nc))
+  s
+}
+
+
+
+
+
+skip_usually <- function() {
+  requireNamespace("testthat")
+  testthat::skip_on_cran()
+  testthat::skip_on_travis()
+  testthat::skip_on_appveyor()
+}
+
+
+
+
+
+
+
+
+
+
+
+

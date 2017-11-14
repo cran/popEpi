@@ -1,8 +1,8 @@
 Package: popEpi
 Title: Functions for Epidemiological Analysis using Population Data
 Authors@R: c(person("Joonas", "Miettinen", , "joonas.miettinen@cancer.fi", c("aut", "cre")), person("Matti", "Rantanen", , "matti.rantanen@cancer.fi", "aut"), person("Karri", "Seppa", , "karri.seppa@cancer.fi", "ctb") )
-Version: 0.4.3
-Date: 2017-09-05
+Version: 0.4.4
+Date: 2017-11-13
 Maintainer: Joonas Miettinen <joonas.miettinen@cancer.fi>
 Description: Enables computation of epidemiological statistics where e.g. 
     counts or mortality rates of the reference population are used. Currently 
@@ -24,9 +24,9 @@ URL: https://github.com/WetRobot/popEpi
 BugReports: https://github.com/WetRobot/popEpi/issues
 RoxygenNote: 6.0.1
 NeedsCompilation: no
-Packaged: 2017-09-05 17:27:56 UTC; jonttu
+Packaged: 2017-11-14 13:55:10 UTC; joonas.miettinen
 Author: Joonas Miettinen [aut, cre],
   Matti Rantanen [aut],
   Karri Seppa [ctb]
 Repository: CRAN
-Date/Publication: 2017-09-05 17:39:06 UTC
+Date/Publication: 2017-11-14 14:11:03 UTC

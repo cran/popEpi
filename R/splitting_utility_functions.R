@@ -101,17 +101,27 @@ checkPophaz <- function(lex, ph, haz.name = "haz") {
          " area duplicated in the data set before proceeding. Tip: use e.g. ",
          "duplicated(PH, by = c('V1', 'V2')) to check for duplicatedness in ",
          "your data set (here named PH) by the variables V1 and V2."
-         )
+    )
   }
   
   invisible()
 }
 
 
-globalVariables(c("lex.dur", "lex.Xst", "lex.Cst"))
-intelliCrop <- function(x, breaks = list(fot = 0:5), allScales = NULL, cropStatuses = FALSE, tol = .Machine$double.eps^0.5) {
+
+
+
+intelliCrop <- function(
+  x, 
+  breaks = list(fot = 0:5), 
+  allScales = NULL, 
+  cropStatuses = FALSE, 
+  tol = .Machine$double.eps^0.5
+) {
   
-  TF <- environment()
+  ## appease R CMD CHECK
+  lex.dur <- lex.Xst <- lex.Cst <- NULL
+  
   checkBreaksList(x = x, breaks = breaks)
   breaks[unlist(lapply(breaks, length)) == 0L] <- NULL
   if (!is.data.table(x)) stop("x needs to be a data.table")
@@ -121,38 +131,42 @@ intelliCrop <- function(x, breaks = list(fot = 0:5), allScales = NULL, cropStatu
   all_names_present(x, c("lex.dur", allScales))
   
   if (cropStatuses) {
-    ## wrapped in data.table to avoid conflicting variable names with x
-    ## (maybe origDur might exist in x)
     origEnd <- x$lex.dur + x[[allScales[1L]]]
   }
   
   
   deltas <- mapply(function(b, y) pmax(min(b), y) - y, SIMPLIFY = FALSE,
-                   b = breaks, y = subsetDTorDF(x, select = cropScales))
+                   b = breaks, y = mget_cols(cropScales, x))
   ## below: baseline (zero value without assigning zero of bad class)
   deltas <- c(deltas, list(x[[cropScales[1]]][1L] - x[[cropScales[1]]][1L]))
   deltas <- do.call(pmax, deltas)
   
-  x[, c(allScales) := .SD + TF$deltas, .SDcols = eval(allScales)]
-  x[, lex.dur := lex.dur - TF$deltas]
+  set(x, j = allScales, value = mget_cols(allScales, x) + deltas)
+  set(x, j = "lex.dur", value = x[["lex.dur"]] - deltas)
   
   durs <- mapply(function(b, y) max(b) - y, SIMPLIFY = FALSE,
-                 b = breaks, y = subsetDTorDF(x, select = cropScales))
+                 b = breaks, y = mget_cols(cropScales, x))
   durs$lex.dur <- x$lex.dur
   durs <- do.call(pmin, durs)
   ## now have max durs by row, i.e. up to roof of breaks at most,
   ## or to ((original lex.dur) - (deltas)) if that is smaller.
   ## (being cropped or exiting before roof of breaks)
   
-  x[, lex.dur := TF$durs]
+  set(x, j = "lex.dur", value = durs)
   
   if (cropStatuses) {
     harmonizeStatuses(x, C = "lex.Cst", X = "lex.Xst")
-    x[lex.dur + x[[allScales[1L]]] + tol < origEnd, lex.Xst := lex.Cst]
+    wh_was_cropped <- which(x[["lex.dur"]] + x[[allScales[1L]]] + tol < origEnd)
+    set(x, i = wh_was_cropped, j = "lex.Xst", 
+        value = x[["lex.Cst"]][wh_was_cropped])
   }
   
   invisible(x)
 }
+
+
+
+
 
 harmonizeStatuses <- function(x, C = "lex.Cst", X = "lex.Xst") {
   
@@ -221,6 +235,10 @@ harmonizeNumericTimeScales <- function(x, times = NULL) {
   invisible(NULL)
 }
 
+
+
+
+
 harmonizeNumeric <- function(x, v1="lex.Cst", v2="lex.Xst") {
   ## assumes v1, v2 are numeric variable names in x  
   
@@ -242,6 +260,10 @@ harmonizeNumeric <- function(x, v1="lex.Cst", v2="lex.Xst") {
   
 }
 
+
+
+
+
 harmonizeFactors <- function(x, v1="lex.Cst", v2="lex.Xst") {
   ## assumes v1, v2 are factor names in x
   
@@ -259,6 +281,10 @@ harmonizeFactors <- function(x, v1="lex.Cst", v2="lex.Xst") {
   
 }
 
+
+
+
+
 intelliDrop <- function(x, breaks = list(fot = 0:5), dropNegDur = TRUE, check = FALSE, tol = .Machine$double.eps^0.5, subset = NULL)  {
   
   if (!is.data.table(x)) {
@@ -266,7 +292,7 @@ intelliDrop <- function(x, breaks = list(fot = 0:5), dropNegDur = TRUE, check = 
          "to the package maintainer")
   }
   checkBreaksList(x = x, breaks = breaks)
-  breaks[unlist(lapply(breaks, length)) == 0L] <- NULL
+  breaks[unlist(lapply(breaks, length)) < 2] <- NULL
   timeScales <- names(breaks)
   
   if (check) {
@@ -392,6 +418,9 @@ unprotectFromDrop <- function(breaks) {
 
 
 setLexisDT <- function(data, entry, exit, entry.status, exit.status, id = NULL, select = NULL) {
+  
+  ## appease R CMD CHECK
+  lex.Cst <- lex.Xst <- NULL
   
   if (!is.data.table(data)) stop("not a data.table")
   if (inherits(data, "Lexis")) stop("already a Lexis object")
@@ -611,7 +640,7 @@ lexpile <- function(lex, by = "lex.id", subset = NULL) {
   
   allScales <- attr(lex, "time.scales")
   sc <- allScales[1L]
-
+  
   all_names_present(lex, by)
   
   if (is.character(lex$lex.Cst) || is.character(lex$lex.Xst)) {
@@ -786,6 +815,8 @@ contractLexis <- function(x, breaks, drop = TRUE) {
 prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(get(cutScale)),
                      exit = max(get(cutScale)), by = "lex.id", breaks = NULL, freezeDummy = NULL, subset = NULL,
                      verbose = FALSE, ...) {
+  ## R CMD CHECK appeasement
+  lex.dur <- NULL
   
   if (verbose) allTime <- proc.time()
   
@@ -837,17 +868,17 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
   l$en <- makeTempVarName(x, pre = "entry_")
   l$ex <- makeTempVarName(x, pre = "exit_")
   x[, c(l$ex, l$en) := list(eval(exSub, envir = .SD, enclos = PF), 
-                                eval(enSub, envir = .SD, enclos = PF)), by = c(l$by)]
+                            eval(enSub, envir = .SD, enclos = PF)), by = c(l$by)]
   
   ## tests disabled for now...
-#   testTime <- proc.time()
-#   
-#   test <- x[, .N, by = list(r = get(l$cutScale) + lex.dur > get(l$ex) - tol)]
-#   if(test[r == TRUE, .N] > 0) stop("exit must currently be higher than or equal to the maximum of cutScale (on subject basis defined using by); you may use breaks instead to limit the data")
-#   
-#   test <- x[, .N, by = list(r = get(l$cutScale) + tol < get(l$en))]
-#   if(test[r == TRUE, .N] > 0) stop("entry must currently be lower than or equal to the minimum of cutScale (on subject basis defined using by); you may use breaks instead to limit the data")
-#   if (verbose) cat("Finished checking entry and exit. Time taken: ", timetaken(argTime), "\n")
+  #   testTime <- proc.time()
+  #   
+  #   test <- x[, .N, by = list(r = get(l$cutScale) + lex.dur > get(l$ex) - tol)]
+  #   if(test[r == TRUE, .N] > 0) stop("exit must currently be higher than or equal to the maximum of cutScale (on subject basis defined using by); you may use breaks instead to limit the data")
+  #   
+  #   test <- x[, .N, by = list(r = get(l$cutScale) + tol < get(l$en))]
+  #   if(test[r == TRUE, .N] > 0) stop("entry must currently be lower than or equal to the minimum of cutScale (on subject basis defined using by); you may use breaks instead to limit the data")
+  #   if (verbose) cat("Finished checking entry and exit. Time taken: ", timetaken(argTime), "\n")
   if (verbose) cat("Finished evaluating entry and exit and checking args. Time taken: ", timetaken(argTime), "\n")
   
   ## create rows to fill gaps --------------------------------------------------
@@ -1009,7 +1040,7 @@ doTestBarrage <- function(dt1, dt2, allScales, testTimes = TRUE, testStatuses = 
   requireNamespace("Epi")
   requireNamespace("testthat")
   
-  lex.id <- NULL ## APPEASE R CMD CHECK
+  lex.id <- lex.dur <- NULL ## APPEASE R CMD CHECK
   
   testthat::expect_equal(sum(dt1$lex.dur), 
                          sum(dt2$lex.dur), 
@@ -1062,17 +1093,28 @@ compareSLDTWithEpi <- function(data, breaks, timeScale) {
   invisible(NULL)
 }
 
+
+
+
+
 splitMultiEpi <- function(data, breaks = list(fot = 0:5), drop) {
   
   for (k in names(breaks)) {
     data <- splitLexis(data, breaks = breaks[[k]], time.scale = k)
   }
   
+  forceLexisDT(
+    data, breaks = attr(data, "breaks"), 
+    allScales = attr(data, "time.scales"), 
+    key = FALSE
+  )
   if (drop) data <- intelliDrop(data, breaks = breaks)
-  setDT(data)
-  
   data
 }
+
+
+
+
 
 compareSMWithEpi <- function(data, breaks = list(fot=0:5)) {
   requireNamespace("Epi")
@@ -1086,3 +1128,299 @@ compareSMWithEpi <- function(data, breaks = list(fot=0:5)) {
   
   invisible(NULL)
 }
+
+
+
+
+
+summarize_Lexis <- function(x) {
+  
+  lex.Cst <- lex.Xst <- NULL ## appease R CMD CHECK
+  
+  dur <- sum(x$lex.dur)
+  status_vars <- paste0("lex.", c("Cst", "Xst"))
+  time_scales <- copy(attr(x, "time.scales"))
+  dt <- copy(setDT(
+    mget(c(status_vars, "lex.id", time_scales[1]), as.environment(x))
+  ))
+  setkeyv(dt, c("lex.id", time_scales[1]))
+  dt <- unique(dt, by = c("lex.id"), fromLast = TRUE)
+  
+  n <- dt[, .N, keyby = status_vars]
+  rm("dt")
+  n[, "transition" := paste0(lex.Cst, "->", lex.Xst)]
+  n <- cast_simple(data = n, columns = "transition", values = "N")
+  return(cbind(lex.dur = dur, n))
+}
+
+
+
+
+
+roll_lexis_status_inplace <- function(unsplit.data, split.data, id.var) {
+  
+  ## R CMD CHECK appeasement
+  lex.Cst <- lex.Xst <- NULL
+  
+  stopifnot(
+    is.data.table(split.data),
+    length(key(split.data)) > 1,
+    key(split.data)[1] == id.var,
+    key(split.data)[2] %in% attr(unsplit.data, "time.scales"),
+    id.var %in% names(unsplit.data),
+    id.var %in% names(split.data),
+    uniqueN(unsplit.data[[id.var]]) == nrow(unsplit.data)
+  )
+  
+  status_vars <- c("lex.Cst", "lex.Xst")
+  status_ud <- mget_cols(c(id.var, status_vars), unsplit.data)
+  
+  join <- structure(list(split.data[[id.var]]), names = id.var)
+  lex_cst <- status_ud[
+    i = join, 
+    j = lex.Cst, 
+    on = id.var
+    ]
+  storage.mode(lex_cst) <- storage.mode(split.data[["lex.Cst"]])
+  set(split.data, j = status_vars, value = list(lex_cst, lex_cst))
+  
+  wh_last_row <- which(!duplicated(split.data, by = id.var, fromLast = TRUE))
+  join <- structure(list(split.data[[id.var]][wh_last_row]), names = id.var)
+  last_lex_xst <- status_ud[
+    i = join, 
+    j = lex.Xst, 
+    on = id.var
+    ]
+  storage.mode(last_lex_xst) <- storage.mode(split.data[["lex.Xst"]])
+  set(split.data, i = wh_last_row, j = "lex.Xst", value = last_lex_xst)
+  
+  
+  NULL
+}
+
+
+
+
+random_splitting_on <- function(
+  lex,
+  n.max.breaks = 20
+) {
+  stopifnot(
+    inherits(lex, "Lexis")
+  )
+  
+  ts_nms <- attr(lex, "time.scales")
+  brks <- attr(lex, "breaks")
+  timesince <- attr(lex, "time.since")
+  lex_vars <- c(paste0("lex.", c("id", "Cst", "Xst", "dur")), ts_nms)
+  non_lex_vars <- setdiff(names(lex), lex_vars)
+  lex <- mget_cols(lex_vars, lex)
+  setattr(lex, "time.scales", ts_nms)
+  setattr(lex, "breaks", brks)
+  setattr(lex, "time.since", timesince)
+  setattr(lex, "class", c("Lexis", "data.table", "data.frame"))
+  checkLexisData(lex)
+  
+  n_split_ts <- sample(seq_along(ts_nms), 1)
+  split_ts_nms <- sample(ts_nms, size = n_split_ts)
+  
+  do_drop <- sample(list(FALSE, TRUE), size = 1)[[1]]
+  
+  bl <- lapply(split_ts_nms, function(split_ts_nm) {
+    r <- c(min(lex[[split_ts_nm]]), max(lex[[split_ts_nm]] + lex[["lex.dur"]]))
+    d <- diff(r)
+    
+    br_r <- if (do_drop) 2:n.max.breaks else 1:n.max.breaks
+    n_br <- sample(br_r, 1)
+    
+    ## allow breaks outside observed data, but at least one break must be
+    ## not outside range of values in data
+    extrema <- r + c(-1,1)*d*0.05
+    l <- rep(extrema[1], n_br)
+    u <- rep(extrema[2], n_br)
+    u[1] <- l[1] <- mean(r)
+    unique(runif(min = l, max = u, n = n_br))
+  })
+  names(bl) <- split_ts_nms
+  
+  es <- ps  <- lex
+  for (ts_nm in split_ts_nms) {
+    es <- Epi::splitLexis(es, breaks = bl[[ts_nm]], time.scale = ts_nm)
+    forceLexisDT(es, breaks = attr(es, "breaks"), allScales = ts_nms,
+                 key = FALSE)
+    if (do_drop) {
+      es <- intelliDrop(es, breaks = bl[ts_nm])
+    }
+    ps <- splitLexisDT(ps, breaks = bl[[ts_nm]], timeScale = ts_nm, 
+                       drop = do_drop)
+  }
+  
+  psm <- splitMulti(lex, breaks = bl, drop = do_drop)
+  
+  list(es = es, ps = ps, psm = psm)
+}
+
+
+
+
+
+random_Lexis <- function(
+  n.rows = c(100, 1000, 2000), 
+  n.time.scales = 1:10,
+  n.statuses = 2:10,
+  n.other.vars = 1
+) {
+  
+  row_n <- sample(as.list(n.rows), 1)[[1]]
+  
+  ts_n <- sample(as.list(n.time.scales), 1)[[1]]
+  
+  st_n <- sample(as.list(n.statuses), 1)[[1]]
+  
+  dt <- setDT(lapply(1:ts_n, function(i) {
+    runif(min = 0, max = 1000, n = row_n)
+  }))
+  ts_nms <- paste0("lex_ts_", formatC(seq_len(ncol(dt)), flag = "0", width = 3))
+  setnames(dt, names(dt), ts_nms)
+  
+  dt[, "lex.Cst" := sample(1:st_n, size = .N, replace = TRUE)]
+  dt[, "lex.Xst" := sample(1:st_n, size = .N, replace = TRUE)]
+  dt[, "lex.id" := sample(1:.N, .N, replace = FALSE)]
+  dt[, "lex.dur" := runif(n = .N, min = 0, max = 10)]
+  
+  oth_n <- sample(as.list(n.other.vars), 1)[[1]]
+  lapply(seq_len(oth_n), function(i) {
+    set(
+      dt, j = makeTempVarName(names = names(dt), pre = "nonlexvar_"), 
+      value = sample(1:100, size = nrow(dt), replace = TRUE)
+    )
+  })
+  
+  brks <- lapply(ts_nms, function(nm) NULL)
+  names(brks) <- ts_nms
+  
+  forceLexisDT(dt, breaks = brks, allScales = ts_nms, key = TRUE)
+  checkLexisData(dt, check.breaks = TRUE)
+  dt[]
+}
+
+
+
+
+
+random_splitting_on_random_data <- function(
+  n.datasets = 100, 
+  n.rows = 1000,
+  n.time.scales = 1:10,
+  n.breaks = 10:100,
+  n.statuses = 1:5,
+  n.other.vars = 1
+) {
+  
+  neql <- vector("list", n.datasets)
+  
+  for (i in 1:n.datasets) {
+    
+    
+    set.seed(get_random_seed())
+    
+    drop <- sample(list(TRUE, FALSE), 1)[[1]]
+    drop <- FALSE
+    
+    dt <- random_Lexis(
+      n.rows = n.rows,
+      n.time.scales = n.time.scales,
+      n.statuses = n.statuses,
+      n.other.vars = n.other.vars
+    )
+    
+    ts_names <- copy(attr(dt, "time.scales"))
+    ts_n <- length(ts_names)
+    
+    dt_bl <- lapply(ts_names, function(x) NULL)
+    names(dt_bl) <- ts_names
+    forceLexisDT(dt, breaks = dt_bl, allScales = ts_names)
+    
+    br_n <- unlist(sample(as.list(n.breaks), ts_n))
+    names(br_n) <- ts_names
+    BL <- lapply(ts_names, function(ts_name) {
+      runif(n = br_n[[ts_name]], min = -100, max = 100)
+    })
+    names(BL) <- ts_names
+    
+    BL <- BL[sample(ts_names, ts_n)]
+    
+    split_pop <- splitMulti(dt, breaks = BL, drop = drop)
+    split_epi <- splitMultiEpi(dt, breaks = BL, drop = drop)
+    
+    setkeyv(split_epi, c("lex.id", ts_names[1]))
+    setkeyv(split_pop, c("lex.id", ts_names[1]))
+    
+    summary_epi <- summarize_Lexis(split_epi)
+    summary_pop <- summarize_Lexis(split_pop)
+    
+    eq <- all.equal(summary_pop, summary_epi, check.attributes = FALSE)
+    if (!isTRUE(eq)) {
+      message("split_epi, split_pop not equal in tick ", i, "")
+      neql[[i]] <- mget(c(
+        "drop", "row_n", "ts_n", "ts_names", 
+        "dt", "dt_bl", "br_n", "BL",
+        "split_epi", "split_pop", "eq",
+        "summary_epi", "summary_pop",
+        "used_seed"
+      ))
+    }
+  }
+  
+  neql[vapply(neql, is.null, logical(1))]
+  neql
+}
+
+
+
+
+
+do_split <- function(x, ts, all.ts, breaks, drop = TRUE, merge = TRUE) {
+  
+  ## unfinished v2 splitlexisDT work horse
+  stopifnot(
+    is.integer(x[["lex.id"]])
+  )
+  
+  id_dt <- data.table(
+    "orig" = x[["lex.id"]],
+    "temp" = 1:nrow(x)
+  )
+  set(x, j = "lex.id", value = id_dt[["temp"]])
+  
+  split <- mget_cols(c(ts, "lex.id", "lex.dur"), x)
+  
+  BL <- structure(list(breaks), names = ts)
+  if (drop) {
+    split <- intelliCrop(split, breaks = BL, allScales = all.ts, 
+                         cropStatuses = TRUE)
+    split <- intelliDrop(x = split, breaks = BL, 
+                         check = FALSE, dropNegDur = TRUE)
+  }
+  n_subjects <- nrow(split)
+  ts_values <- split[[ts]]
+  
+  split <- rbindlist(lapply(1:length(breaks), function(i) get("split")))
+  
+  tmp_ie_nm <-  makeTempVarName(names = names(x), pre = "do_split_tmp_ie_")
+  
+  set(split, j = tmp_ie_nm,  value = rep(breaks, each = n_subjects))
+  set(split, j = tmp_ie_nm,  value = {
+    pmin(split[[tmp_ie_nm]], split[[ts]] + split[["lex.dur"]])
+  })
+  set(split, j = ts, value = c(
+    ts_values, 
+    pmax(ts_values, rep(breaks[-length(breaks)], each = n_subjects))
+  ))
+  
+}
+
+
+
+
+

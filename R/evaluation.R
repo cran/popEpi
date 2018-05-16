@@ -570,17 +570,23 @@ RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   l
 }
 
+
+
+
+
 Surv2DT <- function(Surv) {
   sa <- attributes(Surv)
-  dt <- copy(Surv)
-  setattr(dt, "class", "array")
-  dt <- data.table(dt)
+  type <- sa$type
   
-  type <- attr(Surv, "type")
+  dt <- as.data.table(lapply(sa$dimnames[[2]], function(col_nm) {
+    Surv[, col_nm]
+  }))
+  setnames(dt, names(dt), sa$dimnames[[2]])
+  
   statNA <- sum(is.na(dt$status))
   if (statNA) {
-    stop("Some status indicators (", statNA  ," values in total) were NA as ",
-         "a result of using Surv(). Usual suspects: original status variable ",
+    stop("Some status indicators (", statNA  ," values in total) were NA. ",
+         "Usual suspects: original status variable ",
          "has NA values, or you have numeric status variable with more than ",
          "two levels and you did not assign e.g. type = 'mstate' (e.g. ",
          "Surv(time = c(1,1,1), event = c(0,1,2), type = 'mstate') works).")
@@ -589,15 +595,22 @@ Surv2DT <- function(Surv) {
   
   
   setattr(dt, "type", type)
-  testClass <- sa$inputAttributes$time2$class
-  if (!is.null(testClass) && testClass == "factor") 
-    dt[, status := factor(status, labels = sa$inputAttributes$time2$levels)]
-  testClass <- sa$inputAttributes$event$class
-  if (!is.null(testClass) && testClass == "factor") 
-    dt[, status := factor(status, labels = sa$inputAttributes$event$levels)]
+  
+  label_sources <- c("time2", "event")
+  lapply(label_sources, function(lbl_src) {
+    if (identical(sa$inputAttributes[[lbl_src]]$class, "factor")) {
+      set(
+        dt, j = "status", 
+        value = factor(dt$status, labels = sa$inputAttributes[[lbl_src]]$levels)
+      )
+    }
+    NULL
+  })
   
   dt[]
 }
+
+
 
 
 
@@ -931,6 +944,29 @@ model_frame_robust <- function(formula, data, enc) {
   l <- as.data.table(l)
   l
 }
+
+
+
+
+
+dt_robust_by <- function(e, by.var.nms) {
+  stopifnot(
+    length(e) == 1,
+    is.character(e),
+    grepl(x = e, pattern = "by\\s{0,}=\\s{0,}%%BY_VAR_NMS%%"),
+    length(by.var.nms) == 0 || is.character(by.var.nms)
+  )
+  
+  le <- paste0("list(", paste0("`", by.var.nms, "`", collapse = ", "), ")")
+  if (!length(by.var.nms)) le <- "NULL"
+  
+  e <- gsub(x = e, pattern = "%%BY_VAR_NMS%%", fixed = TRUE, replacement = le)
+  eval(parse(text = e), envir = parent.frame(1L))
+  NULL
+}
+
+
+
 
 
 

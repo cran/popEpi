@@ -450,7 +450,7 @@ makeWeightsDT <- function(data, values = NULL,
       ## NOTE: weights will be repeated for each level of print,
       ## and for each level of print the weights must sum to one for things
       ## to work.
-      weights[, weights := weights/sum(weights)]
+      weights[, "weights" := weights/sum(weights)]
       
     }
     
@@ -461,7 +461,7 @@ makeWeightsDT <- function(data, values = NULL,
     }
     ## at this points weights is a data.frame.
     weights <- data.table(weights)
-    weights[, weights := as.double(weights)]
+    weights[, "weights" := as.double(weights)]
     
     ## ensure repetition by print levels if some adjust levels
     ## that exist in weights do not exist in data.
@@ -480,18 +480,16 @@ makeWeightsDT <- function(data, values = NULL,
         sort(unique(col))
       })
     }
-    wm <- do.call(CJ, wm)
-    setDT(wm)
+    wm <- setDT(do.call(CJ, wm))
     
     weights <- merge(wm, weights, by = adVars, all.x = TRUE, all.y = TRUE)
     
-    byCols <- subsetDTorDF(weights, select = prVars)
-    if (!length(prVars)) byCols <- NULL
-    weights[, weights := weights/sum(weights), by = eval(byCols)]
-    rm(byCols)
+    dt_robust_by(
+      'weights[, "weights" := weights/sum(weights), by = %%BY_VAR_NMS%%]',
+      by.var.nms = prVars
+    )
     
-    data <- merge(data, weights, by = c(prVars, adVars), 
-                  all.x = TRUE, all.y = FALSE)
+    data[i = weights, on = c(prVars, adVars), j = "weights" := weights]
     
     if (any(is.na(data$weights))) {
       ## should not be any NAs since we checked for level congruence

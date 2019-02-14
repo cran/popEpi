@@ -4,8 +4,7 @@
 #' @author Matti Rantanen, Joonas Miettinen
 #'
 #' @description 
-#' Convenience function for using \code{\link[data.table]{dcast.data.table}}
-#' and \code{\link[reshape2]{dcast}};
+#' Convenience function for using \code{\link[data.table]{dcast.data.table}};
 #' inputs are character strings (names of variables) instead of a formula.
 #' 
 #' @param data a \code{data.table} or \code{data.frame}
@@ -143,7 +142,10 @@ na2zero = function(DT, vars = NULL) {
 #' ## however
 #' as.numeric(factor(c("5","7","a"))) ## 1:3
 #' 
-#' fac2num(factor(c("5","7","a"))) ## result: c(5,7,NA) with warning
+#' suppressWarnings(
+#'   fac2num(factor(c("5","7","a"))) ## c(5,7,NA)
+#' )
+#' 
 #' 
 #' 
 fac2num <- function(x) {
@@ -247,13 +249,19 @@ is.Date <- function(obj) {
 #' values <- c("1", "3", "5", NA)
 #' values <- robust_values(values)
 #' 
-#' ## this returns originals
+#' ## this returns originals and throws warnings
 #' values <- c("1", "3", "5", "a")
-#' values <- robust_values(values)
+#' suppressWarnings(
+#'   values <- robust_values(values)
+#' )
 #' 
-#' ## this forces "a" to NA and works otherwise
+#' 
+#' ## this forces "a" to NA and works otherwise; throws warning about NAs
 #' values <- c("1", "3", "5", "a")
-#' values <- robust_values(values, force=TRUE)
+#' suppressWarnings(
+#'   values <- robust_values(values, force=TRUE)
+#' )
+#' 
 #' 
 
 robust_values <- function(num.values, force = FALSE, messages = TRUE) {
@@ -711,61 +719,32 @@ evalLogicalSubset <- function(data, substiset, n = 2, enclos = parent.frame(n)) 
 }
 
 
-subsetDTorDF <- function(data, subset=NULL, select=NULL) {
+#' @importFrom data.table setDT
+subsetDTorDF <- function(data, subset = NULL, select = NULL) {
   ## INTENTION: subsetting either a data.table or a data.frame
   ## and returning only selected variables for lazy people.
-  if (!is.data.frame(data)) stop("data must be a data.table/data.frame")
-  if (!is.logical(subset) && !is.null(subset)) stop("subset must be a logical vector or NULL")
+  if (!is.data.frame(data)) {
+    stop("data must be a data.table/data.frame")
+  }
+  if (!inherits(subset, c("NULL", "logical"))) {
+    stop("subset must be a logical vector or NULL")
+  }
   
-  if (is.null(select)) {
-    select <- names(data)
-  } else {
+  expr <- "data[subset, select]"
+  if (is.data.table(data)) {
+    expr <- "data[subset, .SD, .SDcols = select]"
+  }
+  
+  if (!is.null(select)) {
     all_names_present(data, select)
-  }
-  
-  e <- "data["
-  if (!is.null(subset) && !all(subset)) e <- paste0(e, "subset") 
-  if (!is.null(select) && (length(select) < names(data) || any(select != names(data)))) {
-    e <- paste0(e, ", eval(select)")
-    if (is.data.table(data)) e <- paste0(e, ", with = FALSE")
-  }
-  e <- paste0(e, "]")
-  
-  e <- parse(text = e)
-  
-  eval(e)
-  
-}
-
-subsetRolling <- function(data, subset = NULL, select = NULL) {
-  ## INTENTION: subsets a data.table column by column and by deleting columns
-  ## in the old data.table.
-  if (!is.data.table(data)) stop("data must be a data.table")
-  if (!is.logical(subset)) stop("subset must be a logical vector")
-  
-  if (is.null(select)) {
-    select <- names(data)
   } else {
-    all_names_present(data, select)
+    select <- names(data)
+  }
+  if (is.null(subset)) {
+    expr <- sub("^data\\[subset, ", "data[, ", expr)
   }
   
-  if (length(select) == 0L) stop("select is of length zero, which would delete all columns in data")
-  
-  setcolsnull(data, keep = select)
-  
-  dt <- data[subset, select[1L], with = FALSE]
-  
-  setcolsnull(data, delete = select[1L])
-  select <- select[-1L]
-  
-  for (v in select) {
-    set(dt, j = v, value = data[[v]][subset])
-    set(data, j = v, value = NULL)
-  }
-  
-  rm(list = deparse(substitute(data)), envir = parent.frame(1L))
-  
-  dt
+  eval(parse(text = expr))
 }
 
 

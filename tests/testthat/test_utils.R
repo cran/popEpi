@@ -415,3 +415,70 @@ test_that("fractional years computation works", {
 
 
 
+test_that("subsetDTorDF works as intended", {
+  
+  dt <- data.table::data.table(a = 1:5, b = 5:1)
+  df <- data.frame(a = 1:5, b = 5:1)
+  
+  sub <- c(TRUE, TRUE, FALSE, FALSE, TRUE)
+  col_nms <- rep("a", 50)
+  settings <- list(
+    list(subset = sub, select = NULL),
+    list(subset = NULL, select = col_nms),
+    list(subset = NULL, select = NULL),
+    list(subset = sub, select = col_nms)
+  )
+  
+  expected_df <- list(
+    df[sub, ],
+    df[, col_nms],
+    df,
+    df[sub, col_nms]
+  )
+  expected_dt <- list(
+    dt[sub, ],
+    dt[, .SD, .SDcols = col_nms],
+    dt,
+    dt[sub, .SD, .SDcols = col_nms]
+  )
+  
+  unused <- lapply(seq_along(settings), function(i) {
+    set <- settings[[i]]
+    set[["data"]] <- dt
+    sub_dt <- do.call(subsetDTorDF, set)
+    set[["data"]] <- df
+    sub_df <- do.call(subsetDTorDF, set)
+    
+    exp_df <- expected_df[[i]]
+    exp_dt <- expected_dt[[i]]
+    
+    list(sub_dt = sub_dt, exp_dt = exp_dt, sub_df = sub_df, exp_df = exp_df)
+    expect_equal(
+      data.frame(sub_dt),
+      data.frame(exp_dt)
+    )
+    expect_equal(
+      sub_df,
+      exp_df
+    )
+  })
+  
+  
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

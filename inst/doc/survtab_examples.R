@@ -1,7 +1,6 @@
 ## ----pkgs, eval = TRUE, echo = TRUE, message = FALSE---------------------
 library(popEpi)
 library(Epi)
-library(survival)
 
 ## ------------------------------------------------------------------------
 data(sire)

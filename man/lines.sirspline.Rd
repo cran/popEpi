@@ -4,8 +4,7 @@
 \alias{lines.sirspline}
 \title{lines method for sirspline-object}
 \usage{
-\method{lines}{sirspline}(x, conf.int = TRUE, print.levels = NA,
-  select.spline, ...)
+\method{lines}{sirspline}(x, conf.int = TRUE, print.levels = NA, select.spline, ...)
 }
 \arguments{
 \item{x}{an object returned by function sirspline}
@@ -17,6 +16,10 @@
 \item{select.spline}{select which spline variable (a number or a name) is plotted.}
 
 \item{...}{arguments passed on to lines()}
+}
+\value{
+Always returns `NULL` invisibly.
+This function is called for its side effects.
 }
 \description{
 Plot SIR spline lines with R base graphics
@@ -33,9 +36,12 @@ specific level can be selected using argument
 give different colours for each level.
 }
 \seealso{
-Other sir functions: \code{\link{plot.sirspline}},
-  \code{\link{sir_exp}}, \code{\link{sir_ratio}},
-  \code{\link{sirspline}}, \code{\link{sir}}
+Other sir functions: 
+\code{\link{plot.sirspline}()},
+\code{\link{sir_exp}()},
+\code{\link{sir_ratio}()},
+\code{\link{sirspline}()},
+\code{\link{sir}()}
 }
 \author{
 Matti Rantanen

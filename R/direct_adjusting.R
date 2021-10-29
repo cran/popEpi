@@ -131,19 +131,17 @@
 #' @references
 #' Source of the Nordic standard population in 5-year age groups 
 #' (also contains European & 1966 world standards):
-#' \url{http://www-dep.iarc.fr/NORDCAN/english/glossary.htm}
+#' \url{https://www-dep.iarc.fr/NORDCAN/english/glossary.htm}
 #' 
 #' Source of the 1976 European standard population: 
 #' 
 #' Waterhouse, J.,Muir, C.S.,Correa, P.,Powell, J., eds (1976). 
 #' Cancer Incidence in Five Continents, Vol. III. 
-#' IARC Scientific Publications, No. 15, Lyon, IARC
-#' 
-#' A comparison of the 1966 vs. 2000 world standard populations in 5-year age groups:
-#' \url{http://www3.ha.org.hk/cancereg/e_asr.asp}
+#' IARC Scientific Publications, No. 15, Lyon, IARC.
+#' ISBN: 9789283211150
 #' 
 #' Source of 2000 world standard population in 1-year age groups:
-#' \url{http://seer.cancer.gov/stdpopulations/stdpop.singleages.html}
+#' \url{https://seer.cancer.gov/stdpopulations/stdpop.singleages.html}
 
 NULL
 

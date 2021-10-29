@@ -20,6 +20,10 @@ fully named, with the names corresponding to time scales at the aggregate
 level in your data. Every unique value in a time scale variable in data must
 also exist in the corresponding vector in the breaks list.}
 }
+\value{
+Returns `x` invisibly after setting attributes to it without taking a copy.
+This function is called for its side effects.
+}
 \description{
 Coerces an R object to an \code{aggre} object, identifying
 the object as one containing aggregated counts, person-years and other
@@ -43,9 +47,11 @@ df$FUT <- 0:4
 setaggre(df, values = c("obs", "pyrs"), by = "sex", breaks = list(FUT = 0:5))
 }
 \seealso{
-Other aggregation functions: \code{\link{aggre}},
-  \code{\link{as.aggre}}, \code{\link{lexpand}},
-  \code{\link{summary.aggre}}
+Other aggregation functions: 
+\code{\link{aggre}()},
+\code{\link{as.aggre}()},
+\code{\link{lexpand}()},
+\code{\link{summary.aggre}()}
 }
 \author{
 Joonas Miettinen

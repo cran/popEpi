@@ -9,11 +9,9 @@
 \usage{
 as.aggre(x, values = NULL, by = NULL, breaks = NULL, ...)
 
-\method{as.aggre}{data.frame}(x, values = NULL, by = NULL,
-  breaks = NULL, ...)
+\method{as.aggre}{data.frame}(x, values = NULL, by = NULL, breaks = NULL, ...)
 
-\method{as.aggre}{data.table}(x, values = NULL, by = NULL,
-  breaks = NULL, ...)
+\method{as.aggre}{data.table}(x, values = NULL, by = NULL, breaks = NULL, ...)
 
 \method{as.aggre}{default}(x, ...)
 }
@@ -32,6 +30,10 @@ level in your data. Every unique value in a time scale variable in data must
 also exist in the corresponding vector in the breaks list.}
 
 \item{...}{arguments passed to or from methods}
+}
+\value{
+Returns a copy of `x` with attributes set to those of an object of class
+`"aggre"`.
 }
 \description{
 Coerces an R object to an \code{aggre} object, identifying
@@ -67,9 +69,11 @@ df <- as.aggre(df, values = c("pyrs", "obs"), by = "sex", breaks = BL)
 
 }
 \seealso{
-Other aggregation functions: \code{\link{aggre}},
-  \code{\link{lexpand}}, \code{\link{setaggre}},
-  \code{\link{summary.aggre}}
+Other aggregation functions: 
+\code{\link{aggre}()},
+\code{\link{lexpand}()},
+\code{\link{setaggre}()},
+\code{\link{summary.aggre}()}
 }
 \author{
 Joonas Miettinen

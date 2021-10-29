@@ -3,7 +3,6 @@
 \docType{package}
 \name{popEpi}
 \alias{popEpi}
-\alias{popEpi-package}
 \title{popEpi: Functions for large-scale epidemiological analysis}
 \description{
 \pkg{popEpi} is built for the needs of registry-based (large-scale)
@@ -16,7 +15,11 @@ Included are also a a few functions that can be used in
 epidemiological analysis such as \code{\link{sir}} for estimating
 standardized incidence/mortality ratios (SIRs/SMRs) and \code{\link{survtab}} for 
 estimating observed and relative/net survival as well as cumulative incidence
-functions (CIFs).
+functions (CIFs). In particular, \code{survtab} implements the Ederer II 
+(Ederer and Heise (1959)) and
+Pohar Perme estimators (Pohar Perme, Stare, and Esteve (2012) 
+\doi{10.1111/j.1541-0420.2011.01640.x}) and allows for easy 
+age-standardisation.
 
 Since there are many benefits to using \code{data.tables}, \pkg{popEpi} returns
 outputs by default in the \code{data.table} format where appropriate. 

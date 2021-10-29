@@ -49,7 +49,7 @@ test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johanse
 # custom status var -------------------------------------------------------
 
 test_that("survtab status argument works as expected", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   
   BL <- list(fot= seq(0,19,1/12), per=c(2008,2013))
   sr <- sire[dg_date < ex_date, ]
@@ -103,7 +103,7 @@ test_that("survtab works with more complicated estimation", {
   x$sex <- rbinom(nrow(x), 1, 0.5)
   
   ## period
-  x$period <- cut(year(x$dg_date), c(1993,1998,2003,2008,2013), right = F)
+  x$period <- cut(year(x$dg_date), c(1993,1998,2003,2008,2013), right = FALSE)
   
   # age group
   x$agegr <- cut(x$dg_age, 4)

@@ -4,8 +4,7 @@
 \alias{cast_simple}
 \title{Cast \code{data.table}/\code{data.frame} from long format to wide format}
 \usage{
-cast_simple(data = NULL, columns = NULL, rows = NULL,
-  values = NULL)
+cast_simple(data = NULL, columns = NULL, rows = NULL, values = NULL)
 }
 \arguments{
 \item{data}{a \code{data.table} or \code{data.frame}}
@@ -18,6 +17,9 @@ levels of these variable will be different columns}
 
 \item{values}{a character string; the variable which will be represented
 on rows and columns as specified by \code{columns} and \code{rows}}
+}
+\value{
+A `data.table` just like `[data.table::dcast]`.
 }
 \description{
 Convenience function for using \code{\link[data.table]{dcast.data.table}};
@@ -36,14 +38,14 @@ aggregated, they are aggregated using \code{sum}.
 See \code{?dcast}.
 }
 \examples{
-\dontrun{
+library("data.table")
 ## e.g. silly counts from a long-format table to a wide format
-test <- copy(sire)
+test <- data.table::copy(popEpi::sire)
 test$dg_y <- year(test$dg_date)
 test$ex_y <- year(test$ex_date)
 tab <- ltable(test, c("dg_y","ex_y"))
 cast_simple(tab, columns='dg_y', rows="ex_y", values="obs")
-}
+
 }
 \author{
 Matti Rantanen, Joonas Miettinen

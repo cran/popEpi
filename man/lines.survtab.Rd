@@ -4,8 +4,7 @@
 \alias{lines.survtab}
 \title{\code{lines} method for survtab objects}
 \usage{
-\method{lines}{survtab}(x, y = NULL, subset = NULL, conf.int = TRUE,
-  col = NULL, lty = NULL, ...)
+\method{lines}{survtab}(x, y = NULL, subset = NULL, conf.int = TRUE, col = NULL, lty = NULL, ...)
 }
 \arguments{
 \item{x}{a \code{survtab} output object}
@@ -27,6 +26,10 @@ present in \code{obj} for variables in \code{y}}
 
 \item{...}{additional arguments passed on to to a \code{matlines} call;
 e.g. \code{lwd} can be defined this way}
+}
+\value{
+Always returns `NULL` invisibly.
+This function is called for its side effects.
 }
 \description{
 Plot \code{lines} from a \code{survtab} object
@@ -50,10 +53,13 @@ lines(st, "surv.obs", subset = cancer == "rectal", col = "red")
 plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 }
 \seealso{
-Other survtab functions: \code{\link{Surv}},
-  \code{\link{plot.survtab}}, \code{\link{print.survtab}},
-  \code{\link{summary.survtab}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other survtab functions: 
+\code{\link{Surv}()},
+\code{\link{plot.survtab}()},
+\code{\link{print.survtab}()},
+\code{\link{summary.survtab}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 }
 \author{
 Joonas Miettinen

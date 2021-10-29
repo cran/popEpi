@@ -4,8 +4,15 @@
 \alias{rate}
 \title{Direct-Standardised Incidence/Mortality Rates}
 \usage{
-rate(data, obs = NULL, pyrs = NULL, print = NULL, adjust = NULL,
-  weights = NULL, subset = NULL)
+rate(
+  data,
+  obs = NULL,
+  pyrs = NULL,
+  print = NULL,
+  adjust = NULL,
+  weights = NULL,
+  subset = NULL
+)
 }
 \arguments{
 \item{data}{aggregated data (see e.g. \code{\link{lexpand}}, 
@@ -96,13 +103,18 @@ r3
 \seealso{
 \code{\link{lexpand}}, \code{\link{ltable}}
 
-Other main functions: \code{\link{Surv}},
-  \code{\link{relpois_ag}}, \code{\link{relpois}},
-  \code{\link{sirspline}}, \code{\link{sir}},
-  \code{\link{survmean}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other main functions: 
+\code{\link{Surv}()},
+\code{\link{relpois_ag}()},
+\code{\link{relpois}()},
+\code{\link{sirspline}()},
+\code{\link{sir}()},
+\code{\link{survmean}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 
-Other rate functions: \code{\link{rate_ratio}}
+Other rate functions: 
+\code{\link{rate_ratio}()}
 }
 \author{
 Matti Rantanen, Joonas Miettinen

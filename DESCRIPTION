@@ -9,14 +9,17 @@ Author: Joonas Miettinen [cre, aut] (<https://orcid.org/0000-0001-8624-6754>),
   Matti Rantanen [aut],
   Karri Seppa [ctb]
 Maintainer: Joonas Miettinen <joonas.miettinen@cancer.fi>
-Version: 0.4.8
-Date: 2019-09-27
+Version: 0.4.9
 Language: en-GB
 Description: Enables computation of epidemiological statistics, including those 
     where counts or mortality rates of the reference population are used. 
-    Currently supported: excess hazard models, rates, mean survival times, 
-    relative survival, and standardized incidence and mortality ratios 
-    (SIRs/SMRs), all of which can be easily adjusted for by covariates such as 
+    Currently supported: excess hazard models (Dickman, Sloggett, Hills, and 
+    Hakulinen (2012) <doi:10.1002/sim.1597>), rates, mean survival times, 
+    relative/net survival (in particular the Ederer II (Ederer and Heise (1959))
+    and Pohar Perme (Pohar Perme, Stare, and Esteve 
+    (2012) <doi:10.1111/j.1541-0420.2011.01640.x>) estimators), 
+    and standardized incidence and mortality ratios, 
+    all of which can be easily adjusted for by covariates such as 
     age. Fast splitting and aggregation of 'Lexis' objects (from package 'Epi') 
     and other computations achieved using 'data.table'. 
 Depends: R (>= 3.2.0)
@@ -30,8 +33,8 @@ ByteCompile: true
 VignetteBuilder: knitr
 URL: https://github.com/WetRobot/popEpi
 BugReports: https://github.com/WetRobot/popEpi/issues
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.2
 NeedsCompilation: no
-Packaged: 2019-09-28 07:13:12 UTC; jonttu
+Packaged: 2021-10-28 09:36:53 UTC; jonttu
 Repository: CRAN
-Date/Publication: 2019-09-28 15:20:02 UTC
+Date/Publication: 2021-10-29 08:20:02 UTC

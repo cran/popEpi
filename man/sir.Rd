@@ -4,10 +4,23 @@
 \alias{sir}
 \title{Calculate SIR or SMR}
 \usage{
-sir(coh.data, coh.obs, coh.pyrs, ref.data = NULL, ref.obs = NULL,
-  ref.pyrs = NULL, ref.rate = NULL, subset = NULL, print = NULL,
-  adjust = NULL, mstate = NULL, test.type = "homogeneity",
-  conf.type = "profile", conf.level = 0.95, EAR = FALSE)
+sir(
+  coh.data,
+  coh.obs,
+  coh.pyrs,
+  ref.data = NULL,
+  ref.obs = NULL,
+  ref.pyrs = NULL,
+  ref.rate = NULL,
+  subset = NULL,
+  print = NULL,
+  adjust = NULL,
+  mstate = NULL,
+  test.type = "homogeneity",
+  conf.type = "profile",
+  conf.level = 0.95,
+  EAR = FALSE
+)
 }
 \arguments{
 \item{coh.data}{aggregated cohort data, see e.g. \code{\link{lexpand}}}
@@ -182,15 +195,22 @@ se
 \code{\link{lexpand}}
 \href{../doc/sir.html}{A SIR calculation vignette}
 
-Other sir functions: \code{\link{lines.sirspline}},
-  \code{\link{plot.sirspline}}, \code{\link{sir_exp}},
-  \code{\link{sir_ratio}}, \code{\link{sirspline}}
+Other sir functions: 
+\code{\link{lines.sirspline}()},
+\code{\link{plot.sirspline}()},
+\code{\link{sir_exp}()},
+\code{\link{sir_ratio}()},
+\code{\link{sirspline}()}
 
-Other main functions: \code{\link{Surv}},
-  \code{\link{rate}}, \code{\link{relpois_ag}},
-  \code{\link{relpois}}, \code{\link{sirspline}},
-  \code{\link{survmean}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other main functions: 
+\code{\link{Surv}()},
+\code{\link{rate}()},
+\code{\link{relpois_ag}()},
+\code{\link{relpois}()},
+\code{\link{sirspline}()},
+\code{\link{survmean}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 }
 \author{
 Matti Rantanen, Joonas Miettinen

@@ -4,8 +4,17 @@
 \alias{relpois_ag}
 \title{Excess hazard Poisson model}
 \usage{
-relpois_ag(formula, data, d.exp, offset = NULL, breaks = NULL,
-  subset = NULL, piecewise = TRUE, check = TRUE, ...)
+relpois_ag(
+  formula,
+  data,
+  d.exp,
+  offset = NULL,
+  breaks = NULL,
+  subset = NULL,
+  piecewise = TRUE,
+  check = TRUE,
+  ...
+)
 }
 \arguments{
 \item{formula}{a formula with the counts of events as the response.
@@ -81,14 +90,20 @@ AIC(rpm, rpm2)
 \seealso{
 \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
 
-Other main functions: \code{\link{Surv}},
-  \code{\link{rate}}, \code{\link{relpois}},
-  \code{\link{sirspline}}, \code{\link{sir}},
-  \code{\link{survmean}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other main functions: 
+\code{\link{Surv}()},
+\code{\link{rate}()},
+\code{\link{relpois}()},
+\code{\link{sirspline}()},
+\code{\link{sir}()},
+\code{\link{survmean}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 
-Other relpois functions: \code{\link{RPL}},
-  \code{\link{relpois}}, \code{\link{rpcurve}}
+Other relpois functions: 
+\code{\link{RPL}},
+\code{\link{relpois}()},
+\code{\link{rpcurve}()}
 }
 \author{
 Joonas Miettinen, Karri Seppa

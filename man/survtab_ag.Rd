@@ -4,13 +4,31 @@
 \alias{survtab_ag}
 \title{Estimate Survival Time Functions}
 \usage{
-survtab_ag(formula = NULL, data, adjust = NULL, weights = NULL,
-  surv.breaks = NULL, n = "at.risk", d = "from0to1",
-  n.cens = "from0to0", pyrs = "pyrs", d.exp = "d.exp", n.pp = NULL,
-  d.pp = "d.pp", d.pp.2 = "d.pp.2", n.cens.pp = "n.cens.pp",
-  pyrs.pp = "pyrs.pp", d.exp.pp = "d.exp.pp", surv.type = "surv.rel",
-  surv.method = "hazard", relsurv.method = "e2", subset = NULL,
-  conf.level = 0.95, conf.type = "log-log", verbose = FALSE)
+survtab_ag(
+  formula = NULL,
+  data,
+  adjust = NULL,
+  weights = NULL,
+  surv.breaks = NULL,
+  n = "at.risk",
+  d = "from0to1",
+  n.cens = "from0to0",
+  pyrs = "pyrs",
+  d.exp = "d.exp",
+  n.pp = NULL,
+  d.pp = "d.pp",
+  d.pp.2 = "d.pp.2",
+  n.cens.pp = "n.cens.pp",
+  pyrs.pp = "pyrs.pp",
+  d.exp.pp = "d.exp.pp",
+  surv.type = "surv.rel",
+  surv.method = "hazard",
+  relsurv.method = "e2",
+  subset = NULL,
+  conf.level = 0.95,
+  conf.type = "log-log",
+  verbose = FALSE
+)
 }
 \arguments{
 \item{formula}{a \code{formula}; the response 
@@ -299,7 +317,7 @@ st <- survtab_ag(fot ~ 1, data = x)
 
 summary(st, t = 1:5) ## annual estimates
 summary(st, q = list(r.e2 = 0.75)) ## 1st interval where r.e2 < 0.75 at end
-\dontrun{
+\donttest{
 plot(st)
 
 
@@ -311,7 +329,7 @@ st <- survtab_ag(fot ~ 1, data = x, surv.breaks = BL$fot)
 ## calculate age-standardised 5-year relative survival ratio using 
 ## Ederer II method and period approach 
 
-sire$agegr <- cut(sire$dg_age,c(0,45,55,65,75,Inf),right=F)
+sire$agegr <- cut(sire$dg_age,c(0,45,55,65,75,Inf),right=FALSE)
 BL <- list(fot=seq(0, 5, by = 1/12),
            per = c("2008-01-01", "2013-01-01"))
 x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
@@ -357,39 +375,49 @@ lines(st, y = "surv.obs.fromalivetoothD.as", col = "red")
 }
 }
 \references{
-Perme, Maja Pohar, Janez Stare, and Jacques Estève. 
+Perme, Maja Pohar, Janez Stare, and Jacques Esteve. 
 "On estimation in relative survival." Biometrics 68.1 (2012): 113-120.
+\doi{10.1111/j.1541-0420.2011.01640.x}
 
 Hakulinen, Timo, Karri Seppa, and Paul C. Lambert. 
 "Choosing the relative survival method for cancer survival estimation." 
 European Journal of Cancer 47.14 (2011): 2202-2210.
+\doi{10.1016/j.ejca.2011.03.011}
  
 Seppa, Karri, Timo Hakulinen, and Arun Pokhrel. 
 "Choosing the net survival method for cancer survival estimation." 
 European Journal of Cancer (2013).
+\doi{10.1016/j.ejca.2013.09.019}
 
 CHIANG, Chin Long. Introduction to stochastic processes in biostatistics. 
-1968.
+1968. ISBN-14: 978-0471155003
 
 Seppa K., Dyba T. and Hakulinen T.: Cancer Survival, 
-Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015 
-doi: 10.1016/B978-0-12-801238-3.02745-8.
+Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015.
+\doi{10.1016/B978-0-12-801238-3.02745-8}
 }
 \seealso{
 \code{\link{splitMulti}}, \code{\link{lexpand}}, 
 \code{\link{ICSS}}, \code{\link{sire}}
 \href{../doc/survtab_examples.html}{The survtab_examples vignette}
 
-Other main functions: \code{\link{Surv}},
-  \code{\link{rate}}, \code{\link{relpois_ag}},
-  \code{\link{relpois}}, \code{\link{sirspline}},
-  \code{\link{sir}}, \code{\link{survmean}},
-  \code{\link{survtab}}
+Other main functions: 
+\code{\link{Surv}()},
+\code{\link{rate}()},
+\code{\link{relpois_ag}()},
+\code{\link{relpois}()},
+\code{\link{sirspline}()},
+\code{\link{sir}()},
+\code{\link{survmean}()},
+\code{\link{survtab}()}
 
-Other survtab functions: \code{\link{Surv}},
-  \code{\link{lines.survtab}}, \code{\link{plot.survtab}},
-  \code{\link{print.survtab}},
-  \code{\link{summary.survtab}}, \code{\link{survtab}}
+Other survtab functions: 
+\code{\link{Surv}()},
+\code{\link{lines.survtab}()},
+\code{\link{plot.survtab}()},
+\code{\link{print.survtab}()},
+\code{\link{summary.survtab}()},
+\code{\link{survtab}()}
 }
 \concept{main functions}
 \concept{survtab functions}

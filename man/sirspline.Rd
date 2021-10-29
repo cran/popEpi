@@ -4,10 +4,23 @@
 \alias{sirspline}
 \title{Estimate splines for SIR or SMR}
 \usage{
-sirspline(coh.data, coh.obs, coh.pyrs, ref.data = NULL, ref.obs = NULL,
-  ref.pyrs = NULL, ref.rate = NULL, subset = NULL, print = NULL,
-  adjust = NULL, mstate = NULL, spline, knots = NULL,
-  reference.points = NULL, dependent.splines = TRUE)
+sirspline(
+  coh.data,
+  coh.obs,
+  coh.pyrs,
+  ref.data = NULL,
+  ref.obs = NULL,
+  ref.pyrs = NULL,
+  ref.rate = NULL,
+  subset = NULL,
+  print = NULL,
+  adjust = NULL,
+  mstate = NULL,
+  spline,
+  knots = NULL,
+  reference.points = NULL,
+  dependent.splines = TRUE
+)
 }
 \arguments{
 \item{coh.data}{cohort data with observations and at risk time variables}
@@ -119,7 +132,7 @@ When \code{(dependent.splines = TRUE)} the p-value returned is a global p-value.
 Otherwise the p-value is spline-specific.
 }
 \examples{
-\dontrun{
+\donttest{
 ## for examples see: vignette('sir')
 }
 }
@@ -127,15 +140,22 @@ Otherwise the p-value is spline-specific.
 \code{\link{splitMulti}} 
 \href{../doc/sir.html}{A SIR calculation vignette}
 
-Other sir functions: \code{\link{lines.sirspline}},
-  \code{\link{plot.sirspline}}, \code{\link{sir_exp}},
-  \code{\link{sir_ratio}}, \code{\link{sir}}
+Other sir functions: 
+\code{\link{lines.sirspline}()},
+\code{\link{plot.sirspline}()},
+\code{\link{sir_exp}()},
+\code{\link{sir_ratio}()},
+\code{\link{sir}()}
 
-Other main functions: \code{\link{Surv}},
-  \code{\link{rate}}, \code{\link{relpois_ag}},
-  \code{\link{relpois}}, \code{\link{sir}},
-  \code{\link{survmean}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other main functions: 
+\code{\link{Surv}()},
+\code{\link{rate}()},
+\code{\link{relpois_ag}()},
+\code{\link{relpois}()},
+\code{\link{sir}()},
+\code{\link{survmean}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 }
 \author{
 Matti Rantanen, Joonas Miettinen

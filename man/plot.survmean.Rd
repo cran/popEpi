@@ -13,6 +13,10 @@
 may, therefore, supply e.g. \code{xlab} through this, though arguments
 such as \code{lty} and \code{col} will not work}
 }
+\value{
+Always returns `NULL` invisibly.
+This function is called for its side effects.
+}
 \description{
 Plots the observed (with extrapolation) and expected survival
 curves for all strata in an object created by \code{\link{survmean}}
@@ -30,8 +34,10 @@ the \code{survmean} output using
 where \code{x} is a \code{survmean} object.
 }
 \seealso{
-Other survmean functions: \code{\link{Surv}},
-  \code{\link{lines.survmean}}, \code{\link{survmean}}
+Other survmean functions: 
+\code{\link{Surv}()},
+\code{\link{lines.survmean}()},
+\code{\link{survmean}()}
 }
 \author{
 Joonas Miettinen

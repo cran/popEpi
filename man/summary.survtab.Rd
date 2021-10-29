@@ -4,8 +4,7 @@
 \alias{summary.survtab}
 \title{Summarize a survtab Object}
 \usage{
-\method{summary}{survtab}(object, t = NULL, subset = NULL, q = NULL,
-  ...)
+\method{summary}{survtab}(object, t = NULL, subset = NULL, q = NULL, ...)
 }
 \arguments{
 \item{object}{a \code{survtab} object}
@@ -29,6 +28,9 @@ returns rows with \code{NA} values for quantiles not reached in estimates
 see Examples.}
 
 \item{...}{unused; required for congruence with other \code{summary} methods}
+}
+\value{
+A `data.table`: a slice from `object` based on `t`, `subset`, and `q`.
 }
 \description{
 Summary method function for \code{survtab} objects; see
@@ -77,18 +79,20 @@ summary(st, q = list(surv.obs = c(0.75, 0.90), CIF_canD = 0.20))
 ## if you want all estimates in a new data.frame, you can also simply do
 
 x <- as.data.frame(st)
-
 }
 \references{
 Seppa K., Dyba T. and Hakulinen T.: Cancer Survival, 
-Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015 
-doi: 10.1016/B978-0-12-801238-3.02745-8.
+Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015.
+\doi{10.1016/B978-0-12-801238-3.02745-8}
 }
 \seealso{
-Other survtab functions: \code{\link{Surv}},
-  \code{\link{lines.survtab}}, \code{\link{plot.survtab}},
-  \code{\link{print.survtab}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other survtab functions: 
+\code{\link{Surv}()},
+\code{\link{lines.survtab}()},
+\code{\link{plot.survtab}()},
+\code{\link{print.survtab}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 }
 \author{
 Joonas Miettinen

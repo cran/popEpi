@@ -4,12 +4,27 @@
 \alias{lexpand}
 \title{Split case-level observations}
 \usage{
-lexpand(data, birth = NULL, entry = NULL, exit = NULL,
-  event = NULL, status = status != 0, entry.status = NULL,
-  breaks = list(fot = c(0, Inf)), id = NULL, overlapping = TRUE,
-  aggre = NULL, aggre.type = c("unique", "cartesian"), drop = TRUE,
-  pophaz = NULL, pp = TRUE, subset = NULL, merge = TRUE,
-  verbose = FALSE, ...)
+lexpand(
+  data,
+  birth = NULL,
+  entry = NULL,
+  exit = NULL,
+  event = NULL,
+  status = status != 0,
+  entry.status = NULL,
+  breaks = list(fot = c(0, Inf)),
+  id = NULL,
+  overlapping = TRUE,
+  aggre = NULL,
+  aggre.type = c("unique", "cartesian"),
+  drop = TRUE,
+  pophaz = NULL,
+  pp = TRUE,
+  subset = NULL,
+  merge = TRUE,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{data}{dataset of e.g. cancer cases as rows}
@@ -223,7 +238,7 @@ that a given person has within the same survival interval.
 
 E.g. with 5 rows of duration \code{1/5} within a survival interval 
 \code{[0,1)]}, \code{pp} is determined for all records by a cumulative 
-population survival from \code{0} to \code{0.5}. Th existing accuracy is used,
+population survival from \code{0} to \code{0.5}. The existing accuracy is used,
 so that the weight is cumulated first up to the end of the second row
 and then over the remaining distance to the mid-point (first to 0.4, then to
 0.5). This ensures that more accurately merged population hazards are fully
@@ -306,7 +321,7 @@ with \code{\link{survtab_ag}}. This can be slow, so consider what is really
 needed. The Pohar-Perme weighted figures have the suffix \code{.pp}.
 }
 \examples{
-\dontrun{
+\donttest{
 ## prepare data for e.g. 5-year cohort survival calculation
 x <- lexpand(sire, breaks=list(fot=seq(0, 5, by = 1/12)), 
              birth = bi_date, entry = dg_date, exit = ex_date,
@@ -357,12 +372,15 @@ x <- lexpand(sire, status = status, event = dg_date,
 \seealso{
 \code{\link[Epi]{Lexis}}, \code{\link{popmort}}
 
-Other splitting functions: \code{\link{splitLexisDT}},
-  \code{\link{splitMulti}}
+Other splitting functions: 
+\code{\link{splitLexisDT}()},
+\code{\link{splitMulti}()}
 
-Other aggregation functions: \code{\link{aggre}},
-  \code{\link{as.aggre}}, \code{\link{setaggre}},
-  \code{\link{summary.aggre}}
+Other aggregation functions: 
+\code{\link{aggre}()},
+\code{\link{as.aggre}()},
+\code{\link{setaggre}()},
+\code{\link{summary.aggre}()}
 }
 \author{
 Joonas Miettinen

@@ -18,6 +18,10 @@ before printing; use this to limit to a certain stratum. E.g.
 if the table is large, 
 \code{nrow = 100} for number of rows to print, etc.}
 }
+\value{
+Always returns `NULL` invisibly.
+This function is called for its side effects.
+}
 \description{
 Print method function for \code{aggre} objects; see
 \code{\link{as.aggre}} and \code{\link{aggre}}.

@@ -33,7 +33,7 @@ Another option is to set \code{x} and \code{y} as a vector of two.
 See examples.
 }
 \examples{
-\dontrun{
+\donttest{
 # two rate ratios; silly example with female rectal / breast cancer 
 ## mortality rates
 data("sire", package = "popEpi")
@@ -63,7 +63,8 @@ rate_ratio(x = c(10, 30000), y = c(20, 40000), SE.method = FALSE)
 \seealso{
 \code{\link{rate}}
 
-Other rate functions: \code{\link{rate}}
+Other rate functions: 
+\code{\link{rate}()}
 }
 \author{
 Matti Rantanen

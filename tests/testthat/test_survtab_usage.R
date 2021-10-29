@@ -3,7 +3,7 @@ context("survtab usage")
 
 
 test_that("Dates and frac. yrs produce congruent results", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   library(Epi)
   
   x <- data.table(popEpi::sire)
@@ -118,7 +118,7 @@ test_that("Dates and frac. yrs produce congruent results", {
 
 
 test_that("hazard and lifetable produce congruent results", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   library(Epi)
   
   x <- data.table(popEpi::sire)
@@ -195,7 +195,7 @@ test_that("hazard and lifetable produce congruent results", {
 
 
 test_that("its possible to pass dynamically created arguments", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   library(Epi)
   
   x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
@@ -285,27 +285,34 @@ test_that("survtab_ag allows for certain arguments to be length > 1", {
                pophaz = popmort,
                aggre = list(fot))
   
-  st <- survtab_ag(fot ~ 1, data = x, 
-                   surv.method = "lifetable",
-                   n.cens = c("from0to0", "from0to2"), d = "from0to1")
-  st <- survtab_ag(fot ~ 1, data = x, 
-                   surv.method = "lifetable",
-                   relsurv.method = "pp",
-                   n.cens = c("from0to0", "from0to2"), 
-                   d = "from0to1",
-                   d.pp = "from0to1.pp",
-                   d.pp.2 = "from0to1.pp.2",
-                   n.pp = "at.risk.pp",
-                   n.cens.pp = c("from0to0.pp", "from0to2.pp"))
-  st <- survtab_ag(fot ~ 1, data = x, 
-                   surv.method = "lifetable",
-                   relsurv.method = "pp",
-                   d = c("from0to0", "from0to2"), 
-                   n.cens = "from0to1",
-                   n.cens.pp = "from0to1.pp",
-                   n.pp = "at.risk.pp",
-                   d.pp = c("from0to0.pp", "from0to2.pp"),
-                   d.pp.2 = c("from0to0.pp.2", "from0to2.pp.2"))
+  st1 <- survtab_ag(fot ~ 1, data = x, 
+                    surv.method = "lifetable",
+                    n.cens = c("from0to0", "from0to2"), d = "from0to1")
+  st2 <- survtab_ag(fot ~ 1, data = x, 
+                    surv.method = "lifetable",
+                    relsurv.method = "pp",
+                    n.cens = c("from0to0", "from0to2"), 
+                    d = "from0to1",
+                    d.pp = "from0to1.pp",
+                    d.pp.2 = "from0to1.pp.2",
+                    n.pp = "at.risk.pp",
+                    n.cens.pp = c("from0to0.pp", "from0to2.pp"))
+  st3 <- survtab_ag(fot ~ 1, data = x, 
+                    surv.method = "lifetable",
+                    relsurv.method = "pp",
+                    d = c("from0to0", "from0to2"), 
+                    n.cens = "from0to1",
+                    n.cens.pp = "from0to1.pp",
+                    n.pp = "at.risk.pp",
+                    d.pp = c("from0to0.pp", "from0to2.pp"),
+                    d.pp.2 = c("from0to0.pp.2", "from0to2.pp.2"))
+  
+  testthat::expect_true("surv.obs" %in% names(st1))
+  testthat::expect_true("surv.obs" %in% names(st2))
+  testthat::expect_true("surv.obs" %in% names(st3))
+  testthat::expect_equal(st1[["surv_obs"]], st2[["surv_obs"]])
+  testthat::expect_equal(st2[["surv_obs"]], st3[["surv_obs"]])
+  
 })
 
 
@@ -364,7 +371,7 @@ test_that("update() works with survtab objects", {
 test_that("internal weights work as intended", {
   library("data.table")
   data("sire")
-  sire$agegr <- cut(sire$dg_age,c(0,45,55,65,75,Inf),right=F)
+  sire$agegr <- cut(sire$dg_age,c(0,45,55,65,75,Inf),right=FALSE)
   BL <- list(fot=seq(0, 5, by = 1/12),
              per = c("2008-01-01", "2013-01-01"))
   x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
@@ -422,7 +429,7 @@ test_that("survtab_ag works with bare data.frames", {
 
 
 test_that("confidence intervals are as intended", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   
   library(Epi)
   

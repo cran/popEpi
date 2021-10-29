@@ -1,8 +1,8 @@
-## ----pkgs, eval = TRUE, echo = TRUE, message = FALSE---------------------
+## ----pkgs, eval = TRUE, echo = TRUE, message = FALSE--------------------------
 library(popEpi)
 library(Epi)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 data(sire)
 
 ## NOTE: recommended to use factor status variable
@@ -33,35 +33,35 @@ st <- survtab(FUT ~ sex, data = x,
 st
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 plot(st, col = c("blue", "red"))
 
-## ----popmort-------------------------------------------------------------
+## ----popmort------------------------------------------------------------------
 data(popmort)
 pm <- data.frame(popmort)
 names(pm) <- c("sex", "CAL", "AGE", "haz")
 head(pm)
 
-## ----survtab_e2----------------------------------------------------------
+## ----survtab_e2---------------------------------------------------------------
 st.e2 <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
                  surv.type = "surv.rel", relsurv.method = "e2",
                  breaks = list(FUT = seq(0, 5, 1/12)),
                  pophaz = pm)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 plot(st.e2, y = "r.e2", col = c("blue", "red"))
 
-## ----survtab_pp----------------------------------------------------------
+## ----survtab_pp---------------------------------------------------------------
 st.pp <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
                  surv.type = "surv.rel", relsurv.method = "pp",
                  breaks = list(FUT = seq(0, 5, 1/12)),
                  pophaz = pm)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 plot(st.e2, y = "r.e2", col = c("blue", "red"), lty = 1)
 lines(st.pp, y = "r.pp", col = c("blue", "red"), lty = 2)
 
-## ----survtab_adjust------------------------------------------------------
+## ----survtab_adjust-----------------------------------------------------------
 ## an age group variable
 x$agegr <- cut(x$dg_age, c(0, 60, 70, 80, Inf), right = FALSE)
 
@@ -71,17 +71,17 @@ w
 
 w <- list(agegr = as.numeric(w))
 
-## ----survtab_adjust_2----------------------------------------------------
+## ----survtab_adjust_2---------------------------------------------------------
 st.as <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex + adjust(agegr), 
                  data = x, weights = w,
                  surv.type = "surv.rel", relsurv.method = "e2",
                  breaks = list(FUT = seq(0, 5, 1/12)),
                  pophaz = pm)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 plot(st.as, y = "r.e2.as", col = c("blue", "red"))
 
-## ----weights_examples, eval = TRUE---------------------------------------
+## ----weights_examples, eval = TRUE--------------------------------------------
 list(sex = c(0.4, 0.6), agegr = c(0.2, 0.2, 0.4, 0.2))
 
 wdf <- merge(0:1, 1:4)
@@ -89,7 +89,7 @@ names(wdf) <- c("sex", "agegr")
 wdf$weights <- c(0.1, 0.1, 0.1, 0.1, 0.2, 0.2, 0.1, 0.1)
 wdf
 
-## ----survtab_adjust_3----------------------------------------------------
+## ----survtab_adjust_3---------------------------------------------------------
 st.as <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, 
                  adjust = "agegr",
                  data = x, weights = w,
@@ -97,7 +97,7 @@ st.as <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex,
                  breaks = list(FUT = seq(0, 5, 1/12)),
                  pophaz = pm)
 
-## ----survtab_cause-------------------------------------------------------
+## ----survtab_cause------------------------------------------------------------
 st.ca <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, 
                  data = x, 
                  surv.type = "surv.cause",
@@ -111,7 +111,7 @@ st.pp <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, data = x,
 plot(st.ca, y = "surv.obs.canD", col = "blue")
 lines(st.pp, y = "r.pp", col = "red")
 
-## ----survtab_cif---------------------------------------------------------
+## ----survtab_cif--------------------------------------------------------------
 st.cif <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, 
                   data = x, 
                   surv.type = "cif.obs",
@@ -120,7 +120,7 @@ st.cif <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1,
 plot(st.cif, y = "CIF_canD", conf.int = FALSE)
 lines(st.cif, y = "CIF_othD", conf.int = FALSE, col = "red")
 
-## ----survtab_relcif------------------------------------------------------
+## ----survtab_relcif-----------------------------------------------------------
 st.cir <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, 
                   data = x, 
                   surv.type = "cif.rel",
@@ -129,31 +129,31 @@ st.cir <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1,
 plot(st.cif, y = "CIF_canD", conf.int = FALSE, col = "blue")
 lines(st.cir, y = "CIF.rel", conf.int = FALSE, col = "red")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 sire$sex <- rbinom(nrow(sire), size = 1, prob = 0.5)
 ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
               status = "status", breaks = list(fot = seq(0, 5, 1/12)), 
               aggre = list(sex, fot))
 head(ag)
 
-## ----survtab_ag_example1-------------------------------------------------
+## ----survtab_ag_example1------------------------------------------------------
 st <- survtab_ag(fot ~ sex, data = ag, surv.type = "surv.obs",
                  surv.method = "hazard",
                  d = c("from0to1", "from0to2"), pyrs = "pyrs")
 
-## ----survtab_ag_example2-------------------------------------------------
+## ----survtab_ag_example2------------------------------------------------------
 st <- survtab_ag(fot ~ sex, data = ag, surv.type = "surv.obs",
                  surv.method = "lifetable",
                  d = c("from0to1", "from0to2"), n = "at.risk",
                  n.cens = "from0to0")
 
-## ----survtab_ag_cause----------------------------------------------------
+## ----survtab_ag_cause---------------------------------------------------------
 st.ca <- survtab_ag(fot ~ sex, data = ag, surv.type = "surv.cause",
                     surv.method = "hazard",
                     d = list(canD = from0to1, othD = from0to2), pyrs = "pyrs")
 plot(st.ca, y = "surv.obs.canD", col = c("blue", "red"))
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
               status = "status", breaks = list(fot = seq(0, 5, 1/12)), 
               pophaz = popmort, pp = TRUE,

@@ -131,7 +131,7 @@
 #' 
 #' summary(st, t = 1:5) ## annual estimates
 #' summary(st, q = list(r.e2 = 0.75)) ## 1st interval where r.e2 < 0.75 at end
-#' \dontrun{
+#' \donttest{
 #' plot(st)
 #' 
 #' 
@@ -143,7 +143,7 @@
 #' ## calculate age-standardised 5-year relative survival ratio using 
 #' ## Ederer II method and period approach 
 #' 
-#' sire$agegr <- cut(sire$dg_age,c(0,45,55,65,75,Inf),right=F)
+#' sire$agegr <- cut(sire$dg_age,c(0,45,55,65,75,Inf),right=FALSE)
 #' BL <- list(fot=seq(0, 5, by = 1/12),
 #'            per = c("2008-01-01", "2013-01-01"))
 #' x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
@@ -515,8 +515,10 @@ survtab_ag <- function(formula = NULL,
   
   data <- comp.st.conf.ints(data, al=1-conf.level, surv="surv.obs", transform = conf.type)
   
-  if (verbose) cat("Time taken by computing observed survivals:", timetaken(ostime), "\n")
-  
+  if (verbose) {
+    message("* popEpi::survtab_ag: computed observed survival estimates; ",
+            data.table::timetaken(ostime))
+  }
   
   ## empty surv.int checking ---------------------------------------------------
   testVar <- if (surv.method == "lifetable") "n" else "pyrs"
@@ -552,11 +554,13 @@ survtab_ag <- function(formula = NULL,
                          surv.obs=min(surv.obs)), keyby = eval(byVars)]
     
     
-    message("Some cumulative surv.obs were zero or NA:")
+    message("* popEpi::survtab_ag: Some cumulative surv.obs were zero or NA:")
     if (length(byVars)) setnames(zerotab, c(prVars, adVars), c(prVars_orig, adVars_orig))
     print(zerotab)
     if (surv.method == "lifetable" && data[surv.obs == 0, .N] > 0) {
-      message("NOTE: Zero surv.obs leads to zero relative survivals as well. Adjusting with weights WILL use the zero surv.obs / relative survival values.")
+      message("* popEpi::survtab_ag: NOTE: Zero surv.obs leads to zero ",
+              "relative survivals as well. Adjusting with weights WILL use ",
+              "the zero surv.obs / relative survival values.")
     }
     
   }
@@ -671,13 +675,13 @@ survtab_ag <- function(formula = NULL,
         rs.table[, "p.exp" := 1 - d.exp/n]
         rs.table[, "surv.exp" := cumprod(p.exp), by = eval(rs.by.vars)]
         
-        if (rs.table[, min(surv.obs, na.rm=T) == 0]) {
+        if (rs.table[, min(surv.obs, na.rm=TRUE) == 0]) {
           rs.table[surv.obs == 0, "surv.exp" := 1]
         }
         
         comp.st.r.e2.lif(surv.table = rs.table, surv.by.vars = rs.by.vars)
         
-        if (rs.table[, min(surv.obs, na.rm=T) == 0]) {
+        if (rs.table[, min(surv.obs, na.rm=TRUE) == 0]) {
           rs.table[surv.obs == 0, intersect(c("surv.exp","r.e2","SE.r.e2","r.e2.lo","r.e2.hi"), names(rs.table)) := 0]
         }
       }
@@ -715,7 +719,7 @@ survtab_ag <- function(formula = NULL,
                                        "to package maintainer if you see this."))
         comp.st.r.pp.lif(surv.table = pp.table, surv.by.vars = by.vars)
         
-        if (pp.table[, min(surv.obs, na.rm=T) == 0]) {
+        if (pp.table[, min(surv.obs, na.rm=TRUE) == 0]) {
           pp.table[surv.obs == 0, intersect(c("r.pp","SE.r.pp","r.pp.lo","r.pp.hi"), names(pp.table)) := 0]
         }
       }
@@ -836,7 +840,10 @@ survtab_ag <- function(formula = NULL,
                   
   setattr(data, "survtab.meta", arglist)
   
-  if (verbose) cat("Time taken by whole process: ", timetaken(starttime), "\n")
+  if (verbose) {
+    message("* popEpi::survtab_ag: finished whole process; ",
+            data.table::timetaken(starttime))
+  }
   data[]
 }
 

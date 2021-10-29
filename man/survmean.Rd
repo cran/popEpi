@@ -4,9 +4,20 @@
 \alias{survmean}
 \title{Compute Mean Survival Times Using Extrapolation}
 \usage{
-survmean(formula, data, adjust = NULL, weights = NULL, breaks = NULL,
-  pophaz = NULL, e1.breaks = NULL, e1.pophaz = pophaz, r = "auto",
-  surv.method = "hazard", subset = NULL, verbose = FALSE)
+survmean(
+  formula,
+  data,
+  adjust = NULL,
+  weights = NULL,
+  breaks = NULL,
+  pophaz = NULL,
+  e1.breaks = NULL,
+  e1.pophaz = pophaz,
+  r = "auto",
+  surv.method = "hazard",
+  subset = NULL,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{formula}{a \code{formula}, e.g. \code{FUT ~ V1} or 
@@ -204,7 +215,7 @@ sm1 <- survmean(Surv(FUT, lex.Xst != "alive") ~ 1,
 sm1 <- survmean(FUT ~ 1,
                 pophaz = pm, data = x, weights = NULL,
                 breaks = BL)             
-\dontrun{
+\donttest{
 ## mean survival by group                 
 sm2 <- survmean(FUT ~ group,
                 pophaz = pm, data = x, weights = NULL,
@@ -222,7 +233,7 @@ sm3 <- survmean(FUT ~ group + adjust(agegr),
 ## solid lines are observed + extrapolated survivals;
 ## dashed lines are expected survivals
 plot(sm1)
-\dontrun{
+\donttest{
 ## plotting object with both stratification and standardization
 ## plots curves for each strata-std.group combination
 plot(sm3)
@@ -266,14 +277,20 @@ plot(smd)
 
 }
 \seealso{
-Other survmean functions: \code{\link{Surv}},
-  \code{\link{lines.survmean}}, \code{\link{plot.survmean}}
+Other survmean functions: 
+\code{\link{Surv}()},
+\code{\link{lines.survmean}()},
+\code{\link{plot.survmean}()}
 
-Other main functions: \code{\link{Surv}},
-  \code{\link{rate}}, \code{\link{relpois_ag}},
-  \code{\link{relpois}}, \code{\link{sirspline}},
-  \code{\link{sir}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other main functions: 
+\code{\link{Surv}()},
+\code{\link{rate}()},
+\code{\link{relpois_ag}()},
+\code{\link{relpois}()},
+\code{\link{sirspline}()},
+\code{\link{sir}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 }
 \author{
 Joonas Miettinen

@@ -5,8 +5,16 @@
 \title{Create a Lexis Object with Follow-up Time, Period, and Age
 Time Scales}
 \usage{
-Lexis_fpa(data, birth = NULL, entry = NULL, exit = NULL,
-  entry.status = NULL, exit.status = NULL, subset = NULL, ...)
+Lexis_fpa(
+  data,
+  birth = NULL,
+  entry = NULL,
+  exit = NULL,
+  entry.status = NULL,
+  exit.status = NULL,
+  subset = NULL,
+  ...
+)
 }
 \arguments{
 \item{data}{a \code{data.frame}; mandatory}

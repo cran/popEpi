@@ -4,26 +4,26 @@
 \alias{rpcurve}
 \title{Marginal piecewise parametric relative survival curve}
 \usage{
-rpcurve(object = NULL)
+rpcurve(object)
 }
 \arguments{
 \item{object}{a \code{relpois} object}
+}
+\value{
+A `data.table` of relative survival curves.
 }
 \description{
 Fit a marginal relative survival curve based on a \code{relpois} fit
 }
 \details{
-\pkg{popEpi} version 0.2.1 supported confidence intervals but due to lack
-of testing this is disabled until the intervals are subjected to more rigorous testing.
-
-Currently only estimates a marginal curve, i.e. the average of all
+Estimates a marginal curve, i.e. the average of all
 possible individual curves. 
 
 Only supported when the reserved \code{FOT} variable was used in \code{relpois}.
 Computes a curve for each unique combination of covariates (e.g. 4 sets) 
 and returns a weighted average curve based on the counts
 of subjects for each combination (e.g. 1000, 125, 50, 25 respectively). 
-Fairly fast when only factor variables have been used, otherwise
+Fairly fast when only categorical variables have been used, otherwise
 go get a cup of coffee.
 
 If delayed entry is present in data due to period analysis limiting,
@@ -31,7 +31,7 @@ the marginal curve is constructed only for those whose follow-up started
 in the respective period.
 }
 \examples{
-\dontrun{
+\donttest{
 ## use the simulated rectal cancer cohort
 data("sire", package = "popEpi")
 ab <- c(0,45,55,65,70,Inf)
@@ -63,8 +63,10 @@ lines(y = pmc$est, x = pmc$Tstop, col="red")
 
 }
 \seealso{
-Other relpois functions: \code{\link{RPL}},
-  \code{\link{relpois_ag}}, \code{\link{relpois}}
+Other relpois functions: 
+\code{\link{RPL}},
+\code{\link{relpois_ag}()},
+\code{\link{relpois}()}
 }
 \author{
 Joonas Miettinen

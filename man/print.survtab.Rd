@@ -18,15 +18,22 @@ before printing; use this to limit to a certain stratum. E.g.
 if the table is large, 
 \code{nrow = 100} for number of rows to print, etc.}
 }
+\value{
+Always returns `NULL` invisibly.
+This function is called for its side effects.
+}
 \description{
 Print method function for \code{survtab} objects; see
 \code{\link{survtab_ag}}.
 }
 \seealso{
-Other survtab functions: \code{\link{Surv}},
-  \code{\link{lines.survtab}}, \code{\link{plot.survtab}},
-  \code{\link{summary.survtab}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other survtab functions: 
+\code{\link{Surv}()},
+\code{\link{lines.survtab}()},
+\code{\link{plot.survtab}()},
+\code{\link{summary.survtab}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 }
 \author{
 Joonas Miettinen

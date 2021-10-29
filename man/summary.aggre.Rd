@@ -18,14 +18,19 @@ before summarizing; use this to limit to a certain stratum. E.g.
 
 \item{...}{unused}
 }
+\value{
+Returns a `data.table` --- a further aggregated version of `object`.
+}
 \description{
 \code{summary} method function for \code{aggre} objects; see
 \code{\link{as.aggre}} and \code{\link{aggre}}.
 }
 \seealso{
-Other aggregation functions: \code{\link{aggre}},
-  \code{\link{as.aggre}}, \code{\link{lexpand}},
-  \code{\link{setaggre}}
+Other aggregation functions: 
+\code{\link{aggre}()},
+\code{\link{as.aggre}()},
+\code{\link{lexpand}()},
+\code{\link{setaggre}()}
 }
 \author{
 Joonas Miettinen

@@ -21,7 +21,9 @@
 #' \code{\link[data.table]{setDT}}.
 #' 
 #' @family aggregation functions
-#' 
+#' @return
+#' Returns `x` invisibly after setting attributes to it without taking a copy.
+#' This function is called for its side effects.
 #' @export setaggre
 #' @examples 
 #' df <- data.frame(sex = rep(c("male", "female"), each = 5), 
@@ -88,6 +90,9 @@ setaggre <- function(x, values = NULL, by = NULL, breaks = NULL) {
 #' df <- data.frame(df)
 #' df <- as.aggre(df, values = c("pyrs", "obs"), by = "sex", breaks = BL)
 #' 
+#' @return
+#' Returns a copy of `x` with attributes set to those of an object of class
+#' `"aggre"`.
 #' @export
 as.aggre <- function(x, values = NULL, by = NULL, breaks = NULL, ...) {
   UseMethod("as.aggre", x)
@@ -240,6 +245,8 @@ as.aggre.default <- function(x, ...) {
 #' are directly applicable to split \code{Lexis} data.
 #' 
 #' @family aggregation functions
+#' 
+#' 
 #' 
 #' @examples 
 #' 
@@ -486,7 +493,7 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
     ## which variables used one time scale? and which one?
     ## will only be used in cartesian stuff.
     if (argType == "character") {
-      varsUsingScales <- intersect(by, aggScales)
+      varsUsingScales <- intersect(names(by), aggScales)
       whScaleUsed <- varsUsingScales
     } else if (argType != "NULL") {
       ## note: ags a substitute()'d list at this point always if not char
@@ -501,7 +508,6 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
     ceejay <- lapply(by, function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
     if (length(aggScales) > 0) {
       ## which variables in ceejay used the Lexis time scales from lex?
-      
       ceejay[varsUsingScales] <- lapply(breaks[whScaleUsed], function(x) x[-length(x)])
     }
     

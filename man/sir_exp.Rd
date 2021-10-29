@@ -6,14 +6,28 @@
 \alias{sir_ag}
 \title{Calculate SMR}
 \usage{
-sir_exp(x, obs, exp, pyrs = NULL, print = NULL,
-  conf.type = "profile", test.type = "homogeneity",
-  conf.level = 0.95, subset = NULL)
+sir_exp(
+  x,
+  obs,
+  exp,
+  pyrs = NULL,
+  print = NULL,
+  conf.type = "profile",
+  test.type = "homogeneity",
+  conf.level = 0.95,
+  subset = NULL
+)
 
 sir_lex(x, print = NULL, breaks = NULL, ...)
 
-sir_ag(x, obs = "from0to1", print = attr(x, "aggre.meta")$by,
-  exp = "d.exp", pyrs = "pyrs", ...)
+sir_ag(
+  x,
+  obs = "from0to1",
+  print = attr(x, "aggre.meta")$by,
+  exp = "d.exp",
+  pyrs = "pyrs",
+  ...
+)
 }
 \arguments{
 \item{x}{Data set e.g. \code{aggre} or \code{Lexis} object 
@@ -71,7 +85,7 @@ is allowed in observed, pop.haz or person-years.
 
 \examples{
 
-\dontrun{
+\donttest{
 BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))
 
 ## Aggregated data
@@ -94,9 +108,12 @@ sir_lex(x2, breaks = BL, print = 'per')
 \code{\link{lexpand}}
 \href{../doc/sir.html}{A SIR calculation vignette}
 
-Other sir functions: \code{\link{lines.sirspline}},
-  \code{\link{plot.sirspline}}, \code{\link{sir_ratio}},
-  \code{\link{sirspline}}, \code{\link{sir}}
+Other sir functions: 
+\code{\link{lines.sirspline}()},
+\code{\link{plot.sirspline}()},
+\code{\link{sir_ratio}()},
+\code{\link{sirspline}()},
+\code{\link{sir}()}
 }
 \author{
 Matti Rantanen

@@ -4,13 +4,16 @@
 \alias{fac2num}
 \title{Convert factor variable to numeric}
 \source{
-\href{http://stackoverflow.com/questions/3418128/how-to-convert-a-factor-to-an-integer-numeric-without-a-loss-of-information}{Stackoverflow thread}
+\href{https://stackoverflow.com/questions/3418128/how-to-convert-a-factor-to-an-integer-numeric-without-a-loss-of-information}{Stackoverflow thread}
 }
 \usage{
 fac2num(x)
 }
 \arguments{
 \item{x}{a factor variable with numbers as levels}
+}
+\value{
+A numeric vector based on the levels of `x`.
 }
 \description{
 Convert factor variable with numbers as levels into a numeric variable
@@ -31,7 +34,6 @@ as.numeric(factor(c("5","7","a"))) ## 1:3
 suppressWarnings(
   fac2num(factor(c("5","7","a"))) ## c(5,7,NA)
 )
-
 
 
 }

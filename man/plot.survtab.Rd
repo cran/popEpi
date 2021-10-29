@@ -4,8 +4,17 @@
 \alias{plot.survtab}
 \title{\code{plot} method for survtab objects}
 \usage{
-\method{plot}{survtab}(x, y = NULL, subset = NULL, conf.int = TRUE,
-  col = NULL, lty = NULL, ylab = NULL, xlab = NULL, ...)
+\method{plot}{survtab}(
+  x,
+  y = NULL,
+  subset = NULL,
+  conf.int = TRUE,
+  col = NULL,
+  lty = NULL,
+  ylab = NULL,
+  xlab = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{a \code{survtab} output object}
@@ -31,6 +40,10 @@ present in \code{obj} for variables in \code{y}}
 \item{...}{additional arguments passed on to \code{plot} and 
 \code{lines.survtab}; e.g. \code{ylim} can be defined this way}
 }
+\value{
+Always returns `NULL` invisibly.
+This function is called for its side effects.
+}
 \description{
 Plotting for \code{survtab} objects
 }
@@ -53,10 +66,13 @@ lines(st, "surv.obs", subset = cancer == "rectal", col = "red")
 plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 }
 \seealso{
-Other survtab functions: \code{\link{Surv}},
-  \code{\link{lines.survtab}}, \code{\link{print.survtab}},
-  \code{\link{summary.survtab}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other survtab functions: 
+\code{\link{Surv}()},
+\code{\link{lines.survtab}()},
+\code{\link{print.survtab}()},
+\code{\link{summary.survtab}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 }
 \author{
 Joonas Miettinen

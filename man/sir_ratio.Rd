@@ -4,8 +4,14 @@
 \alias{sir_ratio}
 \title{Confidence intervals for the ratio of two SIRs/SMRs}
 \usage{
-sir_ratio(x, y, digits = 3, alternative = "two.sided",
-  conf.level = 0.95, type = "exact")
+sir_ratio(
+  x,
+  y,
+  digits = 3,
+  alternative = "two.sided",
+  conf.level = 0.95,
+  type = "exact"
+)
 }
 \arguments{
 \item{x}{a sir-object or a vector of two; observed and expected cases.}
@@ -66,15 +72,19 @@ sir_ratio(s1, c(120, 150))
 
 }
 \references{
-Statistics with Confidence: Confidence Intervals and Statistical Guidelines, Douglas Altman
+Statistics with Confidence: Confidence Intervals and Statistical Guidelines, 
+Douglas Altman, 2000. ISBN: 978-0-727-91375-3
 }
 \seealso{
 \code{\link{sir}}
 \href{../doc/sir.html}{A SIR calculation vignette}
 
-Other sir functions: \code{\link{lines.sirspline}},
-  \code{\link{plot.sirspline}}, \code{\link{sir_exp}},
-  \code{\link{sirspline}}, \code{\link{sir}}
+Other sir functions: 
+\code{\link{lines.sirspline}()},
+\code{\link{plot.sirspline}()},
+\code{\link{sir_exp}()},
+\code{\link{sirspline}()},
+\code{\link{sir}()}
 }
 \author{
 Matti Rantanen

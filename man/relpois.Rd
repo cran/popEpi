@@ -4,8 +4,7 @@
 \alias{relpois}
 \title{Excess hazard Poisson model}
 \usage{
-relpois(data, formula, fot.breaks = NULL, subset = NULL,
-  check = TRUE, ...)
+relpois(data, formula, fot.breaks = NULL, subset = NULL, check = TRUE, ...)
 }
 \arguments{
 \item{data}{a dataset split with e.g. \code{\link{lexpand}};
@@ -94,24 +93,36 @@ x <- lexpand(sire, birth = bi_date, entry = dg_date,
 rpm <- relpois(x, formula = lex.Xst \%in\% 1:2 ~ FOT + agegr)
  
 ## some methods for glm work. e.g. test for interaction
-\dontrun{
+\donttest{
 rpm2 <- relpois(x, formula = lex.Xst \%in\% 1:2 ~ FOT*agegr)
 anova(rpm, rpm2, test="LRT")
 AIC(rpm, rpm2)
-## update won't work currently
+## update() won't work currently
 }
+}
+\references{
+Paul W Dickman, Andy Sloggett, Michael Hills, and Timo Hakulinen.
+Regression models for relative survival. 
+Stat Med. 2004 Jan 15;23(1):51-64.
+\doi{10.1002/sim.1597}
 }
 \seealso{
 \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
 
-Other main functions: \code{\link{Surv}},
-  \code{\link{rate}}, \code{\link{relpois_ag}},
-  \code{\link{sirspline}}, \code{\link{sir}},
-  \code{\link{survmean}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other main functions: 
+\code{\link{Surv}()},
+\code{\link{rate}()},
+\code{\link{relpois_ag}()},
+\code{\link{sirspline}()},
+\code{\link{sir}()},
+\code{\link{survmean}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 
-Other relpois functions: \code{\link{RPL}},
-  \code{\link{relpois_ag}}, \code{\link{rpcurve}}
+Other relpois functions: 
+\code{\link{RPL}},
+\code{\link{relpois_ag}()},
+\code{\link{rpcurve}()}
 }
 \author{
 Joonas Miettinen, Karri Seppa

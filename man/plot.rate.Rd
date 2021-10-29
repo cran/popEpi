@@ -4,8 +4,7 @@
 \alias{plot.rate}
 \title{plot method for rate object}
 \usage{
-\method{plot}{rate}(x, conf.int = TRUE, eps = 0.2, left.margin, xlim,
-  ...)
+\method{plot}{rate}(x, conf.int = TRUE, eps = 0.2, left.margin, xlim, ...)
 }
 \arguments{
 \item{x}{a rate object (see \code{\link{rate}})}
@@ -21,6 +20,10 @@ tries to do it by default.}
 
 \item{...}{arguments passed on to graphical functions points and segment 
 (e.g. \code{col}, \code{lwd}, \code{pch} and \code{cex})}
+}
+\value{
+Always returns `NULL` invisibly.
+This function is called for its side effects.
 }
 \description{
 Plot rate estimates with confidence intervals lines using R base graphics

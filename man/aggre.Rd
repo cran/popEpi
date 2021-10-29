@@ -4,8 +4,14 @@
 \alias{aggre}
 \title{Aggregation of split \code{Lexis} data}
 \usage{
-aggre(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
-  subset = NULL, verbose = FALSE)
+aggre(
+  lex,
+  by = NULL,
+  type = c("unique", "full"),
+  sum.values = NULL,
+  subset = NULL,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{lex}{a \code{Lexis} object split with e.g. 
@@ -176,9 +182,11 @@ a6 <- aggre(x, by = c("sex", "age", "fot"),
 and \code{\link{ltable}} for a \code{data.table} based aggregator. Neither
 are directly applicable to split \code{Lexis} data.
 
-Other aggregation functions: \code{\link{as.aggre}},
-  \code{\link{lexpand}}, \code{\link{setaggre}},
-  \code{\link{summary.aggre}}
+Other aggregation functions: 
+\code{\link{as.aggre}()},
+\code{\link{lexpand}()},
+\code{\link{setaggre}()},
+\code{\link{summary.aggre}()}
 }
 \author{
 Joonas Miettinen

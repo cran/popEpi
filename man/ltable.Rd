@@ -6,12 +6,28 @@
 \title{Tabulate Counts and Other Functions by Multiple Variables into a 
 Long-Format Table}
 \usage{
-ltable(data, by.vars = NULL, expr = list(obs = .N), subset = NULL,
-  use.levels = TRUE, na.rm = FALSE, robust = TRUE)
+ltable(
+  data,
+  by.vars = NULL,
+  expr = list(obs = .N),
+  subset = NULL,
+  use.levels = TRUE,
+  na.rm = FALSE,
+  robust = TRUE
+)
 
-expr.by.cj(data, by.vars = NULL, expr = list(obs = .N),
-  subset = NULL, use.levels = FALSE, na.rm = FALSE, robust = FALSE,
-  .SDcols = NULL, enclos = parent.frame(1L), ...)
+expr.by.cj(
+  data,
+  by.vars = NULL,
+  expr = list(obs = .N),
+  subset = NULL,
+  use.levels = FALSE,
+  na.rm = FALSE,
+  robust = FALSE,
+  .SDcols = NULL,
+  enclos = parent.frame(1L),
+  ...
+)
 }
 \arguments{
 \item{data}{a \code{data.table}/\code{data.frame}}
@@ -47,6 +63,10 @@ environment of the data.}
 
 \item{...}{advanced; other arguments passed to inside the 
 data.table's brackets \code{DT[, , ...]}; see \code{\link{data.table}}}
+}
+\value{
+A `data.table` of statistics (e.g. counts) stratified by the columns defined
+in `by.vars`.
 }
 \description{
 \code{ltable} makes use of \code{data.table} 

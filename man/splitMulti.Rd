@@ -4,8 +4,14 @@
 \alias{splitMulti}
 \title{Split case-level observations}
 \usage{
-splitMulti(data, breaks = NULL, ..., drop = TRUE, merge = TRUE,
-  verbose = FALSE)
+splitMulti(
+  data,
+  breaks = NULL,
+  ...,
+  drop = TRUE,
+  merge = TRUE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{data}{a Lexis object with event cases as rows}
@@ -83,7 +89,7 @@ as well, when using e.g. hypothetical years of 365.25 days.
 #### let's prepare data for computing period method survivals
 #### in case there are problems with dates, we first 
 #### convert to fractional years.
-\dontrun{
+\donttest{
 library("Epi")
 library("data.table")
 data("sire", package = "popEpi")
@@ -134,8 +140,9 @@ xm2[xm2$lex.id == 6L, ]
 \code{\link[Epi]{splitLexis}}, \code{\link[Epi]{Lexis}},  
 \code{\link[survival]{survSplit}}
 
-Other splitting functions: \code{\link{lexpand}},
-  \code{\link{splitLexisDT}}
+Other splitting functions: 
+\code{\link{lexpand}()},
+\code{\link{splitLexisDT}()}
 }
 \author{
 Joonas Miettinen

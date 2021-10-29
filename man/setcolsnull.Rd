@@ -4,8 +4,13 @@
 \alias{setcolsnull}
 \title{Delete \code{data.table} columns if there}
 \usage{
-setcolsnull(DT = NULL, delete = NULL, keep = NULL,
-  colorder = FALSE, soft = TRUE)
+setcolsnull(
+  DT = NULL,
+  delete = NULL,
+  keep = NULL,
+  colorder = FALSE,
+  soft = TRUE
+)
 }
 \arguments{
 \item{DT}{a \code{data.table}}
@@ -21,6 +26,10 @@ the rest will be removed; \code{keep} overrides \code{delete}}
 \item{soft}{logical; if \code{TRUE}, does not cause an error if any variable
 name in \code{keep} or \code{delete} is missing; \code{soft = FALSE} useful 
 for programming sometimes}
+}
+\value{
+Always returns `NULL` invisibly.
+This function is called for its side effects.
 }
 \description{
 Deletes columns in a \code{data.table} conveniently.

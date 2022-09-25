@@ -1,7 +1,7 @@
 testthat::context("Compare splitLexisDT results with splitLexis results")
 
 testthat::test_that("splitLexisDT and splitLexis are congruent", {
-  popEpi:::skip_on_cran_and_ci()
+  popEpi:::skip_normally()
   
   library(Epi)
   
@@ -31,11 +31,11 @@ testthat::test_that("splitLexisDT and splitLexis are congruent", {
   
   # one row per id ---------------------------------------------------------------
   
-  test_that("splitLexisDT and splitLexis congruent with one row per id", {
-    expect_identical(1L, 1L) ## to trigger testing...
+  testthat::test_that("splitLexisDT and splitLexis congruent with one row per id", {
+    testthat::expect_identical(1L, 1L) ## to trigger testing...
     for (sc in seq_along(BL)) {
-      test_that(paste0("results congruent using breaks ", sc), {
-        expect_identical(1L, 1L) ## to trigger testing...
+      testthat::test_that(paste0("results congruent using breaks ", sc), {
+        testthat::expect_identical(1L, 1L) ## to trigger testing...
         popEpi:::compareSLDTWithEpi(data = x, breaks = BL[[sc]], timeScale = names(BL)[sc])
       })
     }
@@ -52,11 +52,11 @@ testthat::test_that("splitLexisDT and splitLexis are congruent", {
              exit=list(per=ex_yrs), merge=TRUE, exit.status=1L, entry.status = 0L, id = id)
   
   
-  test_that("splitLexisDT and splitLexis congruent with multiple rows per id", {
-    expect_identical(1L, 1L) ## to trigger testing...
+  testthat::test_that("splitLexisDT and splitLexis congruent with multiple rows per id", {
+    testthat::expect_identical(1L, 1L) ## to trigger testing...
     for (sc in seq_along(BL)) {
-      test_that(paste0("results congruent using breaks ", sc), {
-        expect_identical(1L, 1L) ## to trigger testing...
+      testthat::test_that(paste0("results congruent using breaks ", sc), {
+        testthat::expect_identical(1L, 1L) ## to trigger testing...
         popEpi:::compareSLDTWithEpi(data = x, breaks = BL[[sc]], timeScale = names(BL)[sc])
       })
     }
@@ -81,49 +81,51 @@ testthat::test_that("splitLexisDT and splitLexis are congruent", {
   setDT(x)
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   
-  test_that("splitLexisDT and splitLexis congruent with multiple Lexis states per id", {
-    expect_identical(1L, 1L) ## to trigger testing...
+  testthat::test_that("splitLexisDT and splitLexis congruent with multiple Lexis states per id", {
+    testthat::expect_identical(1L, 1L) ## to trigger testing...
     for (sc in seq_along(BL)) {
-      test_that(paste0("results congruent using breaks ", sc), {
-        expect_identical(1L, 1L) ## to trigger testing...
+      testthat::test_that(paste0("results congruent using breaks ", sc), {
+        testthat::expect_identical(1L, 1L) ## to trigger testing...
         popEpi:::compareSLDTWithEpi(data = x, breaks = BL[[sc]], timeScale = names(BL)[sc])
       })
     }
   })
   
   # using mstate package -------------------------------------------------------
-  test_that("splitLexisDT and splitLexis congruent using mstate data", {
-    expect_identical(1L, 1L) ## to trigger testing...
-    ## taken directly from ?msprep examples
-    library(mstate)
-    tmat <- trans.illdeath()
-    # some data in wide format
-    tg <- data.frame(stt=rep(0,6),sts=rep(0,6),
-                     illt=c(1,1,6,6,8,9),ills=c(1,0,1,1,0,1),
-                     dt=c(5,1,9,7,8,12),ds=c(1,1,1,1,1,1),
-                     x1=c(1,1,1,2,2,2),x2=c(6:1))
-    tg$x1 <- factor(tg$x1,labels=c("male","female"))
-    tg$patid <- factor(2:7,levels=1:8,labels=as.character(1:8))
-    # define time, status and covariates also as matrices
-    tt <- matrix(c(rep(NA,6),tg$illt,tg$dt),6,3)
-    st <- matrix(c(rep(NA,6),tg$ills,tg$ds),6,3)
-    keepmat <- data.frame(gender=tg$x1,age=tg$x2)
-    # data in long format using msprep
-    df <- msprep(time=tt,status=st,trans=tmat,keep=as.matrix(keepmat))
-    
-    x <- Lexis(data=df, entry=list(TT = Tstart), exit=list(TT = Tstop), 
-               merge=TRUE, exit.status=to, entry.status = from, id = id)
-    setDT(x)
-    setattr(x, "class", c("Lexis", "data.table", "data.frame"))
-    BL2 <- list(TT = 0:4, TT = 1:2, TT = 0:1, TT = c(1,Inf))
-    
-    for (sc in seq_along(BL2)) {
-      test_that(paste0("results congruent using breaks ", sc), {
-        expect_identical(1L, 1L) ## to trigger testing...
-        popEpi:::compareSLDTWithEpi(data = x, breaks = BL2[[sc]], timeScale = "TT")
-      })
-    }
-  })
+  if (requireNamespace("mstate")) {
+    testthat::test_that("splitLexisDT and splitLexis congruent using mstate data", {
+      testthat::expect_identical(1L, 1L) ## to trigger testing...
+      ## taken directly from ?msprep examples
+      library(mstate)
+      tmat <- trans.illdeath()
+      # some data in wide format
+      tg <- data.frame(stt=rep(0,6),sts=rep(0,6),
+                      illt=c(1,1,6,6,8,9),ills=c(1,0,1,1,0,1),
+                      dt=c(5,1,9,7,8,12),ds=c(1,1,1,1,1,1),
+                      x1=c(1,1,1,2,2,2),x2=c(6:1))
+      tg$x1 <- factor(tg$x1,labels=c("male","female"))
+      tg$patid <- factor(2:7,levels=1:8,labels=as.character(1:8))
+      # define time, status and covariates also as matrices
+      tt <- matrix(c(rep(NA,6),tg$illt,tg$dt),6,3)
+      st <- matrix(c(rep(NA,6),tg$ills,tg$ds),6,3)
+      keepmat <- data.frame(gender=tg$x1,age=tg$x2)
+      # data in long format using msprep
+      df <- msprep(time=tt,status=st,trans=tmat,keep=as.matrix(keepmat))
+      
+      x <- Lexis(data=df, entry=list(TT = Tstart), exit=list(TT = Tstop), 
+                merge=TRUE, exit.status=to, entry.status = from, id = id)
+      setDT(x)
+      setattr(x, "class", c("Lexis", "data.table", "data.frame"))
+      BL2 <- list(TT = 0:4, TT = 1:2, TT = 0:1, TT = c(1,Inf))
+      
+      for (sc in seq_along(BL2)) {
+        testthat::test_that(paste0("results congruent using breaks ", sc), {
+          testthat::expect_identical(1L, 1L) ## to trigger testing...
+          popEpi:::compareSLDTWithEpi(data = x, breaks = BL2[[sc]], timeScale = "TT")
+        })
+      }
+    })
+  }
   
 })
 

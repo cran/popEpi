@@ -1,8 +1,8 @@
-context("makeWeightsDT")
+testthat::context("makeWeightsDT")
 
 
-test_that("makeWeightsDT works with various weights & adjust spesifications", {
-  popEpi:::skip_on_cran_and_ci()
+testthat::test_that("makeWeightsDT works with various weights & adjust spesifications", {
+  popEpi:::skip_normally()
   sibr <- popEpi::sibr[1:100]
   sibr[1:50, sex := 0L]
   
@@ -30,21 +30,21 @@ test_that("makeWeightsDT works with various weights & adjust spesifications", {
   ## rows in data kept.
   DT <- makeWeightsDT(dt, values = expr, weights = wdt, 
                       print = "gender", adjust = "agegr")
-  expect_equal(nrow(DT), 24L)
-  expect_equal(sum(dt$pyrs), sum(DT$pyrs))
+  testthat::expect_equal(nrow(DT), 24L)
+  testthat::expect_equal(sum(dt$pyrs), sum(DT$pyrs))
   DTW <- unique(DT, by = c("agegr"))$weights
   wdt[, ww := weights/sum(weights)]
-  expect_equal(DTW, wdt[agegr %in% DT$agegr, ww])
-  expect_equal(DT[, sum(pyrs), keyby = agegr], dt[, sum(pyrs), keyby = agegr], check.attributes = FALSE)
-  expect_equal(DT[, sum(pyrs), keyby = gender], dt[, sum(pyrs), keyby = gender], check.attributes = FALSE)
+  testthat::expect_equal(DTW, wdt[agegr %in% DT$agegr, ww])
+  testthat::expect_equal(DT[, sum(pyrs), keyby = agegr], dt[, sum(pyrs), keyby = agegr], check.attributes = FALSE)
+  testthat::expect_equal(DT[, sum(pyrs), keyby = gender], dt[, sum(pyrs), keyby = gender], check.attributes = FALSE)
   
   
 })
 
 
 
-test_that("internal weights are computed correctly", {
-  popEpi:::skip_on_cran_and_ci()
+testthat::test_that("internal weights are computed correctly", {
+  popEpi:::skip_normally()
   sibr <- popEpi::sibr[1:100]
   sibr[1:50, sex := 0L]
   
@@ -58,7 +58,7 @@ test_that("internal weights are computed correctly", {
   
   vals <- list(c("pyrs", "from0to1"))
   
-  expect_error({
+  testthat::expect_error({
     DT <- makeWeightsDT(dt, values = vals, 
                         weights = "internal", 
                         print = NULL, adjust = c("sex", "agegr"))
@@ -70,7 +70,7 @@ test_that("internal weights are computed correctly", {
                        print = NULL, adjust = "agegr",
                        internal.weights.values = "pyrs")
   DT2 <- dt[, sum(pyrs)/sum(dt$pyrs), keyby = agegr]  
-  expect_equal(DT1$weights, DT2$V1)
+  testthat::expect_equal(DT1$weights, DT2$V1)
   
   ## two adjust vars
   DT1 <- makeWeightsDT(dt, values = vals, 
@@ -89,14 +89,14 @@ test_that("internal weights are computed correctly", {
   setkeyv(DT4, c("sex", "agegr"))
   setkeyv(DT1, c("sex", "agegr"))
   
-  expect_equal(DT1$weights, DT4$weight)
+  testthat::expect_equal(DT1$weights, DT4$weight)
   
 })
 
 
-test_that("weighter works with a list of values arguments", {
+testthat::test_that("weighter works with a list of values arguments", {
   
-  popEpi:::skip_on_cran_and_ci()
+  popEpi:::skip_normally()
   sibr <- popEpi::sibr[1:100]
   sibr[1:50, sex := 0L]
   
@@ -108,18 +108,18 @@ test_that("weighter works with a list of values arguments", {
   
   DT1 <- makeWeightsDT(dt, values = vals, 
                        print = "sex")
-  expect_equivalent(DT1, dt[, lapply(.SD, sum), by = sex, .SDcols = c("pyrs", "from0to1", "from0to0")])
+  testthat::expect_equivalent(DT1, dt[, lapply(.SD, sum), by = sex, .SDcols = c("pyrs", "from0to1", "from0to0")])
   
   dt$agegr <- cut(dt$dg_age, c(0, 45, 75, Inf))
   DT2 <- makeWeightsDT(dt, values = vals, 
                        print = c("sex", "agegr"))
-  expect_equivalent(DT2, dt[, lapply(.SD, sum), by = list(sex,agegr), .SDcols = c("pyrs", "from0to1", "from0to0")])
+  testthat::expect_equivalent(DT2, dt[, lapply(.SD, sum), by = list(sex,agegr), .SDcols = c("pyrs", "from0to1", "from0to0")])
   
 })
 
 
-test_that("weighted NA checks work", {
-  popEpi:::skip_on_cran_and_ci()
+testthat::test_that("weighted NA checks work", {
+  popEpi:::skip_normally()
   sibr <- popEpi::sibr[1:100]
   sibr[1:50, sex := 0L]
   
@@ -130,10 +130,11 @@ test_that("weighted NA checks work", {
   vals <- list(c("pyrs", "from0to1"), quote(from0to0))
   
   naTxt <- "A warning message with counts: %%NA_COUNT%%"
-  expect_warning({
+  testthat::expect_warning({
     DT1 <- makeWeightsDT(dt, values = list(c("pyrs", "from0to1"), quote(from0to0)), 
                          adjust = "agegr", weights = "internal", 
                          internal.weights.values = "pyrs", NA.text = naTxt)
   }, regexp = "A warning message with counts: 15")
 
 })
+

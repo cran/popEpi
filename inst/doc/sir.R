@@ -1,7 +1,6 @@
 ## ---- echo=TRUE, warning=FALSE, message=FALSE---------------------------------
 library(popEpi)
 library(Epi)
-library(splines)
 
 ## -----------------------------------------------------------------------------
 data(sire)

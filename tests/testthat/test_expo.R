@@ -1,7 +1,7 @@
-context("Testing aggregation by categories of exposure")
+testthat::context("Testing aggregation by categories of exposure")
 
-test_that("prepExpo works in the simple case", {
-  popEpi:::skip_on_cran_and_ci()
+testthat::test_that("prepExpo works in the simple case", {
+  popEpi:::skip_normally()
   library(Epi)
   
   df <- data.frame(id = "A", birth  = c(1952.4534), 
@@ -22,8 +22,8 @@ test_that("prepExpo works in the simple case", {
                  exit = 2012, by = "lex.id")
   cd <- cumsum(x$lex.dur)
   exp_work <-  c(0, 0, cd[1], cd[1], cd[2], cd[2], cd[3])
-  expect_equal(x2$work, exp_work)
-  expect_equal(x2$per, 1964+c(0,cumsum(x2$lex.dur)[-nrow(x2)]))
+  testthat::expect_equal(x2$work, exp_work)
+  testthat::expect_equal(x2$per, 1964+c(0,cumsum(x2$lex.dur)[-nrow(x2)]))
   
   BL <- list(work = 0:50, age = c(0,18,Inf), per = 1963:2014)
   x2 <- prepExpo(x, freezeScales = "work", 
@@ -41,9 +41,10 @@ test_that("prepExpo works in the simple case", {
   setkeyv(ag, c("lex.id","per"))
   setkeyv(ag2, c("lex.id","per"))
   
-  expect_equal(ag$pyrs, ag2$pyrs)
+  testthat::expect_equal(ag$pyrs, ag2$pyrs)
   
   
   
   
 })
+

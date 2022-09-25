@@ -1,7 +1,7 @@
-context("test rpcurve vs. survtab congruence")
+testthat::context("test rpcurve vs. survtab congruence")
 
-test_that("rpcurve and survtab e2 are approximately congruent", {
-  popEpi:::skip_on_cran_and_ci()
+testthat::test_that("rpcurve and survtab e2 are approximately congruent", {
+  popEpi:::skip_normally()
   
   sire2 <- popEpi::sire[dg_date < ex_date, ]
   sire2[, "agegr" := cut(dg_age, breaks = c(0,45,70,Inf))]
@@ -26,14 +26,14 @@ test_that("rpcurve and survtab e2 are approximately congruent", {
   setDT(mc)
   setDT(st)
   
-  expect_equal(st[Tstop %in% fb]$r.e2.as, mc$est, tolerance=0.0136, scale=1L)
+  testthat::expect_equal(st[Tstop %in% fb]$r.e2.as, mc$est, tolerance=0.0136, scale=1L)
   
   ## added old results on 2016-03-19, 
   ## ref = 4feb1ca37489737332cebf33d24550a9951a7630
   old_res <- c(0.9253749, 0.8801775, 0.8123319, 0.7237591, 0.6679470, 
                0.6315218, 0.6035761, 0.5826368, 0.5645760, 0.5519045, 0.5368186)
   
-  expect_equal(old_res, mc$est, tolerance=1e-5, scale=1L)
+  testthat::expect_equal(old_res, mc$est, tolerance=1e-5, scale=1L)
 })
 
 

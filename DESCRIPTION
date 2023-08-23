@@ -1,6 +1,6 @@
 Package: popEpi
 Title: Functions for Epidemiological Analysis using Population Data
-Version: 0.4.10
+Version: 0.4.11
 Authors@R: c(
     person("Joonas", "Miettinen", , "joonas.miettinen@cancer.fi", role = c("cre", "aut"),
            comment = c(ORCID = "0000-0001-8624-6754")),
@@ -22,7 +22,7 @@ Description: Enables computation of epidemiological statistics, including
     easily adjusted for by covariates such as age. Fast splitting and
     aggregation of 'Lexis' objects (from package 'Epi') and other
     computations achieved using 'data.table'.
-License: GPL-3
+License: MIT + file LICENSE
 URL: https://github.com/FinnishCancerRegistry/popEpi
 BugReports: https://github.com/FinnishCancerRegistry/popEpi/issues
 Depends: R (>= 3.2.0)
@@ -34,8 +34,8 @@ ByteCompile: true
 Encoding: UTF-8
 Language: en-GB
 LazyData: true
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 NeedsCompilation: no
-Packaged: 2022-09-16 07:49:50 UTC; joonas.miettinen
+Packaged: 2023-08-23 07:41:40 UTC; joonas.miettinen
 Repository: CRAN
-Date/Publication: 2022-09-25 16:40:02 UTC
+Date/Publication: 2023-08-23 14:30:02 UTC

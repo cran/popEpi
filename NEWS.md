@@ -1,40 +1,48 @@
-# Changes in 0.4.11
+## News for version 0.4.12
 
-* No changes in any functionality --- added help page for ?"popEpi-package"
+### Unit tests
+
+- No changes in the package itself --- fixed a unit test that used
+  the output of `survival::summmary.survfit` which had improved slightly
+  in 3.6-4.
+
+## News for version 0.4.11
+
+- No changes in any functionality --- added help page for ?"popEpi-package"
   as requested by CRAN.
 
-# Changes in 0.4.10
+## News for version 0.4.10
 
 -   No changes for user — “Suggests” packages now used conditionally in
     vignettes/tests/examples as per Writing R Extensions.
 
-# Changes in 0.4.9
+## News for version 0.4.9
 
 -   `popEpi::aggre` bugfix: `aggre` now correctly infers which
     stratifying variables use Lexis time scales when output is cartesian
     and argument `by` is of type character.
 
-# Changes in 0.4.8
+## News for version 0.4.8
 
 -   small internal fixes due to upcoming new package survival release
 -   popEpi now includes a wrapper for survival::Surv, so you don’t need
     to do library(“survival”) when using Surv() in formulae (e.g. in
     survtab)
 
-# Changes in 0.4.7
+## News for version 0.4.7
 
 -   implemented small internal changes due to upcoming R 3.6.0
 
-# Changes in 0.4.6
+## News for version 0.4.6
 
 -   implemented small internal changes due to upcoming data.table
     version
 
-# Changes in 0.4.5
+## News for version 0.4.5
 
 -   fixed errors arising from new data.table version
 
-# Changes in 0.4.4
+## News for version 0.4.4
 
 -   splitLexisDT/splitMulti bug fix: splitting along multiple time
     scales *sometimes* produced duplicate transitions (e.g. alive -\>
@@ -47,13 +55,13 @@
     identically to splitLexis from Epi when there are NA values in the
     time scale one is splitting along.
 
-# Changes in 0.4.3
+## News for version 0.4.3
 
 -   survtab adjusting was broken with older versions of data.table
     (tested 1.9.6); therefore popEpi now requires the newest version of
     data.table!
 
-# Changes in 0.4.2
+## News for version 0.4.2
 
 -   **`survtab()` bug fix: standard errors were mis-specified for
     adjusted curves, e.g. age-adjusted Ederer II estimates. This
@@ -65,22 +73,22 @@
     `conf.level`
     [#134](https://github.com/FinnishCancerRegistry/popEpi/issues/134)
 
-# Changes in 0.4.1
+## News for version 0.4.1
 
 -   `lexpand()` bug fixed (#120): observations were dropped if their
     entry by age was smaller than the smallest age value, though entry
     at exit is correct and used now.
 -   `sir()` rewrite (#118, #122). New more consistent output, updates on
-    plotting and minor changes in arguments. Introduce very simple
+    plotting and minor News for version arguments. Introduce very simple
     `coef()` and `confint()` methods for sir class.
 -   new functions in sir family: `sir_ag()`, `sir_lex()` and `sir_exp()`
     for extracting SMRs from `aggre` and `Lexis` objects.
 -   fixed issue in internal test brought by pkg survival version 2.39.5;
-    no changes in functions were needed (#125)
+    No changes in functions were needed (#125)
 -   robustified `aggre()`; there were issues with Epi pkg dev version
     which are definitely avoided (#119)
 
-# Changes in 0.4.0
+## News for version 0.4.0
 
 -   removed previously deprecated shift.var (#35)
 -   popEpi no longer depends on package data.table but imports it - this
@@ -92,9 +100,9 @@
     follow-up at the start of follow-up (used to be sum of counts/pyrs
     over all of follow-up)
 -   new functions: `rate_ratio()`, `sir_ratio()`
--   small internal changes in preparation for data.table 1.9.8
+-   small internal News for version preparation for data.table 1.9.8
 
-# Changes in 0.3.1
+## News for version 0.3.1
 
 This is a hotfix. survtab() was causing warnings in certain situations,
 which this update fixes. Also fixed plotting survtab objects so that
@@ -102,9 +110,9 @@ multiple strata are plotted correctly when one or more curves end before
 the longest one as well other small fixes: See Github issues #89, #90,
 #91, and #92.
 
-# Changes in 0.3.0
+## News for version 0.3.0
 
-## Adjusting
+### Adjusting
 
 Direct adjusting (computing weighted averages of estimates) has been
 generalized. Functions such as `survtab` and `survmean` allow for using
@@ -112,7 +120,7 @@ generalized. Functions such as `survtab` and `survmean` allow for using
 argument. Weights are passed separately. See the examples in the next
 chapter. See also `?direct_adjusting`.
 
-## Estimating functions of survival time
+### Estimating functions of survival time
 
 The `survtab` function computes observed, net/relative and
 cause-specific survivals as well as cumulative incidence functions for
@@ -170,7 +178,7 @@ st <- survtab(Surv(FUT, event = lex.Xst) ~ cancer + adjust(agegr),
               pophaz = pm, weights = w)
 ```
 
-## Rates
+### Rates
 
 The new `rate` function enables easy calculation of e.g. standardized
 incidence rates:

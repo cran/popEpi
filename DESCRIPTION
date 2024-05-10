@@ -1,6 +1,6 @@
 Package: popEpi
 Title: Functions for Epidemiological Analysis using Population Data
-Version: 0.4.11
+Version: 0.4.12
 Authors@R: c(
     person("Joonas", "Miettinen", , "joonas.miettinen@cancer.fi", role = c("cre", "aut"),
            comment = c(ORCID = "0000-0001-8624-6754")),
@@ -34,8 +34,8 @@ ByteCompile: true
 Encoding: UTF-8
 Language: en-GB
 LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 NeedsCompilation: no
-Packaged: 2023-08-23 07:41:40 UTC; joonas.miettinen
+Packaged: 2024-05-10 06:56:54 UTC; joonas.miettinen
 Repository: CRAN
-Date/Publication: 2023-08-23 14:30:02 UTC
+Date/Publication: 2024-05-10 09:00:02 UTC

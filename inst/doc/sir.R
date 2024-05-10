@@ -1,4 +1,4 @@
-## ---- echo=TRUE, warning=FALSE, message=FALSE---------------------------------
+## ----echo=TRUE, warning=FALSE, message=FALSE----------------------------------
 library(popEpi)
 library(Epi)
 
@@ -24,11 +24,11 @@ se <- sir( coh.data = c, coh.obs = 'from0to1', coh.pyrs = 'pyrs',
            adjust = c('agegroup','year','sex'), print ='fot')
 se
 
-## ---- fig.height=3, fig.width=6-----------------------------------------------
+## ----fig.height=3, fig.width=6------------------------------------------------
 plot(se, col = 2:3)
 title('SMR for follow-up categories')
 
-## ---- fig.height=5, fig.width=6-----------------------------------------------
+## ----fig.height=5, fig.width=6------------------------------------------------
 c <- lexpand( sire, status = status %in% 1:2, birth = bi_date, exit = ex_date, entry = dg_date,
               breaks = list(per = 1950:2013, age = 1:100, fot = 0:50), 
               aggre = list(fot, agegroup = age, year = per, sex) )
@@ -49,7 +49,7 @@ title('Splines fitted in different models')
 plot(st, col=4, log=TRUE)
 title('Splines are dependent')
 
-## ---- results='hide', fig.height=5, fig.width=6-------------------------------
+## ----results='hide', fig.height=5, fig.width=6--------------------------------
 c$year.cat <- ifelse(c$year < 2002, 1, 2)
 sy <- sirspline( coh.data = c, coh.obs = 'from0to1', coh.pyrs = 'pyrs', 
                  ref.data = popmort, ref.rate = 'haz', 

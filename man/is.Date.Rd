@@ -10,16 +10,13 @@ is.Date(obj)
 \item{obj}{object to test on}
 }
 \value{
-`TRUE` if `obj` is of class `"Date"` or `"IDate"`.
+\code{TRUE} if \code{obj} is of class \code{"Date"} or \code{"IDate"}.
 }
 \description{
-Tests if an object is a \code{Date} object and returns
-a logical vector of length 1. \code{IDate} objects are also 
-\code{Date} objects, but \code{date} objects from package \pkg{date}
-are not.
+Test whether \code{obj} inherits one of \code{Date} or \code{IDate}.
 }
 \seealso{
-\code{\link{get.yrs}}, \code{\link{is_leap_year}}, \code{\link{as.Date}}
+\verb{[get.yrs]}, \verb{[is_leap_year]}, \verb{[as.Date]}
 }
 \author{
 Joonas Miettinen

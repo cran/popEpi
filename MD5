@@ -1,9 +1,9 @@
-c9ead8190107f2e7b601e103859c555b *DESCRIPTION
+0d6667aa10c3bdb1e86c17b3e825b6ce *DESCRIPTION
 cf6476653ec5efa140eb975399794f99 *LICENSE
 81d58c013e24577f9b20f5b8babf46cf *NAMESPACE
-205cbacfe6685ec647c706f1dee53d7d *NEWS.md
+eb6e74c32ce571890b8683bc63cc5bd3 *NEWS.md
 8187284a1252f45f20b76d769b0608b0 *R/S3_definitions.R
-55b559d5e2fe8c0611feed0f84adf7df *R/Surv.R
+958a34c2a3fbfbbdcf009df6f0b5d319 *R/Surv.R
 db23cae1b01d4357298988c754a61acf *R/aggregating.R
 5c09423ef1ca82c4fdd78d29ae49a569 *R/data_document.R
 c7ebda724dfa5cc8d81324c1f58d9b0e *R/direct_adjusting.R
@@ -33,8 +33,8 @@ a0395a442a3ef3f0bf07943a2bef1465 *R/survival_lexis.R
 1fb8ff78709303f021cd16ab7e4733d6 *R/utility_functions.R
 078a775aafac243744b87fb1a853d69c *R/weighted_table.R
 7df524a2c7b53d8ecbff61e2ae1e1080 *README.md
-1dda19015f0aa969acee990c150e3ac9 *build/partial.rdb
-4a61c3b9041f1f0cb8b9429007f292e1 *build/vignette.rds
+9d40159f50a5fc9949cbfe95a2884126 *build/partial.rdb
+b7fbb1411a4ad8243618be2ae1292d85 *build/vignette.rds
 42a2e450ebc81d8cf32d7eb9f3efc406 *data/ICSS.rdata
 d15a881aeee84aa9307933f84acbe2ce *data/meanpop_fi.rda
 ba6bcd1044f5a25c868742359b4338ab *data/popmort.rdata
@@ -45,10 +45,10 @@ acb6b4afdc41b51495ca354054899b43 *data/sire.rdata
 b79094b0fa30222f908d4624b3ef7ee2 *inst/WORDLIST
 0bba3cb0886082d2c434ec7a3d8eec94 *inst/doc/sir.R
 cd1fbd52e290ec8e854b9087a33d533d *inst/doc/sir.Rmd
-1e76da921365e15c6bd8090963351b0d *inst/doc/sir.html
+f9e88d07ada1cb01c80441136571442f *inst/doc/sir.html
 632dbb732de09105b715e22df0167217 *inst/doc/survtab_examples.R
 e3fcf1e6d707b9a160daaddef78ea27e *inst/doc/survtab_examples.Rmd
-d76038f3404ffcd54059d4d777a9c593 *inst/doc/survtab_examples.html
+40a7d4962dc3b13311df285db1d4da50 *inst/doc/survtab_examples.html
 996e06af3d5961ec601ca50938063839 *man/ICSS.Rd
 b1c518638e14ab4514cb89bf72462d0a *man/Lexis_fpa.Rd
 55249b2dd6ddd61ed1f079661eca3ce1 *man/RPL.Rd
@@ -115,7 +115,6 @@ c72937c179d5403575f5d22a975f83d9 *man/survtab_ag.Rd
 fe7516e1ca31ab4df5d87a91bd6805bc *man/try2int.Rd
 5eb66e1ed29f5b085c6705a825f4fec1 *tests/testthat.R
 7649bcb74c39a065e146c7af95db3bdf *tests/testthat/survmean_test_data_01.rds
-6f78da1d22a002e2a800aa4ed0a1fd90 *tests/testthat/test_Surv.R
 59678c7f98b576f3674b9f4399aad5a1 *tests/testthat/test_aggre.R
 5400cc5015ae61c17c3f5cd9eb30d45f *tests/testthat/test_epi.R
 17be0d3a742ebf2ab70141e6f853ed6f *tests/testthat/test_expo.R

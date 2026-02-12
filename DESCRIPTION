@@ -1,13 +1,14 @@
 Package: popEpi
 Title: Functions for Epidemiological Analysis using Population Data
-Version: 0.4.13
+Version: 0.4.14
 Authors@R: c(
     person("Joonas", "Miettinen", , "joonas.miettinen@cancer.fi", role = c("cre", "aut"),
            comment = c(ORCID = "0000-0001-8624-6754")),
     person("Matti", "Rantanen", , "matti.rantanen@statfinn.com", role = "aut"),
     person("Karri", "Seppa", , "karri.seppa@cancer.fi", role = "ctb")
   )
-Author: Joonas Miettinen [cre, aut] (<https://orcid.org/0000-0001-8624-6754>),
+Author: Joonas Miettinen [cre, aut] (ORCID:
+    <https://orcid.org/0000-0001-8624-6754>),
   Matti Rantanen [aut],
   Karri Seppa [ctb]
 Maintainer: Joonas Miettinen <joonas.miettinen@cancer.fi>
@@ -35,6 +36,6 @@ Language: en-GB
 LazyData: true
 RoxygenNote: 7.3.2
 NeedsCompilation: no
-Packaged: 2025-01-31 10:13:17 UTC; joonas.miettinen
+Packaged: 2026-02-12 11:10:07 UTC; joonas.miettinen
 Repository: CRAN
-Date/Publication: 2025-01-31 11:00:05 UTC
+Date/Publication: 2026-02-12 14:00:02 UTC

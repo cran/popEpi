@@ -80,6 +80,11 @@ as a result of using \code{lexpand}. The \code{lex.dur} variable must also
 be present, containing person-year information.
 }
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 ## use the simulated rectal cancer cohort
 data("sire", package = "popEpi")
 sire$agegr <- cut(sire$dg_age, c(0,45,60,Inf), right=FALSE)
@@ -108,20 +113,20 @@ Stat Med. 2004 Jan 15;23(1):51-64.
 \seealso{
 \verb{[lexpand]}, \verb{[stats::poisson]}, \verb{[stats::glm]}
 
-Other main functions: 
-\code{\link{Surv}()},
-\code{\link{rate}()},
-\code{\link{relpois_ag}()},
-\code{\link{sir}()},
-\code{\link{sirspline}()},
-\code{\link{survmean}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other main functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=rate]{rate()}},
+\code{\link[=relpois_ag]{relpois_ag()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sirspline]{sirspline()}},
+\code{\link[=survmean]{survmean()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 
-Other relpois functions: 
+Other relpois functions:
 \code{\link{RPL}},
-\code{\link{relpois_ag}()},
-\code{\link{rpcurve}()}
+\code{\link[=relpois_ag]{relpois_ag()}},
+\code{\link[=rpcurve]{rpcurve()}}
 }
 \author{
 Joonas Miettinen, Karri Seppa

@@ -1,8 +1,3 @@
-
-
-
-
-
 #' @title `array`s, `data.frame`s and `ratetable`s
 #' @description
 #' Utilities to transform objects between `array`, `data.frame`, and
@@ -21,6 +16,11 @@
 #' - `ratetable_to_long_dt`: a [survival::ratetable]
 #' @name array_df_ratetable_utils
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN submission requirement to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #'
 #' long_dt <- popEpi::popmort
 #' arr <- long_df_to_array(long_dt, c("agegroup", "year", "sex"), "haz")
@@ -42,8 +42,6 @@
 #' - `ratetable_to_array`: an `array`
 #' - `ratetable_to_long_df`: a `data.frame`
 #' - `ratetable_to_long_dt`: a `data.table`
-
-
 
 #' @rdname array_df_ratetable_utils
 #' @export
@@ -81,9 +79,12 @@ long_df_to_array <- function(x, stratum.col.nms, value.col.nm) {
 
   arr <- array(x[[value.col.nm]][0L], d)
 
-  wh <- do.call(cbind, lapply(stratum.col.nms, function(col_nm) {
-    match(x[[col_nm]], dn[[col_nm]])
-  }))
+  wh <- do.call(
+    cbind,
+    lapply(stratum.col.nms, function(col_nm) {
+      match(x[[col_nm]], dn[[col_nm]])
+    })
+  )
   arr[wh] <- x[[value.col.nm]]
 
   dimnames(arr) <- dn
@@ -102,8 +103,11 @@ long_df_to_ratetable <- function(
   dim.types,
   cut.points = NULL
 ) {
-  arr <- long_df_to_array(x = x, stratum.col.nms = stratum.col.nms,
-                          value.col.nm = value.col.nm)
+  arr <- long_df_to_array(
+    x = x,
+    stratum.col.nms = stratum.col.nms,
+    value.col.nm = value.col.nm
+  )
   array_to_ratetable(x = arr, dim.types = dim.types, cut.points = cut.points)
 }
 
@@ -120,7 +124,6 @@ long_dt_to_array <- function(x, stratum.col.nms, value.col.nm) {
 }
 
 
-
 #' @rdname array_df_ratetable_utils
 #' @export
 #' @details
@@ -133,8 +136,11 @@ long_dt_to_ratetable <- function(
   dim.types,
   cut.points = NULL
 ) {
-  arr <- long_dt_to_array(x = x, stratum.col.nms = stratum.col.nms,
-                          value.col.nm = value.col.nm)
+  arr <- long_dt_to_array(
+    x = x,
+    stratum.col.nms = stratum.col.nms,
+    value.col.nm = value.col.nm
+  )
   array_to_ratetable(x = arr, dim.types = dim.types, cut.points = cut.points)
 }
 
@@ -169,17 +175,21 @@ array_to_long_df <- function(x) {
   if (length(setdiff(names(dn), "")) == 0L) {
     names(dn) <- rep("", length(dn))
   }
-  names(dn) <- vapply(seq_along(dn), function(k) {
-    nm <- names(dn)[k]
-    if (nm == "") {
-      nm <- paste0(".d", k)
-    }
-    nm
-  }, character(1))
+  names(dn) <- vapply(
+    seq_along(dn),
+    function(k) {
+      nm <- names(dn)[k]
+      if (nm == "") {
+        nm <- paste0(".d", k)
+      }
+      nm
+    },
+    character(1)
+  )
 
   df <- as.data.frame(which(array(TRUE, d), arr.ind = TRUE))
   names(df) <- names(dn)
-  df[, ] <- lapply(seq_along(d), function(k) {
+  df[,] <- lapply(seq_along(d), function(k) {
     dn[[k]][df[[k]]]
   })
 
@@ -199,10 +209,6 @@ array_to_long_dt <- function(x) {
   data.table::setDT(df)
   df[]
 }
-
-
-
-
 
 
 #' @rdname array_df_ratetable_utils
@@ -248,9 +254,6 @@ array_to_ratetable <- function(x, dim.types, cut.points = NULL) {
 }
 
 
-
-
-
 #' @rdname array_df_ratetable_utils
 #' @export
 #' @details
@@ -282,16 +285,3 @@ ratetable_to_long_df <- function(x) {
 ratetable_to_long_dt <- function(x) {
   array_to_long_dt(ratetable_to_array(x))
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

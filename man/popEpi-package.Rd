@@ -46,12 +46,13 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Joonas Miettinen \email{joonas.miettinen@cancer.fi} (\href{https://orcid.org/0000-0001-8624-6754}{ORCID})
   \item Matti Rantanen \email{matti.rantanen@statfinn.com}
 }
 
 Other contributors:
 \itemize{
-  \item Karri Seppa \email{karri.seppa@cancer.fi} [contributor]
+  \item Karri Seppa \email{karri.seppa@cancer.fi} (\href{https://orcid.org/0000-0002-3847-8814}{ORCID}) [contributor]
 }
 
 }

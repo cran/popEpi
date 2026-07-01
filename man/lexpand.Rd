@@ -323,6 +323,11 @@ needed. The Pohar-Perme weighted figures have the suffix \code{.pp}.
 [survtab_ag]: R:survtab_ag
 }
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 \donttest{
 ## prepare data for e.g. 5-year cohort survival calculation
 x <- lexpand(sire, breaks=list(fot=seq(0, 5, by = 1/12)),
@@ -374,15 +379,15 @@ x <- lexpand(sire, status = status, event = dg_date,
 \seealso{
 \verb{[Epi::Lexis]}, \verb{[popmort]}
 
-Other splitting functions: 
-\code{\link{splitLexisDT}()},
-\code{\link{splitMulti}()}
+Other splitting functions:
+\code{\link[=splitLexisDT]{splitLexisDT()}},
+\code{\link[=splitMulti]{splitMulti()}}
 
-Other aggregation functions: 
-\code{\link{aggre}()},
-\code{\link{as.aggre}()},
-\code{\link{setaggre}()},
-\code{\link{summary.aggre}()}
+Other aggregation functions:
+\code{\link[=aggre]{aggre()}},
+\code{\link[=as.aggre]{as.aggre()}},
+\code{\link[=setaggre]{setaggre()}},
+\code{\link[=summary.aggre]{summary.aggre()}}
 }
 \author{
 Joonas Miettinen

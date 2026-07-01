@@ -133,6 +133,11 @@ of a Cartesian product, try
 \code{merge(1:2, 1:5)}.
 }
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 
 ## form a Lexis object
 library(Epi)
@@ -181,11 +186,11 @@ a6 <- aggre(x, by = c("sex", "age", "fot"),
 and \verb{[ltable]} for a \code{data.table} based aggregator. Neither
 are directly applicable to split \code{Lexis} data.
 
-Other aggregation functions: 
-\code{\link{as.aggre}()},
-\code{\link{lexpand}()},
-\code{\link{setaggre}()},
-\code{\link{summary.aggre}()}
+Other aggregation functions:
+\code{\link[=as.aggre]{as.aggre()}},
+\code{\link[=lexpand]{lexpand()}},
+\code{\link[=setaggre]{setaggre()}},
+\code{\link[=summary.aggre]{summary.aggre()}}
 }
 \author{
 Joonas Miettinen

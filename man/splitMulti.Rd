@@ -81,7 +81,19 @@ format, e.g. \code{Date},
 fractional years (see \verb{[Epi::cal.yr]}) and \verb{[get.yrs]},
 or other.
 }
+\section{News for version 0.5.0}{
+
+
+Fixed \code{popEpi::splitMulti} when \code{merge = FALSE}. Did not include \code{lex.dur}
+previously which caused an error.
+}
+
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 #### let's prepare data for computing period method survivals
 #### in case there are problems with dates, we first
 #### convert to fractional years.
@@ -97,9 +109,13 @@ x2 <- splitMulti(x, breaks = list(fot=seq(0, 5, by = 3/12), per=c(2008, 2013)))
 x2 <- splitMulti(x, fot=seq(0, 5, by = 3/12), per=c(2008, 2013))
 
 ## using dates; note: breaks must be expressed as dates or days!
-x <- Lexis(data=sire[dg_date < ex_date, ],
-           entry = list(fot=0, per=dg_date, age=dg_date-bi_date),
-           exit=list(per=ex_date), exit.status=status)
+x <- Lexis(
+  data = sire[dg_date < ex_date, ],
+  entry = list(fot = 0L, per = dg_date, age = as.integer(dg_date - bi_date)),
+  duration = as.integer(ex_date - dg_date),
+  entry.status = 0L,
+  exit.status = status
+)
 BL <- list(fot = seq(0, 5, by = 3/12)*365.242199,
            per = as.Date(paste0(c(1980:2014),"-01-01")),
            age = c(0,45,85,Inf)*365.242199)
@@ -136,9 +152,9 @@ xm2[xm2$lex.id == 6L, ]
 \verb{[Epi::splitLexis]}, \verb{[Epi::Lexis]},
 \verb{[survival::survSplit]}
 
-Other splitting functions: 
-\code{\link{lexpand}()},
-\code{\link{splitLexisDT}()}
+Other splitting functions:
+\code{\link[=lexpand]{lexpand()}},
+\code{\link[=splitLexisDT]{splitLexisDT()}}
 }
 \author{
 Joonas Miettinen

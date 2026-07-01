@@ -1,6 +1,3 @@
-
-
-
 #' @title Flexible Variable Usage in \pkg{popEpi} Functions
 #' @author Joonas Miettinen
 #' @name flexible_argument
@@ -126,6 +123,11 @@
 #' So no conflicts should occur.
 #' @family popEpi argument evaluation docs
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN submission requirement to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #'
 #' data(sire)
 #' ## prepare data for e.g. 5-year "period analysis" for 2008-2012
@@ -155,12 +157,3 @@
 #'                  surv.method = "hazard")
 
 NULL
-
-
-
-
-
-
-
-
-

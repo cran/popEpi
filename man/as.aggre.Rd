@@ -51,6 +51,11 @@ if no class-specific method found)
 
 }}
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 library("data.table")
 df <- data.frame(sex = rep(c("male", "female"), each = 5),
                  obs = rpois(10, rep(7,5, each=5)),
@@ -69,11 +74,11 @@ df <- as.aggre(df, values = c("pyrs", "obs"), by = "sex", breaks = BL)
 
 }
 \seealso{
-Other aggregation functions: 
-\code{\link{aggre}()},
-\code{\link{lexpand}()},
-\code{\link{setaggre}()},
-\code{\link{summary.aggre}()}
+Other aggregation functions:
+\code{\link[=aggre]{aggre()}},
+\code{\link[=lexpand]{lexpand()}},
+\code{\link[=setaggre]{setaggre()}},
+\code{\link[=summary.aggre]{summary.aggre()}}
 }
 \author{
 Joonas Miettinen

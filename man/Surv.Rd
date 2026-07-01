@@ -8,64 +8,52 @@ Surv(
   time,
   time2,
   event,
-  type = c("right", "left", "interval", "counting", "interval2", "mstate"),
+  type = c("right", "left", "interval", "counting", "interval2"),
   origin = 0
 )
 }
 \arguments{
-\item{time}{see  \link[survival:Surv]{survival::Surv}}
+\item{time}{See \verb{[survival::Surv]}}
 
-\item{time2}{see  \link[survival:Surv]{survival::Surv}}
+\item{time2}{See \verb{[survival::Surv]}}
 
-\item{event}{see  \link[survival:Surv]{survival::Surv}}
+\item{event}{See \verb{[survival::Surv]}}
 
-\item{type}{see  \link[survival:Surv]{survival::Surv}}
+\item{type}{See \verb{[survival::Surv]}}
 
-\item{origin}{see \link[survival:Surv]{survival::Surv}}
+\item{origin}{See \verb{[survival::Surv]}}
 }
 \value{
 See \verb{[survival::Surv]}.
 }
 \description{
-Wrapper for \link[survival:Surv]{survival::Surv}.
+\code{popEpi::Surv} simply calls \verb{[survival::Surv]}. This wrapper was written
+simply to avoid doing e.g. \code{library(survival)} when \code{Surv} is used in a
+formula evaluated by \code{popEpi}.
 }
-\section{Surv in survival vs. in popEpi}{
-
-\code{popEpi::Surv} is a wrapper for \link[survival:Surv]{survival::Surv}.
-Therefore you don't need to to do \code{library("survival")} when using \code{Surv}
-with e.g.
-\verb{[survtab]}. Remember that if you do \code{library("survival")} after
-\code{library("popEpi")}, the \code{Surv} from \pkg{survival} is used instead of
-from \pkg{popEpi} (\code{R} throws a warning about this) when an expression
-such as \code{Surv(my_times, my_events)} is evaluated. You can avoid such
-conflicts by writing e.g. \code{popEpi::Surv(my_times, my_events)} instead.
-However, \code{popEpi::Surv} is designed in such a way that this should not
-become a problem and you should be able to use the two interchangeably.
-}
-
 \seealso{
-Other main functions: 
-\code{\link{rate}()},
-\code{\link{relpois}()},
-\code{\link{relpois_ag}()},
-\code{\link{sir}()},
-\code{\link{sirspline}()},
-\code{\link{survmean}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other main functions:
+\code{\link[=rate]{rate()}},
+\code{\link[=relpois]{relpois()}},
+\code{\link[=relpois_ag]{relpois_ag()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sirspline]{sirspline()}},
+\code{\link[=survmean]{survmean()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 
-Other survtab functions: 
-\code{\link{lines.survtab}()},
-\code{\link{plot.survtab}()},
-\code{\link{print.survtab}()},
-\code{\link{summary.survtab}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other survtab functions:
+\code{\link[=lines.survtab]{lines.survtab()}},
+\code{\link[=plot.survtab]{plot.survtab()}},
+\code{\link[=print.survtab]{print.survtab()}},
+\code{\link[=summary.survtab]{summary.survtab()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 
-Other survmean functions: 
-\code{\link{lines.survmean}()},
-\code{\link{plot.survmean}()},
-\code{\link{survmean}()}
+Other survmean functions:
+\code{\link[=lines.survmean]{lines.survmean()}},
+\code{\link[=plot.survmean]{plot.survmean()}},
+\code{\link[=survmean]{survmean()}}
 }
 \concept{main functions}
 \concept{survmean functions}

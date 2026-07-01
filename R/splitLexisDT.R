@@ -36,6 +36,11 @@
 #' @export
 #' @family splitting functions
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN submission requirement to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' library(Epi)
 #' data("sire", package = "popEpi")
 #' x <- Lexis(data=sire[1000:1100, ],
@@ -53,9 +58,13 @@
 #' ## all produce identical results
 #'
 #' ## using Date variables
-#' x <- Lexis(data=sire[1000:1100, ],
-#'            entry = list(fot=0, per=dg_date, age=dg_date-bi_date),
-#'            exit=list(per=ex_date), exit.status=status)
+#' x <- Lexis(
+#'   data=sire[1000:1100, ],
+#'   entry = list(fot = 0L, per = dg_date, age = as.integer(dg_date - bi_date)),
+#'   duration = as.integer(ex_date - dg_date),
+#'   entry.status = 0L,
+#'   exit.status = status
+#' )
 #' BL <- list(fot = 0:5*365.25, per = as.Date(c("2008-01-01", "2013-01-01")))
 #'
 #' x2 <- splitMulti(x, breaks = BL, drop = FALSE)
@@ -65,7 +74,6 @@
 #'
 #' ## splitLexis may not work when using Dates
 splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
-
   do_split <- TRUE
 
   tol <- .Machine$double.eps^0.5
@@ -76,21 +84,34 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   allBreaks <- attr_list[["breaks"]]
 
   if (!timeScale %in% allScales) {
-    stop("timeScale '", timeScale,"' not among following existing time scales: ",
-         paste0("'", allScales, "'", collapse = ", "))
+    stop(
+      "timeScale '",
+      timeScale,
+      "' not among following existing time scales: ",
+      paste0("'", allScales, "'", collapse = ", ")
+    )
   }
 
   ## lexVars: if !merge, will drop all but these (NOTE: checkLexisData
   ## check for existence of these)
-  lexVars <- c("lex.id", "lex.multi", allScales, "lex.dur", "lex.Cst", "lex.Xst")
+  lexVars <- c(
+    "lex.id",
+    "lex.multi",
+    allScales,
+    "lex.dur",
+    "lex.Cst",
+    "lex.Xst"
+  )
   lexVars <- intersect(lexVars, names(lex))
   othVars <- setdiff(names(lex), lexVars)
 
   ## basic checks on breaks
   if (drop && length(breaks) == 1L) {
-    stop("Length of breaks vector is one, but argument 'drop' is TRUE. ",
-         "Cannot do dropping with only one break. Either supply at least ",
-         "two breaks or set drop = FALSE.")
+    stop(
+      "Length of breaks vector is one, but argument 'drop' is TRUE. ",
+      "Cannot do dropping with only one break. Either supply at least ",
+      "two breaks or set drop = FALSE."
+    )
   }
   if (length(breaks) == 0L) {
     stop("No breaks supplied (length of breaks is zero).")
@@ -115,12 +136,13 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   }
 
   breaks <- sort(breaks)
-  if (!drop) breaks <- protectFromDrop(breaks)
+  if (!drop) {
+    breaks <- protectFromDrop(breaks)
+  }
 
   BL <- list(breaks)
   setattr(BL, "names", timeScale)
   checkBreaksList(x = lex, breaks = BL)
-
 
   ## use subset lex if dropping for efficiency
   orig_lex <- lex
@@ -132,37 +154,48 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
 
     setattr(lex, "class", c("Lexis", "data.table", "data.frame"))
 
-    lex <- intelliCrop(lex, breaks = BL, allScales = allScales,
-                       cropStatuses = TRUE, tol = tol)
-    lex <- intelliDrop(lex, breaks = BL, dropNegDur = TRUE,
-                       check = FALSE, tol = tol)
+    lex <- intelliCrop(
+      lex,
+      breaks = BL,
+      allScales = allScales,
+      cropStatuses = TRUE,
+      tol = tol
+    )
+    lex <- intelliDrop(
+      lex,
+      breaks = BL,
+      dropNegDur = TRUE,
+      check = FALSE,
+      tol = tol
+    )
   }
 
   if (!do_split) {
-
     l <- if (!drop) copy(lex) else lex
-
   } else {
-
     ## currently cannot handle NA values in split time scale; will add them in
     ## the end
     ts_is_na <- is.na(lex[[timeScale]])
     ts_any_na <- any(ts_is_na)
     if (ts_any_na) {
-      warning("NA values in the time scale you are splitting along ('",
-              timeScale,"'). Results may deviate from that produced by ",
-              "splitLexis from package Epi. For safety you may want to split ",
-              "using only the data with no NA values and combine the the split",
-              " data with the NA-valued data using rbind.")
+      warning(
+        "NA values in the time scale you are splitting along ('",
+        timeScale,
+        "'). Results may deviate from that produced by ",
+        "splitLexis from package Epi. For safety you may want to split ",
+        "using only the data with no NA values and combine the the split",
+        " data with the NA-valued data using rbind."
+      )
       lex_na <- lex[ts_is_na, ]
       lex <- lex[!ts_is_na, ]
     }
 
-
     ## will use this due to step below (and laziness)
     ts_values <- lex[[timeScale]]
     ## Date objects are based on doubles and therefore keep the most information
-    if (inherits(ts_values, c("IDate"))) ts_values <- as.Date(ts_values)
+    if (inherits(ts_values, c("IDate"))) {
+      ts_values <- as.Date(ts_values)
+    }
 
     N_expand <- length(breaks)
     N_subjects <- nrow(lex)
@@ -180,7 +213,9 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
     l <- vector(mode = "list", length = N_expand)
     l[[1]] <- data.table(lex)
 
-    if (!merge) setcolsnull(l[[1]], keep = lexVars, soft = FALSE)
+    if (!merge) {
+      setcolsnull(l[[1]], keep = lexVars, soft = FALSE)
+    }
 
     tmpID <- makeTempVarName(data = l[[1]], pre = "TEMP_SPLITTING_ID")
     tmpIE <- makeTempVarName(data = l[[1]], pre = "TEMP_SPLIT_INT_END")
@@ -195,14 +230,18 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
     l <- rbindlist(l)
 
     ## time scale value determination --------------------------------------------
-    set(l, j = tmpIE,  value = rep(breaks, each = N_subjects))
-    set(l, j = tmpIE,  value = pmin(l[[tmpIE]], l[[timeScale]] + l$lex.dur) )
-    set(l, j = timeScale, value = c(
-      ts_values,
-      pmax(ts_values, rep(breaks[-length(breaks)], each = N_subjects))
-    ))
+    set(l, j = tmpIE, value = rep(breaks, each = N_subjects))
+    set(l, j = tmpIE, value = pmin(l[[tmpIE]], l[[timeScale]] + l$lex.dur))
+    set(
+      l,
+      j = timeScale,
+      value = c(
+        ts_values,
+        pmax(ts_values, rep(breaks[-length(breaks)], each = N_subjects))
+      )
+    )
 
-    set(l, j = "lex.dur", value = l[[tmpIE]] - l[[timeScale]] )
+    set(l, j = "lex.dur", value = l[[tmpIE]] - l[[timeScale]])
 
     ## other time scale values ---------------------------------------------------
     otherScales <- setdiff(allScales, timeScale)
@@ -221,18 +260,17 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
       l <- l[!has_zero_dur]
     }
 
-
-
     ## roll states -------------------------------------------------------------
     # this avoids duplicate deaths, etc., where appropriate.
     setkeyv(l, c("lex.id", timeScale))
     lex_id <- mget_cols(c("lex.Cst", "lex.Xst", "lex.id"), data = lex)
     setattr(lex_id, "time.scales", allScales)
     roll_lexis_status_inplace(
-      unsplit.data = lex_id, split.data = l, id.var = "lex.id"
+      unsplit.data = lex_id,
+      split.data = l,
+      id.var = "lex.id"
     )
     rm("lex_id")
-
 
     set(l, j = c(tmpIE, tmpID), value = NULL)
 
@@ -243,30 +281,26 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
         j = .SD,
         on = "tmp_id_values",
         .SDcols = "orig_id_values"
-        ]
+      ]
     })
 
     if (ts_any_na) {
       l <- rbind(l, lex_na)
       setkeyv(l, c("lex.id", timeScale))
     }
-
   }
 
   ## harmonize statuses --------------------------------------------------------
   harmonizeStatuses(x = l, C = "lex.Cst", X = "lex.Xst")
 
-
   ## ensure time scales and lex.dur have same (ish) class as before ------------
   for (k in c(allScales, "lex.dur")) {
-
-    if (inherits(orig_lex[[k]], "difftime") && !inherits(l[[k]], "difftime")){
+    if (inherits(orig_lex[[k]], "difftime") && !inherits(l[[k]], "difftime")) {
       setattr(l[[k]], "class", "difftime")
       setattr(l[[k]], "units", attr(orig_lex[[k]], "units"))
     } else if (is.numeric(orig_lex[[k]]) && inherits(l[[k]], "difftime")) {
       set(l, j = k, value = as.numeric(l[[k]]))
     }
-
   }
 
   ## harmonize time scales -----------------------------------------------------
@@ -274,10 +308,11 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   ## difftime -> integer -> double (though difftime is not numeric class)
   harmonizeNumericTimeScales(l, times = c(allScales, "lex.dur"))
 
-
   ## final touch & attributes --------------------------------------------------
   setcolorder(l, neworder = intersect(c(lexVars, othVars), names(l))) #merge=T/F
-  if (!drop) breaks <- unprotectFromDrop(breaks)
+  if (!drop) {
+    breaks <- unprotectFromDrop(breaks)
+  }
   allBreaks[[timeScale]] <- sort(unique(c(allBreaks[[timeScale]], breaks)))
 
   allBreaks <- lapply(allScales, function(scale_nm) {
@@ -288,9 +323,10 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   setattr(l, "breaks", allBreaks)
   setattr(l, "time.scales", allScales)
   setattr(l, "time.since", attr_list[["time.since"]])
-  setattr(l, "class", c("Lexis","data.table","data.frame"))
-  if (!return_DT()) setDFpe(l)
+  setattr(l, "class", c("Lexis", "data.table", "data.frame"))
+  if (!return_DT()) {
+    setDFpe(l)
+  }
 
   l[]
 }
-

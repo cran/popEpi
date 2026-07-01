@@ -21,6 +21,11 @@ Corazziari, Isabella, Mike Quinn, and Riccardo Capocaccia. "Standard cancer pati
 Contains three sets age-standardisation weights for age-standardized survival (net, relative or observed).
 }
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 ## aggregate weights to a subset of age groups
 data(ICSS)
 cut <- c(0, 30, 50, 70, Inf)
@@ -28,7 +33,7 @@ agegr <- cut(ICSS$age, cut, right = FALSE)
 aggregate(ICSS1~agegr, data = ICSS, FUN = sum)
 }
 \seealso{
-Other popEpi data: 
+Other popEpi data:
 \code{\link{meanpop_fi}},
 \code{\link{popmort}},
 \code{\link{sibr}},
@@ -36,7 +41,7 @@ Other popEpi data:
 \code{\link{stdpop101}},
 \code{\link{stdpop18}}
 
-Other weights: 
+Other weights:
 \code{\link{direct_standardization}},
 \code{\link{stdpop101}},
 \code{\link{stdpop18}}

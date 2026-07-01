@@ -63,6 +63,11 @@ The variance of the log rate that is used to derive the confidence intervals
 is derived using the delta method.
 }
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 ## Prepare data with lexpand and then reformat agegroup.
 data(sibr)
 x <- lexpand(sibr, birth = bi_date, entry = dg_date, exit = ex_date,
@@ -103,18 +108,18 @@ r3
 \seealso{
 \verb{[lexpand]}, \verb{[ltable]}
 
-Other main functions: 
-\code{\link{Surv}()},
-\code{\link{relpois}()},
-\code{\link{relpois_ag}()},
-\code{\link{sir}()},
-\code{\link{sirspline}()},
-\code{\link{survmean}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other main functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=relpois]{relpois()}},
+\code{\link[=relpois_ag]{relpois_ag()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sirspline]{sirspline()}},
+\code{\link[=survmean]{survmean()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 
-Other rate functions: 
-\code{\link{rate_ratio}()}
+Other rate functions:
+\code{\link[=rate_ratio]{rate_ratio()}}
 }
 \author{
 Matti Rantanen, Joonas Miettinen

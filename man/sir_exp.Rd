@@ -76,14 +76,12 @@ argument \code{pop.haz} of the \verb{[lexpand]}.
 state in \code{lex.Str} as \code{0} and all other as \code{1}. No missing values
 is allowed in observed, pop.haz or person-years.
 }
-\section{Functions}{
-\itemize{
-\item \code{sir_lex()}: 
-
-\item \code{sir_ag()}: 
-
-}}
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 
 \donttest{
 BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))
@@ -108,12 +106,12 @@ sir_lex(x2, breaks = BL, print = 'per')
 \verb{[lexpand]}
 \href{../doc/sir.html}{A SIR calculation vignette}
 
-Other sir functions: 
-\code{\link{lines.sirspline}()},
-\code{\link{plot.sirspline}()},
-\code{\link{sir}()},
-\code{\link{sir_ratio}()},
-\code{\link{sirspline}()}
+Other sir functions:
+\code{\link[=lines.sirspline]{lines.sirspline()}},
+\code{\link[=plot.sirspline]{plot.sirspline()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sir_ratio]{sir_ratio()}},
+\code{\link[=sirspline]{sirspline()}}
 }
 \author{
 Matti Rantanen

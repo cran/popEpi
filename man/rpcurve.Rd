@@ -31,6 +31,11 @@ the marginal curve is constructed only for those whose follow-up started
 in the respective period.
 }
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 \donttest{
 ## use the simulated rectal cancer cohort
 data("sire", package = "popEpi")
@@ -63,10 +68,10 @@ lines(y = pmc$est, x = pmc$Tstop, col="red")
 
 }
 \seealso{
-Other relpois functions: 
+Other relpois functions:
 \code{\link{RPL}},
-\code{\link{relpois}()},
-\code{\link{relpois_ag}()}
+\code{\link[=relpois]{relpois()}},
+\code{\link[=relpois_ag]{relpois_ag()}}
 }
 \author{
 Joonas Miettinen

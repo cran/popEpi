@@ -129,7 +129,11 @@ When \code{(dependent.splines = TRUE)} the p-value returned is a global p-value.
 Otherwise the p-value is spline-specific.
 }
 \examples{
-\donttest{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L) \donttest{
 ## for examples see: vignette('sir')
 }
 }
@@ -137,22 +141,22 @@ Otherwise the p-value is spline-specific.
 \verb{[splitMulti]}
 \href{../doc/sir.html}{A SIR calculation vignette}
 
-Other sir functions: 
-\code{\link{lines.sirspline}()},
-\code{\link{plot.sirspline}()},
-\code{\link{sir}()},
-\code{\link{sir_exp}()},
-\code{\link{sir_ratio}()}
+Other sir functions:
+\code{\link[=lines.sirspline]{lines.sirspline()}},
+\code{\link[=plot.sirspline]{plot.sirspline()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sir_exp]{sir_exp()}},
+\code{\link[=sir_ratio]{sir_ratio()}}
 
-Other main functions: 
-\code{\link{Surv}()},
-\code{\link{rate}()},
-\code{\link{relpois}()},
-\code{\link{relpois_ag}()},
-\code{\link{sir}()},
-\code{\link{survmean}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other main functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=rate]{rate()}},
+\code{\link[=relpois]{relpois()}},
+\code{\link[=relpois_ag]{relpois_ag()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=survmean]{survmean()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 }
 \author{
 Matti Rantanen, Joonas Miettinen

@@ -131,6 +131,11 @@ So no conflicts should occur.
 }
 
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 
 data(sire)
 ## prepare data for e.g. 5-year "period analysis" for 2008-2012
@@ -160,7 +165,7 @@ st <- survtab_ag(fot ~ 1, data = x, surv.type = "surv.obs",
                  surv.method = "hazard")
 }
 \seealso{
-Other popEpi argument evaluation docs: 
+Other popEpi argument evaluation docs:
 \code{\link{direct_standardization}}
 }
 \author{

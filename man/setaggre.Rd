@@ -36,6 +36,11 @@ without taking a copy as e.g. \code{as.data.frame.XXX} functions do; see e.g.
 \verb{[data.table::setDT]}.
 }
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 df <- data.frame(sex = rep(c("male", "female"), each = 5),
                  obs = rpois(10, rep(7,5, each=5)),
                  pyrs = rpois(10, lambda = 10000))
@@ -47,11 +52,11 @@ df$FUT <- 0:4
 setaggre(df, values = c("obs", "pyrs"), by = "sex", breaks = list(FUT = 0:5))
 }
 \seealso{
-Other aggregation functions: 
-\code{\link{aggre}()},
-\code{\link{as.aggre}()},
-\code{\link{lexpand}()},
-\code{\link{summary.aggre}()}
+Other aggregation functions:
+\code{\link[=aggre]{aggre()}},
+\code{\link[=as.aggre]{as.aggre()}},
+\code{\link[=lexpand]{lexpand()}},
+\code{\link[=summary.aggre]{summary.aggre()}}
 }
 \author{
 Joonas Miettinen

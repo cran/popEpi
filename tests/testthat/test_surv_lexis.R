@@ -1,0 +1,68 @@
+testthat::context("surv_lexis")
+
+testthat::test_that("surv_lexis & survival produce comparable results", {
+  sire <- test_make_sire__()
+  bl <- list(ts_fut = seq(0, 5, 1 / 12))
+  obs <- popEpi:::surv_lexis(
+    lexis = sire,
+    breaks = bl,
+    aggre_by = "my_stratum",
+    subset = NULL,
+    estimators = "S_ch"
+  )
+  exp <- test_survfit_dt__(
+    data = sire,
+    t = bl[["ts_fut"]],
+    stratum_col_nms = "my_stratum"
+  )
+  testthat::expect_true(all.equal(
+    obs[["S_ch_est"]],
+    exp[["est"]],
+    scale = 1L,
+    tolerance = 0.001
+  ))
+  testthat::expect_true(all.equal(
+    obs[["S_ch_se"]],
+    exp[["se"]],
+    scale = 1L,
+    tolerance = 0.001
+  ))
+})
+
+testthat::test_that("surv_lexis & relsurv produce comparable results", {
+  sire <- test_make_sire__()
+  bl <- list(ts_fut = seq(0, 5, 1 / 12))
+  obs <- popEpi:::surv_lexis(
+    lexis = sire,
+    breaks = bl,
+    merge_dt = test_make_pm__(),
+    merge_dt_by = c("sex", "ts_cal", "ts_age"),
+    aggre_by = "my_stratum",
+    subset = NULL,
+    estimators = c("RS_e2_ch", "NS_pp_ch")
+  )
+  exp <- test_relsurv_dt__(
+    data = sire,
+    stratum_col_nms = "my_stratum",
+    t = bl[["ts_fut"]],
+    method = "ederer2"
+  )
+  testthat::expect_true(
+    max(abs(obs[["RS_e2_ch_est"]] - exp[["est"]])) < 0.026
+  )
+  testthat::expect_true(
+    max(abs(obs[["RS_e2_ch_se"]] - exp[["se"]])) < 0.001
+  )
+  exp <- test_relsurv_dt__(
+    data = sire,
+    stratum_col_nms = "my_stratum",
+    t = bl[["ts_fut"]],
+    method = "pohar-perme"
+  )
+  testthat::expect_true(
+    max(abs(obs[["NS_pp_ch_est"]] - exp[["est"]])) < 0.028
+  )
+  testthat::expect_true(
+    max(abs(obs[["NS_pp_ch_se"]] - exp[["se"]])) < 0.001
+  )
+})

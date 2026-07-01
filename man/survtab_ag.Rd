@@ -294,6 +294,11 @@ therefore be meaningful and never e.g. \code{Inf}.
 }
 
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 ## see more examples with explanations in vignette("survtab_examples")
 
 #### survtab_ag usage
@@ -400,23 +405,23 @@ Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015.
 \verb{[ICSS]}, \verb{[sire]}
 \href{../doc/survtab_examples.html}{The survtab_examples vignette}
 
-Other main functions: 
-\code{\link{Surv}()},
-\code{\link{rate}()},
-\code{\link{relpois}()},
-\code{\link{relpois_ag}()},
-\code{\link{sir}()},
-\code{\link{sirspline}()},
-\code{\link{survmean}()},
-\code{\link{survtab}()}
+Other main functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=rate]{rate()}},
+\code{\link[=relpois]{relpois()}},
+\code{\link[=relpois_ag]{relpois_ag()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sirspline]{sirspline()}},
+\code{\link[=survmean]{survmean()}},
+\code{\link[=survtab]{survtab()}}
 
-Other survtab functions: 
-\code{\link{Surv}()},
-\code{\link{lines.survtab}()},
-\code{\link{plot.survtab}()},
-\code{\link{print.survtab}()},
-\code{\link{summary.survtab}()},
-\code{\link{survtab}()}
+Other survtab functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=lines.survtab]{lines.survtab()}},
+\code{\link[=plot.survtab]{plot.survtab()}},
+\code{\link[=print.survtab]{print.survtab()}},
+\code{\link[=summary.survtab]{summary.survtab()}},
+\code{\link[=survtab]{survtab()}}
 }
 \concept{main functions}
 \concept{survtab functions}

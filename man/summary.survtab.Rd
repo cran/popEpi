@@ -48,6 +48,11 @@ are not usually considered at all. See e.g. Seppa, Dyba, and Hakulinen
 (2015).
 }
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 
 library(Epi)
 
@@ -86,13 +91,13 @@ Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015.
 \doi{10.1016/B978-0-12-801238-3.02745-8}
 }
 \seealso{
-Other survtab functions: 
-\code{\link{Surv}()},
-\code{\link{lines.survtab}()},
-\code{\link{plot.survtab}()},
-\code{\link{print.survtab}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other survtab functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=lines.survtab]{lines.survtab()}},
+\code{\link[=plot.survtab]{plot.survtab()}},
+\code{\link[=print.survtab]{print.survtab()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 }
 \author{
 Joonas Miettinen

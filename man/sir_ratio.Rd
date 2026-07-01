@@ -52,6 +52,11 @@ Parameter \code{alternative} is always \code{two.sided} when parameter
 \code{type} is set to \code{asymptotic}.
 }
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 ## Ratio for sir-object and the same values given manually:
 
 
@@ -79,12 +84,12 @@ Douglas Altman, 2000. ISBN: 978-0-727-91375-3
 \verb{[sir]}
 \href{../doc/sir.html}{A SIR calculation vignette}
 
-Other sir functions: 
-\code{\link{lines.sirspline}()},
-\code{\link{plot.sirspline}()},
-\code{\link{sir}()},
-\code{\link{sir_exp}()},
-\code{\link{sirspline}()}
+Other sir functions:
+\code{\link[=lines.sirspline]{lines.sirspline()}},
+\code{\link[=plot.sirspline]{plot.sirspline()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sir_exp]{sir_exp()}},
+\code{\link[=sirspline]{sirspline()}}
 }
 \author{
 Matti Rantanen

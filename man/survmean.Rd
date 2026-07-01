@@ -177,6 +177,11 @@ when using e.g. day-level time scales (such as \code{Date} variables).
 Set the extrapolation breaks manually in such cases.
 }
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 
 library(Epi)
 ## take 500 subjects randomly for demonstration
@@ -276,20 +281,20 @@ plot(smd)
 
 }
 \seealso{
-Other survmean functions: 
-\code{\link{Surv}()},
-\code{\link{lines.survmean}()},
-\code{\link{plot.survmean}()}
+Other survmean functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=lines.survmean]{lines.survmean()}},
+\code{\link[=plot.survmean]{plot.survmean()}}
 
-Other main functions: 
-\code{\link{Surv}()},
-\code{\link{rate}()},
-\code{\link{relpois}()},
-\code{\link{relpois_ag}()},
-\code{\link{sir}()},
-\code{\link{sirspline}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other main functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=rate]{rate()}},
+\code{\link[=relpois]{relpois()}},
+\code{\link[=relpois_ag]{relpois_ag()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sirspline]{sirspline()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 }
 \author{
 Joonas Miettinen

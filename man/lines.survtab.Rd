@@ -35,6 +35,11 @@ This function is called for its side effects.
 Plot \code{lines} from a \code{survtab} object
 }
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 data(sire)
 data(sibr)
 si <- rbind(sire, sibr)
@@ -53,13 +58,13 @@ lines(st, "surv.obs", subset = cancer == "rectal", col = "red")
 plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 }
 \seealso{
-Other survtab functions: 
-\code{\link{Surv}()},
-\code{\link{plot.survtab}()},
-\code{\link{print.survtab}()},
-\code{\link{summary.survtab}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other survtab functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=plot.survtab]{plot.survtab()}},
+\code{\link[=print.survtab]{print.survtab()}},
+\code{\link[=summary.survtab]{summary.survtab()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 }
 \author{
 Joonas Miettinen

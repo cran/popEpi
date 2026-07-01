@@ -63,6 +63,11 @@
 #' object expanded to accommodate split observations.
 #'
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN submission requirement to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' #### let's prepare data for computing period method survivals
 #' #### in case there are problems with dates, we first
 #' #### convert to fractional years.
@@ -78,9 +83,13 @@
 #' x2 <- splitMulti(x, fot=seq(0, 5, by = 3/12), per=c(2008, 2013))
 #'
 #' ## using dates; note: breaks must be expressed as dates or days!
-#' x <- Lexis(data=sire[dg_date < ex_date, ],
-#'            entry = list(fot=0, per=dg_date, age=dg_date-bi_date),
-#'            exit=list(per=ex_date), exit.status=status)
+#' x <- Lexis(
+#'   data = sire[dg_date < ex_date, ],
+#'   entry = list(fot = 0L, per = dg_date, age = as.integer(dg_date - bi_date)),
+#'   duration = as.integer(ex_date - dg_date),
+#'   entry.status = 0L,
+#'   exit.status = status
+#' )
 #' BL <- list(fot = seq(0, 5, by = 3/12)*365.242199,
 #'            per = as.Date(paste0(c(1980:2014),"-01-01")),
 #'            age = c(0,45,85,Inf)*365.242199)
@@ -120,18 +129,21 @@
 #' @seealso
 #' `[Epi::splitLexis]`, `[Epi::Lexis]`,
 #' `[survival::survSplit]`
-#'
-splitMulti <- function(data,
-                       breaks = NULL,
-                       ...,
-                       drop=TRUE,
-                       merge=TRUE,
-                       verbose=FALSE) {
-
+#' @eval codedoc::pkg_doc_fun("popEpi::splitMulti")
+splitMulti <- function(
+  data,
+  breaks = NULL,
+  ...,
+  drop = TRUE,
+  merge = TRUE,
+  verbose = FALSE
+) {
   lex.id <- lex.dur <- NULL ## APPEASE R CMD CHECK
 
   ## basic checks --------------------------------------------------------------
-  if (verbose) {stime <- proc.time()}
+  if (verbose) {
+    stime <- proc.time()
+  }
 
   breaks <- splitMultiPreCheck(data = data, breaks = breaks, ...)
 
@@ -140,24 +152,38 @@ splitMulti <- function(data,
   allScales <- attr_list$time.scales
   splitScales <- names(breaks)
 
-  keep_nms <- if (merge) names(data) else {
+  # @codedoc_comment_block news("popEpi::splitMulti", "2026-03-30", "0.5.0")
+  # Fixed `popEpi::splitMulti` when `merge = FALSE`. Did not include `lex.dur`
+  # previously which caused an error.
+  # @codedoc_comment_block news("popEpi::splitMulti", "2026-03-30", "0.5.0")
+  keep_nms <- if (merge) {
+    names(data)
+  } else {
     intersect(
       names(data),
-      c("lex.id", "lex.Cst", "lex.Xst", allScales)
+      c("lex.id", allScales, "lex.dur", "lex.Cst", "lex.Xst")
     )
   }
   # this is not a copy!
   dt <- mget_cols(keep_nms, data = data)
-  forceLexisDT(dt, breaks = attr(data, "breaks"), allScales = allScales,
-               key = FALSE)
+  forceLexisDT(
+    dt,
+    breaks = attr(data, "breaks"),
+    allScales = allScales,
+    key = FALSE
+  )
 
   ## check if even need to do splitting ----------------------------------------
 
   oldBreaks <- copy(attr(data, "breaks"))
   tryCatch(checkBreaksList(data, oldBreaks), error = function(e) {
-    stop("Error in splitMulti: \n",
-         "Old breaks existing in Lexis data did not pass testing. Error ",
-         "message from test: \n", e, call. = FALSE)
+    stop(
+      "Error in splitMulti: \n",
+      "Old breaks existing in Lexis data did not pass testing. Error ",
+      "message from test: \n",
+      e,
+      call. = FALSE
+    )
   })
 
   ## only do split if all breaks are NOT in the breaks that the data
@@ -169,7 +195,6 @@ splitMulti <- function(data,
     l <- setDT(copy(dt))
     setkeyv(l, c("lex.id", allScales[1]))
   } else {
-
     ## temp IDS ----------------------------------------------------------------
     # used to ensure correct splitting and lex status rolling
 
@@ -185,8 +210,13 @@ splitMulti <- function(data,
     l <- vector(mode = "list", length = length(splitScales))
     setattr(l, "names", splitScales)
     for (v in splitScales) {
-      l[[v]] <- splitLexisDT(dt, breaks = breaks[[v]],
-                             merge = merge, drop = FALSE, timeScale = v)
+      l[[v]] <- splitLexisDT(
+        dt,
+        breaks = breaks[[v]],
+        merge = merge,
+        drop = FALSE,
+        timeScale = v
+      )
       breaks[[v]] <- attr(l[[v]], "breaks")[[v]]
     }
     l <- rbindlist(l)
@@ -198,8 +228,11 @@ splitMulti <- function(data,
       ## roll time scale values, re-compute interval lengths (lex.dur) ---------
 
       tmp_ie <- makeTempVarName(names = names(l), pre = "TEMP_INT_END_")
-      l[, (tmp_ie) := shift(.SD, n = 1, type = "lead"),
-        .SDcols = s1, by = "lex.id"]
+      l[,
+        (tmp_ie) := shift(.SD, n = 1, type = "lead"),
+        .SDcols = s1,
+        by = "lex.id"
+      ]
       is_last_row <- is.na(l[[tmp_ie]])
 
       l[is_last_row, (tmp_ie) := lex.dur + .SD, .SDcols = s1]
@@ -215,10 +248,11 @@ splitMulti <- function(data,
 
     ## ensure statuses are as expected -----------------------------------------
 
-
     setkeyv(l, c("lex.id", s1))
     roll_lexis_status_inplace(
-      unsplit.data = dt, split.data = l, id.var = "lex.id"
+      unsplit.data = dt,
+      split.data = l,
+      id.var = "lex.id"
     )
 
     ## dt$lex.id from temporary values to original values ----------------------
@@ -226,21 +260,23 @@ splitMulti <- function(data,
     on.exit()
     set(dt, j = "lex.id", value = id_dt$lex.id)
 
-
     tmpID <- makeTempVarName(names = names(l), pre = "TEMP_SPLITMULTI_ID_")
     setnames(l, old = "lex.id", new = tmpID)
-    set(l, j = "lex.id", value = {id_dt[
-      i = .(l[[tmpID]]),
-      j = .SD,
-      on = "temp_id_values",
-      .SDcols = "orig_id_values"
-      ]})
+    set(l, j = "lex.id", value = {
+      id_dt[
+        i = .(l[[tmpID]]),
+        j = .SD,
+        on = "temp_id_values",
+        .SDcols = "orig_id_values"
+      ]
+    })
     set(l, j = tmpID, value = NULL)
     rm("id_dt")
-
   }
 
-  if (drop) l <- intelliDrop(l, breaks = breaks, dropNegDur = FALSE)
+  if (drop) {
+    l <- intelliDrop(l, breaks = breaks, dropNegDur = FALSE)
+  }
 
   if (nrow(l) == 0) {
     warning("no data left after dropping; check breaks?")
@@ -251,13 +287,16 @@ splitMulti <- function(data,
   order <- intersect(order, names(l))
   setcolorder(l, order)
 
-  if (verbose) cat("time taken by splitting process: ", timetaken(stime), "\n")
-
+  if (verbose) {
+    cat("time taken by splitting process: ", timetaken(stime), "\n")
+  }
 
   breaks <- lapply(allScales, function(scale_nm) {
     ## allowed to NULL also
     br <- c(breaks[[scale_nm]], oldBreaks[[scale_nm]])
-    if (is.null(br)) return(br)
+    if (is.null(br)) {
+      return(br)
+    }
     sort(unique(br))
   })
   names(breaks) <- allScales
@@ -265,12 +304,12 @@ splitMulti <- function(data,
   setattr(l, "time.scales", allScales)
   setattr(l, "time.since", attr_list[["time.since"]])
   setattr(l, "breaks", breaks)
-  setattr(l, "class", c("Lexis","data.table","data.frame"))
-  if (!return_DT()) setDFpe(l)
+  setattr(l, "class", c("Lexis", "data.table", "data.frame"))
+  if (!return_DT()) {
+    setDFpe(l)
+  }
 
   l[]
-
 }
 
-globalVariables(".")
-
+utils::globalVariables(".")
